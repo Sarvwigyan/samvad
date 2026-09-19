@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Samwad — Bharatiya Theme Design Tokens (Section 4)
+   Cultural & Philosophical Palette: Kesari, Sona, Maroon, Cream, Van
+   ========================================================================== */
+
+:root {
+  --kesari:        #FF9933;   /* saffron */
+  --sona:          #D4A24C;   /* gold */
+  --maroon:        #7B241C;   /* deep rich maroon */
+  --cream:         #FFF8E7;   /* warm cream */
+  --van:           #1B4332;   /* sacred forest green */
+  --raat:          #0F0E0C;   /* dark background */
+  --raat-2:        #1A1814;   /* elevated dark surface */
+
+  --font-heading:  'Tiro Devanagari Hindi', 'Rozha One', 'Cinzel', serif;
+  --font-body:     'Mukta', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+  --font-script:   'Noto Sans Devanagari', sans-serif;
+
+  --radius:        12px;
+  --radius-sm:     8px;
+  --transition:    240ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --shadow-soft:   0 2px 12px rgba(123, 36, 28, 0.08);
+  --shadow-hover:  0 4px 20px rgba(123, 36, 28, 0.14);
+}
+
+[data-theme="dark"] {
+  --bg:            var(--raat);
+  --bg-elevated:   var(--raat-2);
+  --text:          #F5EFE0;
+  --text-muted:    #B0A99A;
+  --border:        rgba(212, 162, 76, 0.18);
+  --accent:        var(--sona);
+  --accent-secondary: var(--kesari);
+}
+
+[data-theme="light"] {
+  --bg:            var(--cream);
+  --bg-elevated:   #FFFFFF;
+  --text:          #2B1810;
+  --text-muted:    #6B5B4E;
+  --border:        rgba(123, 36, 28, 0.12);
+  --accent:        var(--maroon);
+  --accent-secondary: var(--sona);
+}

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Layout } from "./components/Layout";
@@ -15,6 +15,16 @@ import "./theme/tokens.css";
 import "./theme/global.css";
 import "./App.css";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    const centerCol = document.querySelector(".center-stream-col");
+    if (centerCol) centerCol.scrollTop = 0;
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   useEffect(() => {
     // Non-blocking auto-pruning evaluation after 30-second delay
@@ -28,6 +38,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <HashRouter>
+          <ScrollToTop />
           <Routes>
             <Route element={<Layout />}>
               {/* Home / Pravah Feed */}

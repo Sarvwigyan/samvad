@@ -15,7 +15,7 @@ import {
 import { playTempleChime } from "../lib/chime";
 
 export function PostCard({ post, debug = false }) {
-  const { currentUser, loginWithGoogle } = useAuth();
+  const { currentUser, userProfile, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [liked, setLiked] = useState(false);
@@ -123,6 +123,16 @@ export function PostCard({ post, debug = false }) {
   const isAnonymous = post.isAnonymous;
   const authorProfileLink = isAnonymous || !post.authorId ? null : `/parichay/${post.authorId}`;
 
+  // Dynamic author resolution: If authored by current user, immediately reflect new name/avatar!
+  const isAuthorCurrentUser = currentUser && post.authorId === currentUser.uid;
+  const displayAuthorName = (!isAnonymous && isAuthorCurrentUser && userProfile?.displayName)
+    ? userProfile.displayName
+    : (post.authorName || "सुधी साधक");
+
+  const displayAuthorPhoto = (!isAnonymous && isAuthorCurrentUser && userProfile?.avatarUrl !== undefined)
+    ? userProfile.avatarUrl
+    : post.authorPhoto;
+
   return (
     <article className="post-card-container" onClick={handleCardClick} role="button" tabIndex={0}>
       {/* Header */}
@@ -131,16 +141,16 @@ export function PostCard({ post, debug = false }) {
           {authorProfileLink ? (
             <Link to={authorProfileLink} onClick={(e) => e.stopPropagation()}>
               <Avatar
-                src={post.authorPhoto}
-                alt={post.authorName}
+                src={displayAuthorPhoto}
+                alt={displayAuthorName}
                 size="md"
-                fallbackText={post.authorName}
+                fallbackText={displayAuthorName}
               />
             </Link>
           ) : (
             <Avatar
-              src={post.authorPhoto}
-              alt={post.authorName}
+              src={displayAuthorPhoto}
+              alt={displayAuthorName}
               size="md"
               fallbackText="साधक"
             />
@@ -154,11 +164,11 @@ export function PostCard({ post, debug = false }) {
                   className="author-name-link"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {post.authorName || "सुधी साधक"}
+                  {displayAuthorName}
                 </Link>
               ) : (
                 <span className="author-name-text">
-                  {post.authorName || "साधक (गुप्त)"}
+                  {displayAuthorName}
                 </span>
               )}
 

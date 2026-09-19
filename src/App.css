@@ -567,10 +567,8 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  background: var(--bg-elevated);
-  backdrop-filter: var(--backdrop-blur);
-  -webkit-backdrop-filter: var(--backdrop-blur);
-  box-shadow: var(--shadow-liquid);
+  background: var(--bg-elevated-solid);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
 }
 
 /* Sticky Header */

@@ -30,8 +30,8 @@ export function Layout() {
   const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/parichay";
 
   useEffect(() => {
-    // Real-time trending topics listener
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));
+    // Real-time trending topics listener (lightweight 30 recent posts)
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(30));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {

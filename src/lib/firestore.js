@@ -15,7 +15,8 @@ import {
   increment,
   runTransaction,
   Timestamp,
-  getCountFromServer
+  getCountFromServer,
+  writeBatch
 } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -126,7 +127,39 @@ export async function upsertUserProfile(uid, profileData) {
       updateData.username = profileData.username.toLowerCase();
     }
     await updateDoc(userRef, updateData);
+
+    // Asynchronously synchronize author name/avatar across user's existing posts
+    if (profileData.displayName || profileData.avatarUrl !== undefined) {
+      syncUserPostsAuthorMetadata(uid, profileData.displayName, profileData.avatarUrl).catch(() => {});
+    }
+
     return { ...existing.data(), ...updateData };
+  }
+}
+
+/**
+ * Synchronizes new author name and avatar across all recent posts authored by user
+ * @param {string} uid
+ * @param {string} newDisplayName
+ * @param {string} newAvatarUrl
+ */
+export async function syncUserPostsAuthorMetadata(uid, newDisplayName, newAvatarUrl) {
+  if (!uid || (!newDisplayName && newAvatarUrl === undefined)) return;
+  try {
+    const q = query(collection(db, "posts"), where("authorId", "==", uid), limit(50));
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+
+    const batch = writeBatch(db);
+    snap.docs.forEach((docSnap) => {
+      const updatePayload = {};
+      if (newDisplayName) updatePayload.authorName = newDisplayName;
+      if (newAvatarUrl !== undefined) updatePayload.authorPhoto = newAvatarUrl;
+      batch.update(docSnap.ref, updatePayload);
+    });
+    await batch.commit();
+  } catch (err) {
+    console.warn("Notice: syncing author metadata on posts:", err?.message);
   }
 }
 

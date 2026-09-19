@@ -26,7 +26,7 @@ export default function Home() {
     }
   });
 
-  const { rankedPosts } = useRankedFeed(posts, currentUser);
+  const { rankedPosts } = useRankedFeed(posts, currentUser, activeTab === TAB_PRAVAH);
 
   useEffect(() => {
     let unsubscribeFallback = null;

@@ -13,7 +13,7 @@ const RANK_CACHE_TTL = 60000; // 60 seconds cache
  * @param {object|null} currentUser - Active authenticated user
  * @returns {{ rankedPosts: Array<object>, isRanking: boolean, refreshRanking: Function }}
  */
-export function useRankedFeed(rawPosts = [], currentUser = null) {
+export function useRankedFeed(rawPosts = [], currentUser = null, enabled = true) {
   const [rankedPosts, setRankedPosts] = useState([]);
   const [isRanking, setIsRanking] = useState(false);
 
@@ -26,6 +26,11 @@ export function useRankedFeed(rawPosts = [], currentUser = null) {
   const refreshRanking = async (force = false) => {
     if (!rawPosts || rawPosts.length === 0) {
       setRankedPosts([]);
+      return;
+    }
+
+    if (!enabled) {
+      setRankedPosts(rawPosts);
       return;
     }
 
@@ -76,8 +81,12 @@ export function useRankedFeed(rawPosts = [], currentUser = null) {
   };
 
   useEffect(() => {
-    refreshRanking(false);
-  }, [rawPosts, currentUser?.uid]);
+    if (enabled) {
+      refreshRanking(false);
+    } else {
+      setRankedPosts(rawPosts);
+    }
+  }, [rawPosts, currentUser?.uid, enabled]);
 
   return {
     rankedPosts,

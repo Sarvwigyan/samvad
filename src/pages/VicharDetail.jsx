@@ -203,6 +203,16 @@ export default function VicharDetail() {
 
   const authorLink = post.isAnonymous || !post.authorId ? null : `/parichay/${post.authorId}`;
 
+  // Dynamically resolve author name and photo for current user
+  const isAuthorCurrentUser = currentUser && post.authorId === currentUser.uid;
+  const displayAuthorName = (!post.isAnonymous && isAuthorCurrentUser && userProfile?.displayName)
+    ? userProfile.displayName
+    : (post.authorName || "सुधी साधक");
+
+  const displayAuthorPhoto = (!post.isAnonymous && isAuthorCurrentUser && userProfile?.avatarUrl !== undefined)
+    ? userProfile.avatarUrl
+    : post.authorPhoto;
+
   return (
     <div className="vichar-detail-page">
       {/* Header bar */}
@@ -220,16 +230,16 @@ export default function VicharDetail() {
             {authorLink ? (
               <Link to={authorLink}>
                 <Avatar
-                  src={post.authorPhoto}
-                  alt={post.authorName}
+                  src={displayAuthorPhoto}
+                  alt={displayAuthorName}
                   size="lg"
-                  fallbackText={post.authorName}
+                  fallbackText={displayAuthorName}
                 />
               </Link>
             ) : (
               <Avatar
-                src={post.authorPhoto}
-                alt={post.authorName}
+                src={displayAuthorPhoto}
+                alt={displayAuthorName}
                 size="lg"
                 fallbackText="साधक"
               />
@@ -237,11 +247,11 @@ export default function VicharDetail() {
             <div className="author-text-meta">
               {authorLink ? (
                 <Link to={authorLink} className="author-display-link">
-                  {post.authorName || "सुधी साधक"}
+                  {displayAuthorName}
                 </Link>
               ) : (
                 <span className="author-display-text">
-                  {post.authorName || "साधक (गुप्त)"}
+                  {displayAuthorName}
                 </span>
               )}
               <span className="author-handle">
@@ -388,22 +398,31 @@ export default function VicharDetail() {
           <div className="replies-list">
             {replies.map((reply) => {
               const rLink = reply.isAnonymous || !reply.authorId ? null : `/parichay/${reply.authorId}`;
+              const isReplyCurrentUser = currentUser && reply.authorId === currentUser.uid;
+              const displayReplyName = (!reply.isAnonymous && isReplyCurrentUser && userProfile?.displayName)
+                ? userProfile.displayName
+                : (reply.authorName || "सुधी साधक");
+
+              const displayReplyPhoto = (!reply.isAnonymous && isReplyCurrentUser && userProfile?.avatarUrl !== undefined)
+                ? userProfile.avatarUrl
+                : reply.authorPhoto;
+
               return (
                 <div key={reply.id} className="reply-item-card">
                   <div className="reply-author-row">
                     {rLink ? (
                       <Link to={rLink}>
                         <Avatar
-                          src={reply.authorPhoto}
-                          alt={reply.authorName}
+                          src={displayReplyPhoto}
+                          alt={displayReplyName}
                           size="sm"
-                          fallbackText={reply.authorName}
+                          fallbackText={displayReplyName}
                         />
                       </Link>
                     ) : (
                       <Avatar
-                        src={reply.authorPhoto}
-                        alt={reply.authorName}
+                        src={displayReplyPhoto}
+                        alt={displayReplyName}
                         size="sm"
                         fallbackText="साधक"
                       />
@@ -411,11 +430,11 @@ export default function VicharDetail() {
                     <div className="reply-meta">
                       {rLink ? (
                         <Link to={rLink} className="reply-author-name">
-                          {reply.authorName || "सुधी साधक"}
+                          {displayReplyName}
                         </Link>
                       ) : (
                         <span className="reply-author-name">
-                          {reply.authorName || "साधक (गुप्त)"}
+                          {displayReplyName}
                         </span>
                       )}
                       <span className="reply-time">{timeAgo(reply.createdAt)}</span>

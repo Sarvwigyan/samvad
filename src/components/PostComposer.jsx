@@ -5,6 +5,7 @@ import { playTempleChime } from "../lib/chime";
 import { getClientId } from "../lib/clientId";
 import { validatePostText } from "../lib/validation";
 import { Button } from "./ui/Button";
+import { Avatar } from "./ui/Avatar";
 
 const BHAV_OPTIONS = [
   { id: "vichar", label: "💡 दर्शन / विचार", short: "दर्शन" },
@@ -127,20 +128,28 @@ export function PostComposer({ onPostCreated }) {
         </button>
       </div>
 
-      {/* Input Field */}
-      <div className="composer-textarea-box">
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          className={`composer-textarea ${isOverLimit ? "has-error" : ""}`}
-          placeholder="कल्याणकारी विचारों को प्रवाह में व्यक्त करें... (Ctrl + Enter)"
-          rows={2}
-          maxLength={600}
-          disabled={isSending}
-          aria-label="विचार लिखें"
+      {/* Avatar + Textarea Row */}
+      <div className="composer-body-layout">
+        <Avatar
+          src={isAnonymous ? null : (userProfile?.avatarUrl || currentUser.photoURL)}
+          alt={userProfile?.displayName || currentUser.displayName}
+          size="md"
+          fallbackText={isAnonymous ? "साधक" : (userProfile?.displayName || currentUser.displayName)}
         />
+        <div className="composer-textarea-box">
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            className={`composer-textarea ${isOverLimit ? "has-error" : ""}`}
+            placeholder="कल्याणकारी विचारों को प्रवाह में व्यक्त करें... (Ctrl + Enter)"
+            rows={2}
+            maxLength={600}
+            disabled={isSending}
+            aria-label="विचार लिखें"
+          />
+        </div>
       </div>
 
       {error && <p className="composer-error-msg">⚠️ {error}</p>}

@@ -15,11 +15,20 @@ export default function Home() {
       q,
       (snapshot) => {
         const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setPosts(items);
+        // Strict deduplication by ID
+        const unique = [];
+        const seen = new Set();
+        for (const item of items) {
+          if (!seen.has(item.id)) {
+            seen.add(item.id);
+            unique.push(item);
+          }
+        }
+        setPosts(unique);
         setLoading(false);
       },
       (err) => {
-        console.error("Posts fetch error:", err);
+        console.warn("Posts fetch notice:", err.message);
         setLoading(false);
       }
     );
@@ -27,11 +36,19 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
+  const handlePostCreated = (newPost) => {
+    if (!newPost?.id) return;
+    setPosts((prev) => {
+      if (prev.some((p) => p.id === newPost.id)) return prev;
+      return [newPost, ...prev];
+    });
+  };
+
   return (
     <div className="home-pravah-page">
       {/* Top Composer */}
       <section className="home-composer-section">
-        <PostComposer onPostCreated={(newPost) => setPosts((prev) => [newPost, ...prev])} />
+        <PostComposer onPostCreated={handlePostCreated} />
       </section>
 
       {/* Posts Stream */}

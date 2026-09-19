@@ -240,7 +240,7 @@ export default function DirectMessages() {
     : conversations;
 
   return (
-    <div className="dm-master-shell">
+    <div className={`dm-master-shell ${activeConvId ? "has-active-chat" : ""}`}>
       {/* LEFT COLUMN: Conversation List */}
       <aside className={`dm-list-panel ${activeConvId ? "hide-on-mobile" : ""}`}>
         <header className="dm-list-header">
@@ -366,9 +366,10 @@ export default function DirectMessages() {
                 </div>
               ) : (
                 <div className="dm-bubbles-list">
-                  {visibleMessages.map((msg) => {
+                  {visibleMessages.map((msg, index) => {
                     const isMine = msg.senderUid === currentUser.uid;
                     const isDeleted = msg.deletedForEveryone;
+                    const isNearTop = index < 2;
 
                     // Group reactions
                     const reactionMap = {};
@@ -441,7 +442,7 @@ export default function DirectMessages() {
 
                             {/* Quick Reaction Bar (WhatsApp / Arattai Style) */}
                             {activeReactionMenuMsgId === msg.id && (
-                              <div className="dm-reaction-bar-popup">
+                              <div className={`dm-reaction-bar-popup ${isNearTop ? "placement-bottom" : ""}`}>
                                 {["👍", "❤️", "😂", "😮", "😢", "🙏", "🪷"].map((em) => (
                                   <button
                                     key={em}
@@ -465,14 +466,14 @@ export default function DirectMessages() {
 
                             {/* Full Emoji Picker for Reaction */}
                             {activeFullPickerMsgId === msg.id && (
-                              <div className="dm-reaction-full-picker-wrap">
+                              <div className={`dm-reaction-full-picker-wrap ${isNearTop ? "placement-bottom" : ""}`}>
                                 <EmojiPicker
                                   onSelect={(em) => handleReact(msg.id, em)}
                                   onClose={() => {
                                     setActiveFullPickerMsgId(null);
                                     setActiveReactionMenuMsgId(null);
                                   }}
-                                  align="top"
+                                  align={isNearTop ? "bottom" : "top"}
                                 />
                               </div>
                             )}

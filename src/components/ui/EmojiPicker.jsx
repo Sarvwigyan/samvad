@@ -117,7 +117,11 @@ export function EmojiPicker({ onSelect, onClose, align = "bottom" }) {
   const displayedEmojis = allFilteredEmojis || currentCategoryObj.emojis;
 
   return (
-    <div ref={pickerRef} className={`universal-emoji-picker picker-align-${align}`}>
+    <div
+      ref={pickerRef}
+      className={`universal-emoji-picker picker-align-${align}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="emoji-picker-header">
         <div className="emoji-search-box">
           <SearchIcon size={14} />
@@ -178,6 +182,7 @@ export function EmojiPicker({ onSelect, onClose, align = "bottom" }) {
                 onSelect(emoji);
               }}
               title={emoji}
+              aria-label={emoji}
             >
               {emoji}
             </button>

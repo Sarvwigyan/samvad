@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { collection, query, orderBy, limit, onSnapshot, doc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
@@ -43,6 +43,8 @@ export function Layout() {
   const { theme, toggleTheme } = useTheme();
   const { canInstall, isInstalled, promptInstall } = usePWAInstall();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMobileChatActive = location.pathname.startsWith("/sandesh/") && location.pathname.length > 9;
 
   const [suggestedSadhaks, setSuggestedSadhaks] = useState([]);
   const [followingStates, setFollowingStates] = useState({});
@@ -145,7 +147,7 @@ export function Layout() {
   };
 
   return (
-    <div className="samvad-master-shell">
+    <div className={`samvad-master-shell ${isMobileChatActive ? "in-mobile-chat" : ""}`}>
       <EcosystemBar />
       <div className="layout-shell-3col">
         {/* ========================================================

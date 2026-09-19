@@ -570,7 +570,7 @@ export function PostComposer({ onPostCreated }) {
               <EmojiPicker
                 onSelect={(emoji) => handleEmojiSelect(emoji)}
                 onClose={() => setIsEmojiOpen(false)}
-                align="top"
+                align="bottom"
               />
             )}
           </div>

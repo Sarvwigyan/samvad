@@ -14,7 +14,7 @@ describe("mentions utility", () => {
     expect(extractMentions(null)).toEqual([]);
   });
 
-  it("ignores handles shorter than 3 characters", () => {
-    expect(extractMentions("@ab")).toEqual([]);
+  it("extracts short handles matching relaxed regex", () => {
+    expect(extractMentions("@ab")).toEqual(["ab"]);
   });
 });

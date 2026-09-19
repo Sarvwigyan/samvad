@@ -592,7 +592,7 @@ export default function VicharDetail() {
                     <EmojiPicker
                       onSelect={(emoji) => handleReplyEmojiSelect(emoji)}
                       onClose={() => setIsReplyEmojiOpen(false)}
-                      align="top"
+                      align="bottom"
                     />
                   )}
                 </div>

@@ -1,7 +1,7 @@
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
-export const MENTION_REGEX = /@([a-zA-Z0-9_]{3,20})/g;
+export const MENTION_REGEX = /@([a-zA-Z0-9_]{1,30})/gu;
 
 /**
  * Extracts all unique usernames mentioned in text (without the @ symbol).

@@ -5,6 +5,7 @@ import {
   listenConversations,
   listenMessages,
   sendDirectMessage,
+  voteDmPoll,
   getOrCreateConversation,
   markConversationRead,
   toggleMessageReaction,
@@ -24,7 +25,11 @@ import {
   SearchIcon,
   SmileIcon,
   MoreHorizontalIcon,
-  TrashIcon
+  TrashIcon,
+  MicIcon,
+  StopCircleIcon,
+  ChartIcon,
+  CloseIcon
 } from "../components/ui/Icons";
 import { EmojiPicker } from "../components/ui/EmojiPicker";
 
@@ -47,6 +52,132 @@ export default function DirectMessages() {
   const [activeMsgMenuId, setActiveMsgMenuId] = useState(null);
   const [activeFullPickerMsgId, setActiveFullPickerMsgId] = useState(null);
   const [convSearch, setConvSearch] = useState("");
+
+  // Audio / Voice note states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [audioDataUrl, setAudioDataUrl] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+
+  // Poll states
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, []);
+
+  const formatDuration = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 16000 });
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result.length > 950000) {
+            alert("ध्वनि संदेश बहुत बड़ा है (1MB सीमा)। कृपया छोटा संदेश भेजें।");
+          } else {
+            setAudioDataUrl(reader.result);
+          }
+          stream.getTracks().forEach((track) => track.stop());
+        };
+        reader.readAsDataURL(blob);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+      setRecordingDuration(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+      triggerHaptic(10);
+    } catch (err) {
+      console.error("Audio recording error:", err);
+      alert("माइक्रोफ़ोन अनुमति अस्वीकृत या अनुपलब्ध है।");
+    }
+  };
+
+  const stopRecording = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      triggerHaptic(10);
+    }
+  };
+
+  const cancelRecording = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stream?.getTracks().forEach((track) => track.stop());
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      audioChunksRef.current = [];
+      setAudioDataUrl(null);
+      triggerHaptic(8);
+    }
+  };
+
+  const clearAudio = () => {
+    setAudioDataUrl(null);
+  };
+
+  const handlePollOptionChange = (index, val) => {
+    const updated = [...pollOptions];
+    updated[index] = val;
+    setPollOptions(updated);
+  };
+
+  const addPollOption = () => {
+    if (pollOptions.length < 4) {
+      setPollOptions([...pollOptions, ""]);
+    }
+  };
+
+  const removePollOption = (index) => {
+    if (pollOptions.length > 2) {
+      setPollOptions(pollOptions.filter((_, i) => i !== index));
+    }
+  };
+
+  const clearPoll = () => {
+    setShowPollCreator(false);
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+  };
+
+  const handleVoteDmPoll = async (msgId, optionIndex) => {
+    if (!activeConvId || !currentUser) return;
+    triggerHaptic(10);
+    try {
+      await voteDmPoll(activeConvId, msgId, optionIndex, currentUser.uid);
+    } catch (err) {
+      console.error("Failed to vote in DM poll:", err);
+    }
+  };
 
   const handleInputEmojiSelect = (emoji) => {
     if (!inputRef.current) {
@@ -180,23 +311,47 @@ export default function DirectMessages() {
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
     const clean = inputText.trim();
-    if (!clean || !activeConvId || !currentUser) return;
+    const validPollOptions = pollOptions.filter((o) => o.trim());
+    const hasValidPoll = showPollCreator && pollQuestion.trim() && validPollOptions.length >= 2;
+
+    if (!clean && !audioDataUrl && !hasValidPoll) return;
+    if (!activeConvId || !currentUser) return;
 
     triggerHaptic(10);
     playTempleChime();
-    setInputText("");
 
     const activeConv = conversations.find((c) => c.id === activeConvId);
     const targetUid = activeConv?.participants?.find((uid) => uid !== currentUser.uid);
 
-    await sendDirectMessage(activeConvId, {
+    const payload = {
       senderUid: currentUser.uid,
       senderName: userProfile?.displayName || currentUser.displayName || "साधक",
       senderAvatar: userProfile?.avatarUrl || currentUser.photoURL || null,
       text: clean,
       targetUid
-    });
+    };
 
+    if (audioDataUrl) {
+      payload.audioData = audioDataUrl;
+    }
+
+    if (hasValidPoll) {
+      payload.poll = {
+        question: pollQuestion.trim(),
+        options: validPollOptions.map((text) => ({
+          text: text.trim(),
+          votes: 0,
+          voters: []
+        })),
+        totalVotes: 0
+      };
+    }
+
+    setInputText("");
+    setAudioDataUrl(null);
+    clearPoll();
+
+    await sendDirectMessage(activeConvId, payload);
     inputRef.current?.focus();
   };
 
@@ -406,7 +561,74 @@ export default function DirectMessages() {
                             {isDeleted ? (
                               <p className="dm-bubble-text text-deleted">🚫 <em>यह संदेश हटा दिया गया है</em></p>
                             ) : (
-                              <p className="dm-bubble-text">{msg.text}</p>
+                              <>
+                                {msg.text && <p className="dm-bubble-text">{msg.text}</p>}
+
+                                {/* Voice Message Player */}
+                                {msg.audioData && (
+                                  <div className="dm-bubble-audio-box">
+                                    <audio
+                                      controls
+                                      src={msg.audioData}
+                                      preload="metadata"
+                                      className="dm-bubble-audio-player"
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Interactive Poll in DM */}
+                                {msg.poll && (
+                                  <div className="dm-bubble-poll-card">
+                                    <p className="dm-poll-card-question">📊 {msg.poll.question}</p>
+                                    <div className="dm-poll-options-stack">
+                                      {(() => {
+                                        const userVotedIndex = msg.poll.options?.findIndex((o) =>
+                                          o.voters?.includes(currentUser.uid)
+                                        );
+                                        const hasVoted = userVotedIndex !== -1 && userVotedIndex !== undefined;
+                                        const totalVotes =
+                                          msg.poll.totalVotes ||
+                                          msg.poll.options?.reduce((sum, o) => sum + (o.votes || 0), 0) ||
+                                          0;
+
+                                        return msg.poll.options?.map((opt, optIdx) => {
+                                          const votes = opt.votes || 0;
+                                          const percent = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                                          const isSelected = userVotedIndex === optIdx;
+
+                                          return (
+                                            <button
+                                              key={optIdx}
+                                              type="button"
+                                              className={`dm-poll-option-btn ${isSelected ? "selected" : ""} ${hasVoted ? "has-voted" : ""}`}
+                                              onClick={() => !hasVoted && handleVoteDmPoll(msg.id, optIdx)}
+                                              disabled={hasVoted}
+                                            >
+                                              {hasVoted && (
+                                                <div
+                                                  className="dm-poll-bar-fill"
+                                                  style={{ width: `${percent}%` }}
+                                                />
+                                              )}
+                                              <div className="dm-poll-opt-content">
+                                                <span className="dm-poll-opt-name">
+                                                  {opt.text} {isSelected && "✓"}
+                                                </span>
+                                                {hasVoted && (
+                                                  <span className="dm-poll-opt-pct">{percent}%</span>
+                                                )}
+                                              </div>
+                                            </button>
+                                          );
+                                        });
+                                      })()}
+                                    </div>
+                                    <div className="dm-poll-card-footer">
+                                      <span>{msg.poll.totalVotes || 0} मत (Votes)</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
                             )}
 
                             {/* Floating Action Buttons (Hover/Touch) */}
@@ -537,6 +759,110 @@ export default function DirectMessages() {
 
             {/* Message Input Box */}
             <footer className="dm-input-tray">
+              {/* Active Voice Recording Indicator */}
+              {isRecording && (
+                <div className="dm-recording-tray">
+                  <div className="dm-recording-live-indicator">
+                    <span className="dm-recording-dot" />
+                    <span className="dm-recording-timer">{formatDuration(recordingDuration)}</span>
+                    <span className="dm-recording-label">ध्वनि संदेश रिकॉर्ड हो रहा है...</span>
+                  </div>
+                  <div className="dm-recording-ctrls">
+                    <button
+                      type="button"
+                      className="dm-rec-btn-cancel"
+                      onClick={cancelRecording}
+                    >
+                      रद्द करें
+                    </button>
+                    <button
+                      type="button"
+                      className="dm-rec-btn-stop"
+                      onClick={stopRecording}
+                    >
+                      <StopCircleIcon size={16} />
+                      <span>पूर्ण</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Audio Preview Drawer (Recorded & ready to send) */}
+              {audioDataUrl && !isRecording && (
+                <div className="dm-audio-preview-tray">
+                  <span className="dm-preview-mic-icon"><MicIcon size={18} /></span>
+                  <audio controls src={audioDataUrl} className="dm-preview-audio-player" />
+                  <button
+                    type="button"
+                    className="dm-preview-clear-btn"
+                    onClick={clearAudio}
+                    title="ऑडियो हटाएँ"
+                  >
+                    <TrashIcon size={16} />
+                  </button>
+                </div>
+              )}
+
+              {/* Poll Creator Drawer */}
+              {showPollCreator && (
+                <div className="dm-poll-creator-tray">
+                  <div className="dm-poll-creator-top">
+                    <span className="dm-poll-creator-title">
+                      <ChartIcon size={16} /> जनमत संग्रह (Poll)
+                    </span>
+                    <button
+                      type="button"
+                      className="dm-poll-close-btn"
+                      onClick={clearPoll}
+                      title="रद्द करें"
+                    >
+                      <CloseIcon size={14} />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="प्रश्न पूछें... (उदा. क्या आप सहमत हैं?)"
+                    value={pollQuestion}
+                    onChange={(e) => setPollQuestion(e.target.value)}
+                    className="dm-poll-question-input"
+                    maxLength={150}
+                  />
+                  <div className="dm-poll-options-grid">
+                    {pollOptions.map((opt, i) => (
+                      <div key={i} className="dm-poll-opt-input-wrap">
+                        <input
+                          type="text"
+                          placeholder={`विकल्प ${i + 1}`}
+                          value={opt}
+                          onChange={(e) => handlePollOptionChange(i, e.target.value)}
+                          className="dm-poll-opt-input"
+                          maxLength={60}
+                        />
+                        {pollOptions.length > 2 && (
+                          <button
+                            type="button"
+                            className="dm-poll-remove-opt-btn"
+                            onClick={() => removePollOption(i)}
+                            title="विकल्प हटाएँ"
+                          >
+                            <CloseIcon size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {pollOptions.length < 4 && (
+                    <button
+                      type="button"
+                      className="dm-poll-add-btn"
+                      onClick={addPollOption}
+                    >
+                      + विकल्प जोड़ें (Add option)
+                    </button>
+                  )}
+                </div>
+              )}
+
               <form className="dm-send-form" onSubmit={handleSendMessage}>
                 {/* Emoji Picker in Chat Input */}
                 <div className="dm-input-emoji-wrap" style={{ position: "relative" }}>
@@ -558,34 +884,80 @@ export default function DirectMessages() {
                   )}
                 </div>
 
+                {/* Poll Trigger Button */}
+                <button
+                  type="button"
+                  className={`dm-input-tool-btn ${showPollCreator ? "active" : ""}`}
+                  onClick={() => setShowPollCreator(!showPollCreator)}
+                  title="जनमत संग्रह (Poll) जोड़ें"
+                  aria-label="जनमत संग्रह जोड़ें"
+                >
+                  <ChartIcon size={20} />
+                </button>
+
                 <input
                   ref={inputRef}
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="संदेश लिखें... (Enter दबाकर भेजें)"
+                  placeholder={
+                    isRecording
+                      ? "ध्वनि रिकॉर्ड हो रही है..."
+                      : audioDataUrl
+                      ? "संदेश के साथ टिप्पणी लिखें (वैकल्पिक)..."
+                      : "संदेश लिखें... (Enter दबाकर भेजें)"
+                  }
+                  disabled={isRecording}
                   className="dm-input-field"
                   maxLength={2000}
                 />
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  disabled={!inputText.trim()}
-                  className="dm-send-btn"
-                  title="संदेश प्रेषित करें"
-                >
-                  <SendIcon size={16} />
-                </Button>
+
+                {/* Send button or Mic button */}
+                {inputText.trim() || audioDataUrl || (showPollCreator && pollQuestion.trim() && pollOptions.filter((o) => o.trim()).length >= 2) ? (
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    className="dm-send-btn"
+                    title="संदेश प्रेषित करें"
+                  >
+                    <SendIcon size={16} />
+                  </Button>
+                ) : isRecording ? (
+                  <button
+                    type="button"
+                    onClick={stopRecording}
+                    className="dm-mic-btn is-recording-active"
+                    title="रिकॉर्डिंग समाप्त करें"
+                  >
+                    <StopCircleIcon size={20} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={startRecording}
+                    className="dm-mic-btn"
+                    title="ध्वनि संदेश रिकॉर्ड करें"
+                    aria-label="ध्वनि संदेश रिकॉर्ड करें"
+                  >
+                    <MicIcon size={20} />
+                  </button>
+                )}
               </form>
             </footer>
           </div>
         ) : (
           <div className="dm-no-active-selection">
-            <span className="no-select-glyph"><MailIcon size={54} /></span>
-            <h3>संदेश चुनें अथवा नया संवाद प्रारंभ करें</h3>
-            <p>बाईं सूची से किसी संवाद का चयन करें अथवा किसी साधक के परिचय पृष्ठ से वार्ता शुरू करें।</p>
+            <div className="dm-empty-x-card">
+              <div className="dm-empty-icon-circle">
+                <MailIcon size={44} />
+              </div>
+              <h3 className="dm-empty-x-title">संदेश का चयन करें</h3>
+              <p className="dm-empty-x-desc">
+                अपनी मौजूदा बातचीतों में से चुनें, अथवा नया संवाद प्रारंभ करने के लिए किसी साधक के परिचय पृष्ठ पर जाएँ।
+              </p>
+            </div>
           </div>
         )}
       </section>

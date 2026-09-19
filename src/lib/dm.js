@@ -80,26 +80,44 @@ export async function getOrCreateConversation(currentUser, targetUser) {
  * @param {string} param1.text
  * @param {string} param1.targetUid
  */
-export async function sendDirectMessage(convId, { senderUid, senderName, senderAvatar, text, targetUid }) {
-  if (!convId || !senderUid || !text?.trim()) return;
+export async function sendDirectMessage(convId, { senderUid, senderName, senderAvatar, text = "", targetUid, audioData = null, poll = null }) {
+  if (!convId || !senderUid) return;
 
-  const cleanText = text.trim();
+  const cleanText = text ? text.trim() : "";
+  if (!cleanText && !audioData && !poll) return;
+
   const convRef = doc(db, "conversations", convId);
   const messagesRef = collection(db, "conversations", convId, "messages");
 
-  // 1. Add message document
-  await addDoc(messagesRef, {
+  const msgPayload = {
     senderUid,
     senderName: senderName || "साधक",
     senderAvatar: senderAvatar || null,
     text: cleanText,
     createdAt: serverTimestamp(),
     read: false
-  });
+  };
+
+  if (audioData) msgPayload.audioData = audioData;
+  if (poll) {
+    msgPayload.poll = {
+      question: poll.question || "मतदान (Poll)",
+      options: poll.options.map((opt) => ({ text: opt, votes: 0 })),
+      voters: {},
+      totalVotes: 0
+    };
+  }
+
+  // 1. Add message document
+  await addDoc(messagesRef, msgPayload);
 
   // 2. Update conversation header
+  let summary = cleanText;
+  if (!summary && audioData) summary = "🎙️ वॉयस संदेश";
+  else if (!summary && poll) summary = `📊 मतदान: ${poll.question}`;
+
   const updatePayload = {
-    lastMessage: cleanText.length > 80 ? cleanText.slice(0, 77) + "..." : cleanText,
+    lastMessage: summary.length > 80 ? summary.slice(0, 77) + "..." : summary,
     lastMessageAt: serverTimestamp(),
     lastSenderUid: senderUid
   };
@@ -112,6 +130,46 @@ export async function sendDirectMessage(convId, { senderUid, senderName, senderA
     await updateDoc(convRef, updatePayload);
   } catch (e) {
     console.warn("Update conversation header notice:", e.message);
+  }
+}
+
+/**
+ * Votes on an interactive poll inside a DM conversation.
+ * @param {string} convId
+ * @param {string} messageId
+ * @param {number} optionIndex
+ * @param {string} uid
+ */
+export async function voteDmPoll(convId, messageId, optionIndex, uid) {
+  if (!convId || !messageId || optionIndex === undefined || !uid) return;
+  try {
+    const msgRef = doc(db, "conversations", convId, "messages", messageId);
+    const snap = await getDoc(msgRef);
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    if (!data.poll || !data.poll.options) return;
+
+    const poll = { ...data.poll };
+    const voters = { ...(poll.voters || {}) };
+
+    if (voters[uid] !== undefined) return;
+
+    voters[uid] = optionIndex;
+    const options = poll.options.map((opt, i) => {
+      if (i === optionIndex) {
+        return { ...opt, votes: (opt.votes || 0) + 1 };
+      }
+      return opt;
+    });
+
+    poll.options = options;
+    poll.voters = voters;
+    poll.totalVotes = (poll.totalVotes || 0) + 1;
+
+    await updateDoc(msgRef, { poll });
+  } catch (err) {
+    console.warn("voteDmPoll notice:", err.message);
   }
 }
 

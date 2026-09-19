@@ -12,6 +12,7 @@ import { computeTrendingTopics } from "../lib/trending";
 import { EcosystemBar } from "./EcosystemBar";
 import { triggerHaptic } from "../lib/haptics";
 import { listenUnreadCount } from "../lib/notifications";
+import { getDailyShloka, fetchDynamicShloka } from "../lib/shastra";
 import {
   StreamIcon,
   BookmarkIcon,
@@ -45,6 +46,7 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobileChatActive = location.pathname.startsWith("/sandesh/") && location.pathname.length > 9;
+  const isSandesh = location.pathname.startsWith("/sandesh");
 
   const [suggestedSadhaks, setSuggestedSadhaks] = useState([]);
   const [followingStates, setFollowingStates] = useState({});
@@ -52,6 +54,22 @@ export function Layout() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isEcoDrawerOpen, setIsEcoDrawerOpen] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  // Dynamic Shastra State
+  const [currentShloka, setCurrentShloka] = useState(getDailyShloka);
+  const [isShlokaLoading, setIsShlokaLoading] = useState(false);
+  const [isWidgetsCollapsed, setIsWidgetsCollapsed] = useState(false);
+
+  const handleNextShloka = async () => {
+    setIsShlokaLoading(true);
+    triggerHaptic(10);
+    try {
+      const next = await fetchDynamicShloka(currentShloka?.id);
+      setCurrentShloka(next);
+    } finally {
+      setIsShlokaLoading(false);
+    }
+  };
 
   const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/parichay";
 
@@ -147,7 +165,7 @@ export function Layout() {
   };
 
   return (
-    <div className={`samvad-master-shell ${isMobileChatActive ? "in-mobile-chat" : ""}`}>
+    <div className={`samvad-master-shell ${isMobileChatActive ? "in-mobile-chat" : ""} ${isSandesh ? "in-sandesh" : ""} ${isWidgetsCollapsed ? "widgets-collapsed" : ""}`}>
       <EcosystemBar />
       <div className="layout-shell-3col">
         {/* ========================================================
@@ -366,27 +384,38 @@ export function Layout() {
           ======================================================== */}
       <aside className="right-widgets-col">
         <div className="right-widgets-sticky">
-          {/* Functional Search Box */}
-          <form className="search-widget-card" onSubmit={handleSearchSubmit}>
-            <span className="search-icon"><SearchIcon size={18} /></span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="विचार, विषय अथवा साधक खोजें..."
-              className="search-input-field"
-              aria-label="खोज"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="search-clear-btn"
-                onClick={() => { setSearchQuery(""); navigate("/"); }}
-              >
-                ✕
-              </button>
-            )}
-          </form>
+          {/* Functional Search Box & Tab Close/Collapse Button */}
+          <div className="widgets-top-ctrl-row">
+            <form className="search-widget-card" onSubmit={handleSearchSubmit}>
+              <span className="search-icon"><SearchIcon size={18} /></span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="विचार, विषय अथवा साधक खोजें..."
+                className="search-input-field"
+                aria-label="खोज"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onClick={() => { setSearchQuery(""); navigate("/"); }}
+                >
+                  ✕
+                </button>
+              )}
+            </form>
+            <button
+              type="button"
+              className="widgets-panel-toggle-btn"
+              onClick={() => setIsWidgetsCollapsed(true)}
+              title="पैनल छुपाएँ (Collapse)"
+              aria-label="विजेट्स पैनल छुपाएँ"
+            >
+              ✕
+            </button>
+          </div>
 
           {/* Trending Topics / प्रवाहित विषय */}
           <section className="widget-card trending-widget-card">
@@ -455,17 +484,39 @@ export function Layout() {
             </div>
           </section>
 
-          {/* Daily Subhashita / अमृत वचन */}
+          {/* Daily Subhashita / अमृत वचन (Dynamic Shastra Engine) */}
           <section className="widget-card subhashita-card">
             <div className="widget-header">
-              <h3 className="widget-title">दैनिक सुभाषित</h3>
-              <span className="subhashita-feather"><QuoteIcon size={18} /></span>
+              <div className="subhashita-title-wrap">
+                <h3 className="widget-title">दैनिक सुभाषित</h3>
+                {currentShloka?.theme && (
+                  <span className="subhashita-theme-badge">{currentShloka.theme}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                className={`subhashita-refresh-btn ${isShlokaLoading ? "spinning" : ""}`}
+                onClick={handleNextShloka}
+                title="नया श्लोक प्राप्त करें (Next Shloka)"
+                aria-label="नया श्लोक"
+              >
+                <span className="subhashita-refresh-icon">↺</span>
+              </button>
             </div>
             <blockquote className="subhashita-quote">
-              "अयं निजः परो वेति गणना लघुचेतसाम्।<br />
-              उदारचरितानां तु वसुधैव कुटुम्बकम्॥"
+              {currentShloka?.shloka ? currentShloka.shloka.split("\n").map((line, i) => (
+                <React.Fragment key={i}>
+                  {line}
+                  {i < currentShloka.shloka.split("\n").length - 1 && <br />}
+                </React.Fragment>
+              )) : "अयं निजः परो वेति गणना लघुचेतसाम्।"}
             </blockquote>
-            <cite className="subhashita-ref">— महोपनिषद् (४.७१)</cite>
+            {currentShloka?.meaning && (
+              <p className="subhashita-meaning">
+                {currentShloka.meaning}
+              </p>
+            )}
+            <cite className="subhashita-ref">— {currentShloka?.source || "प्राचीन संहिता"}</cite>
           </section>
 
           {/* Sovereign Footer */}
@@ -479,6 +530,19 @@ export function Layout() {
           </footer>
         </div>
       </aside>
+
+      {/* Floating Button to re-open collapsed widgets panel */}
+      {isWidgetsCollapsed && !isSandesh && (
+        <button
+          type="button"
+          className="widgets-uncollapse-floating-btn"
+          onClick={() => setIsWidgetsCollapsed(false)}
+          title="विजेट्स पैनल पुनः दिखाएँ (Open sidebar)"
+          aria-label="विजेट्स पैनल खोलें"
+        >
+          <span>◀</span>
+        </button>
+      )}
     </div>
 
       {/* ========================================================

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Avatar } from "./ui/Avatar";
 import { timeAgo } from "../lib/timeAgo";
@@ -11,7 +12,10 @@ import {
   togglePrasar,
   isPostBookmarked,
   toggleSmaran,
-  deleteVichar
+  deleteVichar,
+  incrementViews,
+  getUserPollVote,
+  castPollVote
 } from "../lib/firestore";
 import { playTempleChime } from "../lib/chime";
 import { triggerHaptic } from "../lib/haptics";
@@ -27,12 +31,14 @@ import {
   CopyIcon,
   InfinityIcon,
   ExternalLinkIcon,
-  CloseIcon
+  CloseIcon,
+  EyeIcon
 } from "./ui/Icons";
 
 export function PostCard({ post, debug = false, onPostDeleted }) {
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const cardRef = useRef(null);
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
@@ -43,6 +49,11 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [activeLightboxImg, setActiveLightboxImg] = useState(null);
+  
+  // Analytics and Polls
+  const [viewed, setViewed] = useState(false);
+  const [localPoll, setLocalPoll] = useState(post.poll);
+  const [pollVotedIndex, setPollVotedIndex] = useState(null);
 
   useEffect(() => {
     if (!currentUser || !post.id) return;
@@ -51,9 +62,54 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     isPostLiked(post.id, currentUser.uid).then((val) => isMounted && setLiked(val));
     isPostReposted(post.id, currentUser.uid).then((val) => isMounted && setReposted(val));
     isPostBookmarked(post.id, currentUser.uid).then((val) => isMounted && setBookmarked(val));
+    
+    if (post.poll) {
+      getUserPollVote(post.id, currentUser.uid).then((idx) => {
+        if (isMounted && idx !== null && idx !== undefined) {
+          setPollVotedIndex(idx);
+        }
+      });
+    }
 
     return () => { isMounted = false; };
-  }, [post.id, currentUser]);
+  }, [post.id, currentUser, post.poll]);
+
+  useEffect(() => {
+    if (!cardRef.current || viewed || !post.id) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setViewed(true);
+        incrementViews(post.id);
+        observer.disconnect();
+      }
+    }, { threshold: 0.1 });
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [post.id, viewed]);
+
+  const handleVote = async (e, idx) => {
+    e.stopPropagation();
+    if (!currentUser) {
+      loginWithGoogle();
+      return;
+    }
+    if (pollVotedIndex !== null) return;
+    
+    // Optimistic UI
+    setPollVotedIndex(idx);
+    const newPoll = { ...localPoll };
+    if (!newPoll[`opt${idx}`]) return;
+    newPoll[`opt${idx}`].votes += 1;
+    newPoll.totalVotes += 1;
+    setLocalPoll(newPoll);
+    triggerHaptic(10);
+    
+    try {
+      await castPollVote(post.id, currentUser.uid, idx);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   const handleAnumodan = async (e) => {
     e.stopPropagation();
@@ -108,10 +164,19 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     }
 
     const prevBookmarked = bookmarked;
+    let folderName = "सामान्य";
+    
+    // Only ask for folder if we are bookmarking (not unbookmarking)
+    if (!prevBookmarked) {
+      const input = window.prompt("संचित करने के लिए फ़ोल्डर का नाम (उदा: अध्यात्म, राजनीति, समाचार):", "सामान्य");
+      if (input === null) return; // User cancelled
+      folderName = input.trim() || "सामान्य";
+    }
+
     setBookmarked(!prevBookmarked);
 
     try {
-      await toggleSmaran(post.id, currentUser.uid);
+      await toggleSmaran(post.id, currentUser.uid, folderName);
     } catch (err) {
       setBookmarked(prevBookmarked);
     }
@@ -187,7 +252,7 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     : post.authorPhoto;
 
   return (
-    <article className="post-card-container" onClick={handleCardClick} role="button" tabIndex={0}>
+    <article className="post-card-container" onClick={handleCardClick} role="button" tabIndex={0} ref={cardRef}>
       {/* Toast Notification */}
       {toastMsg && <div className="post-action-toast">{toastMsg}</div>}
 
@@ -351,6 +416,36 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
           })}
         </p>
 
+        {/* Poll UI */}
+        {localPoll && (
+          <div className="post-poll-container" onClick={e => e.stopPropagation()}>
+            <p className="poll-question">{localPoll.question}</p>
+            <div className="poll-options">
+              {Array.from({ length: localPoll.length }).map((_, i) => {
+                const opt = localPoll[`opt${i}`];
+                if (!opt) return null;
+                const percentage = localPoll.totalVotes > 0 ? Math.round((opt.votes / localPoll.totalVotes) * 100) : 0;
+                const isSelected = pollVotedIndex === i;
+                const showResults = pollVotedIndex !== null || localPoll.expiresAt.toMillis() < Date.now();
+                return (
+                  <div key={i} className={`poll-option-row ${isSelected ? "selected" : ""}`} onClick={(e) => handleVote(e, i)}>
+                    <div className="poll-progress-bg" style={{ width: showResults ? `${percentage}%` : '0%' }}></div>
+                    <div className="poll-option-content">
+                      <span className="poll-option-text">{opt.text} {isSelected && "✓"}</span>
+                      {showResults && <span className="poll-option-percent">{percentage}%</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="poll-footer">
+              <span>{localPoll.totalVotes} मतदान</span>
+              <span>•</span>
+              <span>{localPoll.expiresAt.toMillis() < Date.now() ? "समाप्त" : "सक्रिय"}</span>
+            </div>
+          </div>
+        )}
+
         {/* Attached Images Grid (X-style 1-4 images) */}
         {post.images && post.images.length > 0 && (
           <div className={`post-media-grid grid-count-${Math.min(post.images.length, 4)}`}>
@@ -375,6 +470,13 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
                 />
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Audio Player */}
+        {post.audioData && (
+          <div className="post-audio-container" onClick={e => e.stopPropagation()} style={{ marginTop: "12px", width: "100%" }}>
+            <audio src={post.audioData} controls style={{ width: "100%", height: "36px", outline: "none" }} />
           </div>
         )}
 
@@ -491,6 +593,14 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
           </span>
           <span className="action-text">{vocab.share.hi}</span>
         </button>
+
+        {/* Analytics (Views) */}
+        <div className="action-pill-btn view-count-btn" style={{ cursor: 'default' }} title="दृष्टि (Impressions)">
+          <span className="action-glyph">
+            <EyeIcon size={16} />
+          </span>
+          <span className="action-count">{post.viewCount || 0}</span>
+        </div>
       </footer>
 
       <div className="lotus-separator" aria-hidden="true">

@@ -12,6 +12,7 @@ export default function Smaran() {
   const navigate = useNavigate();
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeFolder, setActiveFolder] = useState("सभी");
 
   useEffect(() => {
     if (!currentUser) {
@@ -50,6 +51,9 @@ export default function Smaran() {
     );
   }
 
+  const folders = ["सभी", ...new Set(bookmarks.map(b => b.folder || "सामान्य"))];
+  const displayedBookmarks = activeFolder === "सभी" ? bookmarks : bookmarks.filter(b => (b.folder || "सामान्य") === activeFolder);
+
   return (
     <div className="smaran-page">
       <div className="smaran-header-bar">
@@ -59,9 +63,30 @@ export default function Smaran() {
         <span className="smaran-count-badge">{bookmarks.length} विचार</span>
       </div>
 
+      <div className="smaran-folders-row" style={{ padding: "0 16px 12px", display: "flex", gap: "8px", overflowX: "auto", borderBottom: "1px solid var(--border)" }}>
+        {folders.map(folder => (
+          <button
+            key={folder}
+            onClick={() => setActiveFolder(folder)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "9999px",
+              border: `1px solid ${activeFolder === folder ? "var(--sona)" : "var(--border)"}`,
+              background: activeFolder === folder ? "var(--bg-elevated)" : "transparent",
+              color: activeFolder === folder ? "var(--sona)" : "var(--text)",
+              fontWeight: activeFolder === folder ? "bold" : "normal",
+              cursor: "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            {folder}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <PostCardSkeleton count={3} />
-      ) : bookmarks.length === 0 ? (
+      ) : displayedBookmarks.length === 0 ? (
         <div className="smaran-empty-state">
           <span className="smaran-empty-icon" style={{ display: "inline-flex", opacity: 0.6 }}>
             <BookmarkIcon size={44} />
@@ -74,7 +99,7 @@ export default function Smaran() {
         </div>
       ) : (
         <div className="smaran-stream-list">
-          {bookmarks.map((post) => (
+          {displayedBookmarks.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>

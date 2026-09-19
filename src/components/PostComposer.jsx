@@ -9,7 +9,7 @@ import { compressPostImage } from "../lib/storage";
 import { searchUsersByMention } from "../lib/mentions";
 import { Button } from "./ui/Button";
 import { Avatar } from "./ui/Avatar";
-import { ImageIcon, CloseIcon, SmileIcon } from "./ui/Icons";
+import { ImageIcon, CloseIcon, SmileIcon, ChartIcon, MicIcon, StopCircleIcon } from "./ui/Icons";
 import { EmojiPicker } from "./ui/EmojiPicker";
 
 export function PostComposer({ onPostCreated }) {
@@ -22,6 +22,18 @@ export function PostComposer({ onPostCreated }) {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  
+  // Poll State
+  const [showPoll, setShowPoll] = useState(false);
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollDuration, setPollDuration] = useState(24);
+  
+  // Audio State
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioDataUrl, setAudioDataUrl] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  
   const [mentionQuery, setMentionQuery] = useState(null);
   const [mentionSuggestions, setMentionSuggestions] = useState([]);
   const [selectedMentionIdx, setSelectedMentionIdx] = useState(0);
@@ -43,7 +55,49 @@ export function PostComposer({ onPostCreated }) {
   const wordCount = useMemo(() => countWords(text), [text]);
   const charCount = text.length;
   const isOverLimit = wordCount > MAX_POST_WORDS;
-  const isSendDisabled = isSending || isCompressing || (text.trim().length === 0 && images.length === 0) || isOverLimit;
+  const hasValidPoll = showPoll && pollOptions.filter(o => o.trim()).length >= 2;
+  const isSendDisabled = isSending || isCompressing || (!text.trim() && images.length === 0 && !hasValidPoll && !audioDataUrl) || isOverLimit;
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Extreme compression for Firestore < 1MB limit
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/mp4';
+      const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 16000 });
+      chunksRef.current = [];
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result.length > 950000) {
+            setError("ऑडियो फ़ाइल बहुत बड़ी है (1MB सीमा)। कृपया छोटा संदेश रिकॉर्ड करें।");
+          } else {
+            setAudioDataUrl(reader.result);
+          }
+          stream.getTracks().forEach(track => track.stop());
+        };
+        reader.readAsDataURL(blob);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+      setError("");
+    } catch (err) {
+      setError("माइक्रोफ़ोन अनुमति अस्वीकृत या अनुपलब्ध।");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const clearAudio = () => {
+    setAudioDataUrl(null);
+  };
 
   const handleImageSelect = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -72,6 +126,18 @@ export function PostComposer({ onPostCreated }) {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handlePollOptionChange = (index, val) => {
+    const newOptions = [...pollOptions];
+    newOptions[index] = val;
+    setPollOptions(newOptions);
+  };
+
+  const addPollOption = () => {
+    if (pollOptions.length < 4) {
+      setPollOptions([...pollOptions, ""]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (isSubmittingRef.current || isSending || isCompressing) return;
@@ -82,8 +148,13 @@ export function PostComposer({ onPostCreated }) {
     }
 
     const trimmed = text.trim();
-    if (!trimmed && images.length === 0) {
-      setError("विचार अथवा चित्र अनिवार्य है");
+    if (!trimmed && images.length === 0 && !hasValidPoll && !audioDataUrl) {
+      setError("विचार, चित्र, ऑडियो या मतदान अनिवार्य है");
+      return;
+    }
+
+    if (showPoll && !hasValidPoll) {
+      setError("मतदान के लिए कम से প্রচ 2 विकल्प अनिवार्य हैं");
       return;
     }
 
@@ -96,21 +167,33 @@ export function PostComposer({ onPostCreated }) {
     setIsSending(true);
     setError("");
 
+    const pollData = showPoll ? {
+      question: trimmed || "मतदान (Poll)",
+      options: pollOptions.filter(o => o.trim()),
+      durationHours: pollDuration
+    } : null;
+
     try {
       const newPost = await createVichar({
         authorId: currentUser.uid,
         authorName: userProfile?.displayName || currentUser.displayName || "सुधी साधक",
         authorPhoto: userProfile?.avatarUrl || currentUser.photoURL || null,
-        text: trimmed || "(चित्र विचार)",
+        text: trimmed,
         bhav: activeBhav.short,
         isAnonymous,
         images,
+        poll: pollData,
+        audioData: audioDataUrl,
         clientId: getClientId()
       });
 
       playTempleChime();
       setText("");
       setImages([]);
+      setShowPoll(false);
+      setPollOptions(["", ""]);
+      setPollDuration(24);
+      setAudioDataUrl(null);
       setManualBhavId(null);
       setIsDropdownOpen(false);
       setIsEmojiOpen(false);
@@ -124,7 +207,7 @@ export function PostComposer({ onPostCreated }) {
       }
     } catch (err) {
       console.error("Post creation error:", err);
-      setError("विचार प्रेषित नहीं हो सका। कृपया नेटवर्क अथवा सुरक्षा नियम जाँचें।");
+      setError(err.message || "विचार प्रेषित नहीं हो सका। कृपया नेटवर्क अथवा सुरक्षा नियम जाँचें।");
     } finally {
       setIsSending(false);
       isSubmittingRef.current = false;
@@ -385,6 +468,60 @@ export function PostComposer({ onPostCreated }) {
         </div>
       )}
 
+      {/* Poll Creation UI */}
+      {showPoll && (
+        <div className="composer-poll-box">
+          <div className="poll-header">
+            <span>मतदान बनाएँ</span>
+            <button type="button" onClick={() => setShowPoll(false)} className="close-poll-btn"><CloseIcon size={14} /></button>
+          </div>
+          {pollOptions.map((opt, i) => (
+            <div key={i} className="poll-input-row">
+              <input
+                type="text"
+                placeholder={`विकल्प ${i + 1}`}
+                value={opt}
+                onChange={(e) => handlePollOptionChange(i, e.target.value)}
+                maxLength={50}
+                className="poll-option-input"
+              />
+              {i >= 2 && (
+                <button
+                  type="button"
+                  className="poll-remove-opt-btn"
+                  onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))}
+                >
+                  <CloseIcon size={14} />
+                </button>
+              )}
+            </div>
+          ))}
+          {pollOptions.length < 4 && (
+            <button type="button" className="poll-add-opt-btn" onClick={addPollOption}>
+              + विकल्प जोड़ें
+            </button>
+          )}
+          <div className="poll-duration-row">
+            <label>अवधि:</label>
+            <select value={pollDuration} onChange={(e) => setPollDuration(Number(e.target.value))}>
+              <option value={1}>1 घंटा</option>
+              <option value={12}>12 घंटे</option>
+              <option value={24}>1 दिन</option>
+              <option value={72}>3 दिन</option>
+              <option value={168}>7 दिन</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Audio Preview */}
+      {audioDataUrl && (
+        <div className="composer-audio-box" style={{ padding: "8px 12px", border: "1px solid var(--border)", borderRadius: "var(--radius)", marginTop: "12px", display: "flex", alignItems: "center", gap: "12px", background: "var(--bg-elevated)" }}>
+          <audio src={audioDataUrl} controls style={{ height: "30px", flex: 1 }} />
+          <button type="button" onClick={clearAudio} style={{ background: "transparent", border: "none", color: "#E74C3C", cursor: "pointer" }}><CloseIcon size={16} /></button>
+        </div>
+      )}
+
       {isCompressing && (
         <div className="composer-compressing-banner">
           <span className="btn-spinner" aria-hidden="true" />
@@ -437,6 +574,28 @@ export function PostComposer({ onPostCreated }) {
               />
             )}
           </div>
+          {/* Poll Trigger */}
+          <button
+            type="button"
+            className={`composer-action-icon-btn ${showPoll ? "active" : ""}`}
+            onClick={() => setShowPoll(!showPoll)}
+            title="मतदान बनाएँ"
+            aria-label="मतदान बनाएँ"
+          >
+            <ChartIcon size={19} />
+          </button>
+          {/* Voice Record Trigger */}
+          {!audioDataUrl && (
+            <button
+              type="button"
+              className={`composer-action-icon-btn ${isRecording ? "active" : ""}`}
+              style={isRecording ? { color: "#E74C3C" } : {}}
+              onClick={isRecording ? stopRecording : startRecording}
+              title={isRecording ? "रिकॉर्डिंग रोकें" : "ध्वनि रिकॉर्ड करें (Voice Note)"}
+            >
+              {isRecording ? <StopCircleIcon size={19} /> : <MicIcon size={19} />}
+            </button>
+          )}
         </div>
 
         <div className="composer-footer-right">

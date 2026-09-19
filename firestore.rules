@@ -71,6 +71,13 @@ service cloud.firestore {
         allow write, delete: if isOwner(userId);
       }
 
+      // Subcollection: Votes (Matdaan)
+      match /votes/{userId} {
+        allow read: if true;
+        allow write: if isOwner(userId);
+        allow delete: if false; // Users cannot remove a cast vote easily
+      }
+
       // Subcollection: Replies (Uttar)
       match /replies/{replyId} {
         allow read: if true;

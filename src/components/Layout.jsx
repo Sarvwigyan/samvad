@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, doc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -65,13 +65,18 @@ export function Layout() {
   }, [currentUser]);
 
   useEffect(() => {
-    // Real-time trending topics listener (lightweight 30 recent posts)
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(30));
+    // Listen to global trending document
     const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setLiveTrending(computeTrendingTopics(items, 6));
+      doc(db, "system", "trending"),
+      (docSnap) => {
+        if (docSnap.exists() && docSnap.data().tags) {
+          const tagsObj = docSnap.data().tags;
+          const topTags = Object.keys(tagsObj)
+            .map(tag => ({ tag, count: tagsObj[tag], countLabel: `${tagsObj[tag]} विचार` }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 6);
+          setLiveTrending(topTags);
+        }
       },
       (err) => {
         console.warn("Trending listener notice:", err);

@@ -4673,3 +4673,129 @@
   color: var(--sona, #d4a24c);
   background: rgba(212, 162, 76, 0.14);
 }
+/* Poll UI */
+.composer-poll-box {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-top: 12px;
+  background: var(--bg-elevated);
+}
+.poll-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--sona);
+}
+.close-poll-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.poll-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.poll-option-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  color: var(--text);
+  outline: none;
+}
+.poll-option-input:focus {
+  border-color: var(--sona);
+}
+.poll-remove-opt-btn {
+  background: transparent;
+  border: none;
+  color: #E74C3C;
+  cursor: pointer;
+}
+.poll-add-opt-btn {
+  background: transparent;
+  border: none;
+  color: var(--sona);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px 0;
+}
+.poll-duration-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+.poll-duration-row select {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+.post-poll-container {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 12px 0;
+  background: var(--bg-elevated);
+}
+.poll-question {
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+}
+.poll-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.poll-option-row {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.poll-option-row:hover {
+  border-color: var(--sona);
+}
+.poll-option-row.selected {
+  border-color: var(--sona);
+  font-weight: bold;
+}
+.poll-progress-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: rgba(212, 162, 76, 0.2);
+  transition: width 0.5s ease-out;
+}
+.poll-option-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+.poll-footer {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 8px;
+}
+.view-count-btn {
+  color: var(--text-muted) !important;
+}
+

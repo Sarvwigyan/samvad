@@ -323,18 +323,35 @@ export async function getFollowing(uid) {
  * Creates a post / vichar
  * @param {object} param0
  */
-export async function createVichar({ authorId, authorName, authorPhoto, text, bhav, isAnonymous, clientId, images = [] }) {
-  if (!authorId || !text) throw new Error("सामग्री व पहचान अनिवार्य है");
-
+export async function createVichar({ authorId, authorName, authorPhoto, text, bhav, isAnonymous, clientId, images = [], poll = null, audioData = null, replyToId = null, threadId = null }) {
+  if (!authorId) throw new Error("सामग्री व पहचान अनिवार्य है");
+  
   // Enforce 2100 words limit
-  const trimmed = text.trim();
+  const trimmed = (text || "").trim();
   const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
   if (wordCount > 2100) {
     throw new Error("विचार अधिकतम 2100 शब्दों तक ही सीमित है");
   }
 
+  if (!trimmed && images.length === 0 && !poll && !audioData) {
+    throw new Error("विचार, चित्र, ऑडियो या मतदान अनिवार्य है");
+  }
+
   // Ensure images array is capped at 4 items
   const cleanImages = Array.isArray(images) ? images.slice(0, 4).filter(Boolean) : [];
+
+  let pollData = null;
+  if (poll && Array.isArray(poll.options) && poll.options.length >= 2) {
+    pollData = {
+      question: poll.question || "",
+      length: poll.options.length,
+      totalVotes: 0,
+      expiresAt: Timestamp.fromMillis(Date.now() + (poll.durationHours || 24) * 60 * 60 * 1000)
+    };
+    poll.options.forEach((optText, i) => {
+      pollData[`opt${i}`] = { text: optText, votes: 0 };
+    });
+  }
 
   const postData = {
     authorId,
@@ -343,12 +360,17 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
     authorPhoto: isAnonymous ? null : (authorPhoto || null),
     text: trimmed,
     images: cleanImages,
+    poll: pollData,
+    audioData: audioData || null,
+    replyToId: replyToId || null,
+    threadId: threadId || null,
     bhav: bhav || "विचार",
     isAnonymous: Boolean(isAnonymous),
     likeCount: 0,
     replyCount: 0,
     repostCount: 0,
     bookmarkCount: 0,
+    viewCount: 0,
     engagementScore: 0,
     preserve: false,
     expireAt: Timestamp.fromMillis(calculateExpireAt(Date.now(), false)),
@@ -366,6 +388,22 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
     });
   } catch (e) {
     // User profile doc might not exist yet
+  }
+
+  // Asynchronously extract hashtags and update trending counts
+  const hashtags = trimmed.match(/#[a-zA-Z0-9_\u0900-\u097F]+/gu) || [];
+  if (hashtags.length > 0) {
+    const uniqueTags = [...new Set(hashtags.map(t => t.toLowerCase()))].slice(0, 5); // Max 5 tags per post to prevent spam
+    try {
+      const updates = {};
+      uniqueTags.forEach(tag => {
+        updates[`tags.${tag}`] = increment(1);
+      });
+      await updateDoc(doc(db, "system", "trending"), updates).catch(async () => {
+        // If document doesn't exist, create it
+        await setDoc(doc(db, "system", "trending"), { tags: uniqueTags.reduce((acc, tag) => ({ ...acc, [tag]: 1 }), {}) });
+      });
+    } catch (err) {}
   }
 
   // Asynchronously process @mentions and notify mentioned users
@@ -388,6 +426,97 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
   }
 
   return { id: docRef.id, ...postData };
+}
+
+/**
+ * Fetch top trending hashtags
+ * @returns {Promise<Array<{tag: string, count: number}>>}
+ */
+export async function getTrendingTags() {
+  try {
+    const docSnap = await getDoc(doc(db, "system", "trending"));
+    if (docSnap.exists() && docSnap.data().tags) {
+      const tagsObj = docSnap.data().tags;
+      return Object.keys(tagsObj)
+        .map(tag => ({ tag, count: tagsObj[tag] }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    }
+  } catch (err) {}
+  return [];
+}
+
+/**
+ * Increment views on a post (stochastic 10% sampling to save writes)
+ * @param {string} postId
+ */
+export async function incrementViews(postId) {
+  if (!postId) return;
+  // 10% chance to run, incrementing by 10 to approximate true views
+  if (Math.random() < 0.1) {
+    try {
+      await updateDoc(doc(db, "posts", postId), {
+        viewCount: increment(10)
+      });
+    } catch (e) {}
+  }
+}
+
+/**
+ * Checks if a user has voted on a post's poll
+ * @param {string} postId
+ * @param {string} uid
+ * @returns {Promise<number|null>} Returns the option index they voted for, or null
+ */
+export async function getUserPollVote(postId, uid) {
+  if (!postId || !uid) return null;
+  try {
+    const voteDoc = await getDoc(doc(db, "posts", postId, "votes", uid));
+    if (voteDoc.exists()) {
+      return voteDoc.data().optionIndex;
+    }
+  } catch (err) {}
+  return null;
+}
+
+/**
+ * Casts a vote on a poll
+ * @param {string} postId
+ * @param {string} uid
+ * @param {number} optionIndex
+ */
+export async function castPollVote(postId, uid, optionIndex) {
+  if (!postId || !uid || optionIndex === undefined) throw new Error("Missing parameters");
+  
+  const voteRef = doc(db, "posts", postId, "votes", uid);
+  const postRef = doc(db, "posts", postId);
+  
+  await runTransaction(db, async (transaction) => {
+    const voteDoc = await transaction.get(voteRef);
+    if (voteDoc.exists()) {
+      throw new Error("पहले ही मतदान किया जा चुका है");
+    }
+    
+    const postDoc = await transaction.get(postRef);
+    if (!postDoc.exists()) throw new Error("विचार नहीं मिला");
+    
+    const postData = postDoc.data();
+    if (!postData.poll) throw new Error("इस विचार में मतदान नहीं है");
+    if (postData.poll.expiresAt.toMillis() < Date.now()) {
+      throw new Error("मतदान की समय सीमा समाप्त हो चुकी है");
+    }
+    
+    transaction.set(voteRef, {
+      uid,
+      optionIndex,
+      createdAt: serverTimestamp()
+    });
+    
+    transaction.update(postRef, {
+      [`poll.opt${optionIndex}.votes`]: increment(1),
+      "poll.totalVotes": increment(1)
+    });
+  });
 }
 
 /**
@@ -629,9 +758,10 @@ export async function isPostBookmarked(postId, uid) {
  * Toggles Smaran (Bookmark) for a post
  * @param {string} postId
  * @param {string} uid
+ * @param {string} folderName (Optional)
  * @returns {Promise<{ bookmarked: boolean }>}
  */
-export async function toggleSmaran(postId, uid) {
+export async function toggleSmaran(postId, uid, folderName = "सामान्य") {
   if (!postId || !uid) throw new Error("पहचान अनिवार्य है");
   const markRef = doc(db, "users", uid, "bookmarks", postId);
   const postRef = doc(db, "posts", postId);
@@ -645,7 +775,7 @@ export async function toggleSmaran(postId, uid) {
     } catch (e) {}
     return { bookmarked: false };
   } else {
-    await setDoc(markRef, { postId, createdAt: serverTimestamp() });
+    await setDoc(markRef, { postId, folder: folderName, createdAt: serverTimestamp() });
     try {
       await updateDoc(postRef, { bookmarkCount: increment(1) });
       syncPostPreservation(postId);
@@ -672,10 +802,10 @@ export async function getUserBookmarks(uid) {
       snap = await getDocs(query(collection(db, "users", uid, "bookmarks"), limit(50)));
     }
 
-    const postIds = snap.docs.map((d) => d.id);
-    const postPromises = postIds.map((id) => getVicharById(id));
+    const bookmarksData = snap.docs.map(d => ({ id: d.id, folder: d.data().folder || "सामान्य" }));
+    const postPromises = bookmarksData.map((b) => getVicharById(b.id));
     const posts = await Promise.all(postPromises);
-    const valid = posts.filter(Boolean);
+    const valid = posts.map((p, i) => (p ? { ...p, folder: bookmarksData[i].folder } : null)).filter(Boolean);
     valid.sort((a, b) => {
       const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
       const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);

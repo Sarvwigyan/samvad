@@ -14,7 +14,26 @@ export default function Profile() {
   const targetUid = uid || currentUser?.uid;
   const isOwnProfile = currentUser && currentUser.uid === targetUid;
 
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(() => {
+    if (isOwnProfile && myLiveProfile) return myLiveProfile;
+    if (isOwnProfile && currentUser) {
+      return {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || "सुधी साधक",
+        username: (currentUser.email ? currentUser.email.split("@")[0].replace(/[^a-z0-9_]/gi, "") : `user_${currentUser.uid.slice(0, 5)}`).toLowerCase(),
+        avatarUrl: currentUser.photoURL || null,
+        bannerUrl: null,
+        bio: "",
+        location: "",
+        website: "",
+        followersCount: 0,
+        followingCount: 0,
+        postsCount: 0,
+        createdAt: new Date()
+      };
+    }
+    return null;
+  });
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -28,27 +47,40 @@ export default function Profile() {
     let isMounted = true;
     setLoading(true);
 
-    // If viewing own profile, start with myLiveProfile
-    if (isOwnProfile && myLiveProfile) {
-      setProfile(myLiveProfile);
-    }
+    const fallbackProfile = (isOwnProfile && currentUser) ? {
+      uid: currentUser.uid,
+      displayName: currentUser.displayName || "सुधी साधक",
+      username: (currentUser.email ? currentUser.email.split("@")[0].replace(/[^a-z0-9_]/gi, "") : `user_${currentUser.uid.slice(0, 5)}`).toLowerCase(),
+      avatarUrl: currentUser.photoURL || null,
+      bannerUrl: null,
+      bio: "",
+      location: "",
+      website: "",
+      followersCount: 0,
+      followingCount: 0,
+      postsCount: 0,
+      createdAt: new Date()
+    } : null;
 
     Promise.all([
       getUserProfile(targetUid),
       getUserVichars(targetUid)
     ]).then(([prof, userPosts]) => {
       if (isMounted) {
-        setProfile(prof);
-        setPosts(userPosts);
+        setProfile(prof || fallbackProfile);
+        setPosts(userPosts || []);
         setLoading(false);
       }
     }).catch((err) => {
       console.error("Error loading profile page:", err);
-      if (isMounted) setLoading(false);
+      if (isMounted) {
+        if (fallbackProfile) setProfile(fallbackProfile);
+        setLoading(false);
+      }
     });
 
     return () => { isMounted = false; };
-  }, [targetUid, isOwnProfile, myLiveProfile]);
+  }, [targetUid, isOwnProfile, myLiveProfile, currentUser]);
 
   if (loading) {
     return (

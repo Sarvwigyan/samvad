@@ -235,6 +235,7 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
 
   const postData = {
     authorId,
+    uid: authorId,
     authorName: isAnonymous ? "साधक (गुप्त)" : (authorName || "सुधी पाठक"),
     authorPhoto: isAnonymous ? null : (authorPhoto || null),
     text: text.trim(),

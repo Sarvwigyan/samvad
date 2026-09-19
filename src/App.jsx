@@ -10,6 +10,7 @@ import Following from "./pages/Following";
 import VicharDetail from "./pages/VicharDetail";
 import Smaran from "./pages/Smaran";
 import SettingsLayout from "./pages/Settings/SettingsLayout";
+import { pruneIfNeeded } from "./lib/pruning";
 import "./theme/tokens.css";
 import "./theme/global.css";
 import "./App.css";
@@ -18,9 +19,7 @@ export default function App() {
   useEffect(() => {
     // Non-blocking auto-pruning evaluation after 30-second delay
     const timer = setTimeout(() => {
-      import("./lib/pruning").then(({ pruneIfNeeded }) => {
-        pruneIfNeeded().catch(() => {});
-      });
+      pruneIfNeeded().catch(() => {});
     }, 30000);
 
     return () => clearTimeout(timer);

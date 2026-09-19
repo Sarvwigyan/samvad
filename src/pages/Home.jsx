@@ -2,14 +2,31 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 import { PostComposer } from "../components/PostComposer";
 import { PostCard } from "../components/PostCard";
+import { FeedTabs, FEED_TAB_KEY, TAB_PRAVAH, TAB_NAYA } from "../components/FeedTabs";
+import { useRankedFeed } from "../hooks/useRankedFeed";
 
 export default function Home() {
+  const { currentUser } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const filterQuery = searchParams.get("q") || "";
+  const isDebug = searchParams.get("debug") === "1";
+
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FEED_TAB_KEY);
+      if (saved === TAB_PRAVAH || saved === TAB_NAYA) return saved;
+      return currentUser ? TAB_PRAVAH : TAB_NAYA;
+    } catch (e) {
+      return TAB_NAYA;
+    }
+  });
+
+  const { rankedPosts } = useRankedFeed(posts, currentUser);
 
   useEffect(() => {
     let unsubscribeFallback = null;
@@ -77,8 +94,10 @@ export default function Home() {
     });
   };
 
+  const candidatePosts = activeTab === TAB_PRAVAH ? rankedPosts : posts;
+
   const displayedPosts = filterQuery
-    ? posts.filter((p) => {
+    ? candidatePosts.filter((p) => {
         const qLower = filterQuery.toLowerCase();
         return (
           p.text?.toLowerCase().includes(qLower) ||
@@ -86,7 +105,7 @@ export default function Home() {
           p.authorName?.toLowerCase().includes(qLower)
         );
       })
-    : posts;
+    : candidatePosts;
 
   return (
     <div className="home-pravah-page">
@@ -111,6 +130,11 @@ export default function Home() {
         </section>
       )}
 
+      {/* Feed Tabs: प्रवाह (Pravah / For You) vs नया (Naya / Latest) */}
+      {!filterQuery && (
+        <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      )}
+
       {/* Posts Stream */}
       <section className="home-feed-section">
         {loading ? (
@@ -133,7 +157,7 @@ export default function Home() {
         ) : (
           <div className="feed-stream-list">
             {displayedPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} debug={isDebug} />
             ))}
           </div>
         )}

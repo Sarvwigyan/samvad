@@ -14,7 +14,7 @@ import {
 } from "../lib/firestore";
 import { playTempleChime } from "../lib/chime";
 
-export function PostCard({ post }) {
+export function PostCard({ post, debug = false }) {
   const { currentUser, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
@@ -171,11 +171,32 @@ export function PostCard({ post }) {
           </div>
         </div>
 
-        {post.bhav && (
-          <span className="post-bhav-badge">
-            {post.bhav}
-          </span>
-        )}
+        <div className="post-header-badges">
+          {post.preserve && (
+            <span
+              className="preserved-badge"
+              title="अमर विचार (Preserved Forever — 10+ सहभागिता या संजोया गया)"
+              aria-label="अमर विचार"
+            >
+              ♾️ अमर
+            </span>
+          )}
+
+          {debug && post.rankScore !== undefined && (
+            <span
+              className="debug-rank-badge"
+              title={`Rank Score: ${(post.rankScore * 100).toFixed(2)}% | Sim: ${(post.semanticSimilarity ?? 0).toFixed(2)} | Eng: ${(post.engagementNorm ?? 0).toFixed(2)} | Rec: ${(post.recencyScore ?? 0).toFixed(2)}`}
+            >
+              ⚡ {(post.rankScore * 100).toFixed(0)}%
+            </span>
+          )}
+
+          {post.bhav && (
+            <span className="post-bhav-badge">
+              {post.bhav}
+            </span>
+          )}
+        </div>
       </header>
 
       {/* Body */}

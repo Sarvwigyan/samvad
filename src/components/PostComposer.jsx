@@ -1,28 +1,32 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createVichar } from "../lib/firestore";
 import { playTempleChime } from "../lib/chime";
 import { getClientId } from "../lib/clientId";
 import { validatePostText } from "../lib/validation";
+import { classifyVichar, BHAV_CATEGORIES } from "../lib/nlp";
 import { Button } from "./ui/Button";
 import { Avatar } from "./ui/Avatar";
-
-const BHAV_OPTIONS = [
-  { id: "vichar", label: "💡 दर्शन / विचार", short: "दर्शन" },
-  { id: "adhyatma", label: "🪷 अध्यात्म / चिंतन", short: "अध्यात्म" },
-  { id: "suvichar", label: "🌸 सुविचार / नीति", short: "सुविचार" },
-  { id: "jigyasa", label: "❓ जिज्ञासा / प्रश्न", short: "जिज्ञासा" },
-  { id: "gyan", label: "📜 विद्या / ज्ञान", short: "ज्ञान" }
-];
 
 export function PostComposer({ onPostCreated }) {
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
   const [text, setText] = useState("");
-  const [selectedBhav, setSelectedBhav] = useState(BHAV_OPTIONS[0].short);
+  const [manualBhavId, setManualBhavId] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const textareaRef = useRef(null);
+
+  // Smart dynamic classification
+  const autoBhav = useMemo(() => classifyVichar(text), [text]);
+  const activeBhav = useMemo(() => {
+    if (manualBhavId) {
+      const found = Object.values(BHAV_CATEGORIES).find((c) => c.id === manualBhavId);
+      if (found) return found;
+    }
+    return autoBhav;
+  }, [manualBhavId, autoBhav]);
 
   const charCount = text.length;
   const isOverLimit = charCount > 500;
@@ -50,13 +54,15 @@ export function PostComposer({ onPostCreated }) {
         authorName: userProfile?.displayName || currentUser.displayName || "सुधी साधक",
         authorPhoto: userProfile?.avatarUrl || currentUser.photoURL || null,
         text: val.sanitized,
-        bhav: selectedBhav,
+        bhav: activeBhav.short,
         isAnonymous,
         clientId: getClientId()
       });
 
       playTempleChime();
       setText("");
+      setManualBhavId(null);
+      setIsDropdownOpen(false);
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
@@ -103,28 +109,69 @@ export function PostComposer({ onPostCreated }) {
 
   return (
     <form className="post-composer-card" onSubmit={handleSubmit}>
-      {/* Bhav Category Selection */}
+      {/* Smart Apple-Liquid Header Row */}
       <div className="composer-header-row">
-        <div className="bhav-pill-group" role="radiogroup" aria-label="भाव चुनें">
-          {BHAV_OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              className={`bhav-select-btn ${selectedBhav === opt.short ? "active" : ""}`}
-              onClick={() => setSelectedBhav(opt.short)}
-            >
-              {opt.label}
-            </button>
-          ))}
+        {/* Real-Time Smart Bhav Classifier Pill */}
+        <div className="smart-bhav-wrapper">
+          <button
+            type="button"
+            className="smart-bhav-pill"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            title="क्लिक करके श्रेणी बदलें"
+            aria-label="भाव श्रेणी"
+          >
+            <span className="smart-bhav-spark">✦</span>
+            <span className="smart-bhav-glyph">{activeBhav.glyph}</span>
+            <span className="smart-bhav-text">{activeBhav.label}</span>
+            <span className="smart-bhav-badge">
+              {manualBhavId ? "निर्धारित" : "स्वतः विश्लेषित"}
+            </span>
+            <span className="smart-bhav-caret">▾</span>
+          </button>
+
+          {/* Optional manual override popover */}
+          {isDropdownOpen && (
+            <div className="smart-bhav-dropdown">
+              <div className="dropdown-header-note">श्रेणी चुनें अथवा एआई को स्वतः विश्लेषण करने दें:</div>
+              {Object.values(BHAV_CATEGORIES).map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`dropdown-cat-item ${activeBhav.id === cat.id ? "selected" : ""}`}
+                  onClick={() => {
+                    setManualBhavId(cat.id);
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  <span className="dropdown-cat-glyph">{cat.glyph}</span>
+                  <span className="dropdown-cat-label">{cat.label}</span>
+                  {activeBhav.id === cat.id && <span className="dropdown-check">✓</span>}
+                </button>
+              ))}
+              {manualBhavId && (
+                <button
+                  type="button"
+                  className="dropdown-reset-btn"
+                  onClick={() => {
+                    setManualBhavId(null);
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  ↺ एआई स्वतः-विश्लेषण पर पुनः सेट करें
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
+        {/* Identity Switcher */}
         <button
           type="button"
           className={`identity-switch ${isAnonymous ? "anon-active" : ""}`}
           onClick={() => setIsAnonymous(!isAnonymous)}
           title="पहचान का प्रकार बदलें"
         >
-          {isAnonymous ? "🪷 गुप्त विचार (Anonymous)" : "🪪 आत्म-पहचान"}
+          {isAnonymous ? "🪷 गुप्त विचार" : "🪪 आत्म-पहचान"}
         </button>
       </div>
 
@@ -143,7 +190,7 @@ export function PostComposer({ onPostCreated }) {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             className={`composer-textarea ${isOverLimit ? "has-error" : ""}`}
-            placeholder="कल्याणकारी विचारों को प्रवाह में व्यक्त करें... (Ctrl + Enter)"
+            placeholder="कल्याणकारी विचारों को प्रवाह में व्यक्त करें... #हैशटैग का प्रयोग करें (Ctrl + Enter)"
             rows={2}
             maxLength={600}
             disabled={isSending}

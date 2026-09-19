@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { usePWAInstall } from "../lib/usePWAInstall";
 import { getSuggestedSadhaks, followUser, unfollowUser, isFollowing } from "../lib/firestore";
-
-const TRENDING_TOPICS = [
-  { tag: "#वेदान्त", desc: "उपनिषदों का गहन तत्त्वज्ञान", count: "1.2k विचार" },
-  { tag: "#न्यायदर्शन", desc: "तर्कशास्त्र, प्रमाण एवं मीमांसा", count: "840 विचार" },
-  { tag: "#संस्कृत", desc: "देववाणी एवं शास्त्रीय व्याकरण", count: "2.5k विचार" },
-  { tag: "#आयुर्वेद", desc: "जीवन, स्वास्थ्य एवं औषधि विज्ञान", count: "950 विचार" },
-  { tag: "#वैशेषिक", desc: "पदार्थ, परमाणु एवं भौतिक चिन्तन", count: "420 विचार" }
-];
+import { computeTrendingTopics } from "../lib/trending";
 
 const CURATED_SADHAKS = [
   { uid: "curated_vidya", displayName: "भारतीय ज्ञान परम्परा", username: "bharat_vidya", avatarUrl: null, fallbackText: "ज्ञा" },
@@ -29,9 +24,26 @@ export function Layout() {
 
   const [suggestedSadhaks, setSuggestedSadhaks] = useState([]);
   const [followingStates, setFollowingStates] = useState({});
+  const [liveTrending, setLiveTrending] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/parichay";
+
+  useEffect(() => {
+    // Real-time trending topics listener
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setLiveTrending(computeTrendingTopics(items, 6));
+      },
+      (err) => {
+        console.warn("Trending listener notice:", err);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -274,27 +286,36 @@ export function Layout() {
           </form>
 
           {/* Trending Topics / प्रवाहित विषय */}
-          <section className="widget-card">
+          <section className="widget-card trending-widget-card">
             <div className="widget-header">
               <h3 className="widget-title">प्रवाहित विषय (Trending)</h3>
               <span className="widget-lotus">🪷</span>
             </div>
             <div className="trending-list">
-              {TRENDING_TOPICS.map((topic) => (
-                <div
-                  key={topic.tag}
-                  className="trending-item"
-                  onClick={() => handleTrendingClick(topic.tag)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="trending-meta">
-                    <span className="trending-tag">{topic.tag}</span>
-                    <span className="trending-desc">{topic.desc}</span>
+              {liveTrending.length > 0 ? (
+                liveTrending.map((topic) => (
+                  <div
+                    key={topic.tag}
+                    className="trending-item"
+                    onClick={() => handleTrendingClick(topic.tag)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="trending-meta">
+                      <span className="trending-tag">{topic.tag}</span>
+                      <span className="trending-desc">सक्रिय विचार-प्रवाह</span>
+                    </div>
+                    <span className="trending-count">{topic.countLabel}</span>
                   </div>
-                  <span className="trending-count">{topic.count}</span>
+                ))
+              ) : (
+                <div className="trending-empty-hint">
+                  <span className="hint-glyph">#️⃣</span>
+                  <p className="hint-text">
+                    विचारों में <strong>#हैशटैग</strong> का प्रयोग करें। वास्तविक समय में यहाँ लोकप्रिय विषय स्वतः प्रवाहित होंगे।
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </section>
 

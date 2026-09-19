@@ -14,7 +14,8 @@ import {
   serverTimestamp,
   increment,
   runTransaction,
-  Timestamp
+  Timestamp,
+  getCountFromServer
 } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -26,6 +27,7 @@ import {
 
 /**
  * Fetches user profile from users/{uid}
+ * Synchronizes true follower and following count from subcollections
  * @param {string} uid
  * @returns {Promise<object|null>} User profile data or null
  */
@@ -33,8 +35,22 @@ export async function getUserProfile(uid) {
   if (!uid) return null;
   try {
     const userDoc = await getDoc(doc(db, "users", uid));
-    if (userDoc.exists()) {
-      return { uid: userDoc.id, ...userDoc.data() };
+    const data = userDoc.exists() ? { ...userDoc.data() } : {};
+
+    // Retrieve exact counts from followers and following subcollections
+    try {
+      const [followersSnap, followingSnap] = await Promise.all([
+        getCountFromServer(collection(db, "users", uid, "followers")),
+        getCountFromServer(collection(db, "users", uid, "following"))
+      ]);
+      data.followersCount = followersSnap.data().count;
+      data.followingCount = followingSnap.data().count;
+    } catch (countErr) {
+      // Keep existing counts if subcollection read fails
+    }
+
+    if (userDoc.exists() || data.followersCount > 0 || data.followingCount > 0) {
+      return { uid, ...data };
     }
     return null;
   } catch (err) {

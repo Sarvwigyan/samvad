@@ -192,16 +192,46 @@ export function PostCard({ post, debug = false }) {
           )}
 
           {post.bhav && (
-            <span className="post-bhav-badge">
+            <span
+              className="post-bhav-badge clickable"
+              role="button"
+              tabIndex={0}
+              title={`'${post.bhav}' श्रेणी के विचार खोजें`}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/?q=${encodeURIComponent(post.bhav)}`);
+              }}
+            >
               {post.bhav}
             </span>
           )}
         </div>
       </header>
 
-      {/* Body */}
+      {/* Body with Clickable Hashtags */}
       <div className="post-card-body">
-        <p className="post-content-text">{post.text}</p>
+        <p className="post-content-text">
+          {post.text?.split(/(#[a-zA-Z0-9_\u0900-\u097F]+)/gu).map((part, i) => {
+            if (part.startsWith("#")) {
+              return (
+                <span
+                  key={i}
+                  className="post-hashtag-link"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/?q=${encodeURIComponent(part)}`);
+                  }}
+                  title={`'${part}' विषय के विचार खोजें`}
+                >
+                  {part}
+                </span>
+              );
+            }
+            return part;
+          })}
+        </p>
       </div>
 
       {/* Actions Row using Sanskrit Vocabulary */}

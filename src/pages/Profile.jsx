@@ -68,7 +68,11 @@ export default function Profile() {
       getUserVichars(targetUid)
     ]).then(([prof, userPosts]) => {
       if (isMounted) {
-        setProfile(prof || fallbackProfile);
+        const finalProf = prof || fallbackProfile;
+        if (finalProf && !finalProf.postsCount && userPosts) {
+          finalProf.postsCount = userPosts.length;
+        }
+        setProfile(finalProf);
         setPosts(userPosts || []);
         setLoading(false);
       }
@@ -146,7 +150,7 @@ export default function Profile() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           profile={profile}
-          onSaved={(updated) => setProfile(updated)}
+          onSaved={(updated) => setProfile((prev) => ({ ...prev, ...updated }))}
         />
       )}
     </div>

@@ -283,7 +283,7 @@
   display: flex;
   justify-content: center;
   position: relative;
-  background-color: var(--bg);
+  background: transparent;
 }
 
 /* LEFT COLUMN: Sidebar Navigation */
@@ -567,7 +567,10 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--bg-elevated);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-liquid);
 }
 
 /* Sticky Header */
@@ -806,6 +809,34 @@
   font-size: 0.72rem;
   color: var(--text-muted);
   font-weight: 500;
+  background: rgba(212, 155, 53, 0.08);
+  border: 1px solid var(--border-light);
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.trending-empty-hint {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  background: rgba(212, 155, 53, 0.04);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint-glyph {
+  font-size: 1.25rem;
+  opacity: 0.85;
+}
+
+.hint-text {
+  margin: 0;
 }
 
 /* Suggested Sadhaks */
@@ -979,41 +1010,168 @@
   gap: 8px;
 }
 
-.bhav-pill-group {
+.smart-bhav-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.smart-bhav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(212, 155, 53, 0.12);
+  border: 1px solid rgba(212, 155, 53, 0.35);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sona);
+  cursor: pointer;
+  box-shadow: var(--glass-highlight);
+  transition: all var(--transition);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  user-select: none;
+}
+
+.smart-bhav-pill:hover {
+  background: rgba(212, 155, 53, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--sona-glow);
+}
+
+.smart-bhav-pill:active {
+  transform: translateY(1px);
+}
+
+.smart-bhav-spark {
+  color: var(--kesari);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.smart-bhav-glyph {
+  font-size: 0.9rem;
+}
+
+.smart-bhav-text {
+  font-family: var(--font-heading);
+  letter-spacing: 0.02em;
+}
+
+.smart-bhav-badge {
+  font-size: 0.65rem;
+  font-family: var(--font-body);
+  background: rgba(212, 155, 53, 0.18);
+  padding: 1px 7px;
+  border-radius: 9999px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.smart-bhav-caret {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* Smart Bhav Dropdown Popover */
+.smart-bhav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  background: var(--bg-elevated);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-float);
+  padding: 8px;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: dropdownFadeIn 160ms var(--spring-smooth);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-header-note {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--border-light);
+  line-height: 1.35;
+}
+
+.dropdown-cat-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.bhav-select-btn {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  padding: 5px 12px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  box-shadow: 0 2px 0 var(--border);
-  transition: all 120ms ease;
-}
-
-.bhav-select-btn:hover {
-  border-color: var(--sona);
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
   color: var(--text);
+  font-size: 0.84rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 120ms ease;
+  width: 100%;
 }
 
-.bhav-select-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 0 0 transparent;
+.dropdown-cat-item:hover {
+  background: rgba(212, 155, 53, 0.14);
+  color: var(--sona);
 }
 
-.bhav-select-btn.active {
-  background: linear-gradient(135deg, rgba(255, 153, 51, 0.15), rgba(212, 162, 76, 0.22));
-  border-color: var(--sona);
+.dropdown-cat-item.selected {
+  background: rgba(212, 155, 53, 0.18);
   color: var(--sona);
   font-weight: 700;
-  box-shadow: 0 2px 0 rgba(212, 162, 76, 0.4);
+}
+
+.dropdown-cat-glyph {
+  font-size: 1rem;
+}
+
+.dropdown-cat-label {
+  flex: 1;
+}
+
+.dropdown-check {
+  color: var(--sona);
+  font-weight: bold;
+}
+
+.dropdown-reset-btn {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border-light);
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  transition: color 120ms ease;
+}
+
+.dropdown-reset-btn:hover {
+  color: var(--sona);
+  text-decoration: underline;
 }
 
 .identity-switch {
@@ -1294,6 +1452,23 @@
   border-radius: 9999px;
   padding: 2px 10px;
   font-weight: 500;
+  transition: all 140ms ease;
+}
+
+.post-bhav-badge.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.post-bhav-badge.clickable:hover {
+  border-color: var(--sona);
+  background: rgba(212, 162, 76, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--sona-glow);
+}
+
+.post-bhav-badge.clickable:active {
+  transform: translateY(1px);
 }
 
 .post-card-body {
@@ -1307,6 +1482,28 @@
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.post-hashtag-link {
+  color: var(--sona);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(212, 155, 53, 0.08);
+  transition: all 120ms ease;
+  display: inline-block;
+}
+
+.post-hashtag-link:hover {
+  color: var(--kesari);
+  background: rgba(212, 155, 53, 0.2);
+  text-decoration: underline;
+  transform: translateY(-1px);
+}
+
+.post-hashtag-link:active {
+  transform: translateY(1px);
 }
 
 /* Post Card Action Bar */

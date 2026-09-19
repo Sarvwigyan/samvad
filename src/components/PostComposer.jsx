@@ -99,7 +99,7 @@ export function PostComposer({ onPostCreated }) {
     return (
       <div className="composer-guest-card">
         <div className="guest-card-left">
-          <span className="guest-lotus">🪷</span>
+          <span className="guest-lotus" style={{ fontSize: "1.6rem" }}>☸</span>
           <div>
             <h4 className="guest-title">विचार साझा करने हेतु गूगल से प्रवेश करें</h4>
             <p className="guest-subtitle">प्रवेश के उपरांत आप अपनी पहचान अथवा गुप्त साधक के रूप में विचार व्यक्त कर सकते हैं।</p>
@@ -176,7 +176,7 @@ export function PostComposer({ onPostCreated }) {
           onClick={() => setIsAnonymous(!isAnonymous)}
           title="पहचान का प्रकार बदलें"
         >
-          {isAnonymous ? "🪷 गुप्त विचार" : "🪪 आत्म-पहचान"}
+          {isAnonymous ? "गुप्त विचार" : "आत्म-पहचान"}
         </button>
       </div>
 

@@ -8,7 +8,7 @@ export function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="auth-loading-state">
-        <div className="lotus-spinner">🪷</div>
+        <div className="lotus-spinner">☸</div>
         <p>प्रमाणीकरण की पुष्टि हो रही है...</p>
       </div>
     );

@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { validateUsername, validateBio } from "../lib/validation";
 import { upsertUserProfile } from "../lib/firestore";
 import { uploadUserAvatar, uploadUserBanner } from "../lib/storage";
+import { CameraIcon } from "../components/ui/Icons";
 
 export function EditProfile({ isOpen, onClose, profile, onSaved }) {
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
@@ -115,8 +116,8 @@ export function EditProfile({ isOpen, onClose, profile, onSaved }) {
               className="file-input-hidden"
               id="banner-upload"
             />
-            <label htmlFor="banner-upload" className="file-pick-overlay">
-              📷 बैनर बदलें
+            <label htmlFor="banner-upload" className="file-pick-overlay" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <CameraIcon size={16} /> बैनर बदलें
             </label>
           </div>
         </div>
@@ -128,7 +129,7 @@ export function EditProfile({ isOpen, onClose, profile, onSaved }) {
             {avatarPreview ? (
               <img src={avatarPreview} alt="अवतार पूर्वावलोकन" className="avatar-preview-img" />
             ) : (
-              <div className="avatar-fallback">🪷</div>
+              <div className="avatar-fallback">☸</div>
             )}
             <input
               type="file"
@@ -137,8 +138,8 @@ export function EditProfile({ isOpen, onClose, profile, onSaved }) {
               className="file-input-hidden"
               id="avatar-upload"
             />
-            <label htmlFor="avatar-upload" className="file-pick-overlay">
-              📷
+            <label htmlFor="avatar-upload" className="file-pick-overlay" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CameraIcon size={18} />
             </label>
           </div>
         </div>

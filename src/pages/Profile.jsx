@@ -90,7 +90,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="profile-loading-box">
-        <div className="lotus-spinner">🪷</div>
+        <div className="lotus-spinner">☸</div>
         <p>परिचय पत्रक लोड हो रहा है...</p>
       </div>
     );

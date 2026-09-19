@@ -33,7 +33,7 @@ export default function Following() {
 
       {loading ? (
         <div className="feed-empty-state">
-          <div className="lotus-spinner">🪷</div>
+          <div className="lotus-spinner">☸</div>
           <p>अनुसरित सूची लोड हो रही है...</p>
         </div>
       ) : following.length === 0 ? (

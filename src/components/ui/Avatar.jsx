@@ -27,7 +27,7 @@ export function Avatar({
         />
       ) : (
         <div className="avatar-fallback" aria-hidden="true">
-          {fallbackText ? fallbackText.slice(0, 2).toUpperCase() : "🪷"}
+          {fallbackText ? fallbackText.slice(0, 2).toUpperCase() : "☸"}
         </div>
       )}
     </div>

@@ -63,9 +63,11 @@ export default function Smaran() {
         <PostCardSkeleton count={3} />
       ) : bookmarks.length === 0 ? (
         <div className="smaran-empty-state">
-          <span className="smaran-empty-icon">🪷</span>
+          <span className="smaran-empty-icon" style={{ display: "inline-flex", opacity: 0.6 }}>
+            <BookmarkIcon size={44} />
+          </span>
           <h3>कोई संचित स्मरण नहीं है</h3>
-          <p>विचारों के नीचे 🔖 चिह्न पर क्लिक कर उन्हें अपने व्यक्तिगत स्मरण में संचित करें।</p>
+          <p>विचारों के नीचे स्मरण बटन पर क्लिक कर उन्हें अपने व्यक्तिगत संग्रह में संचित करें।</p>
           <Button variant="outline" size="sm" onClick={() => navigate("/")}>
             प्रवाह पर जाएँ (Explore Feed)
           </Button>

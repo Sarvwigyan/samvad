@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { FollowButton } from "./FollowButton";
+import { MapPinIcon, LinkIcon } from "./ui/Icons";
 
 export function ProfileHeader({ profile, onEditClick }) {
   const { currentUser } = useAuth();
@@ -69,7 +70,7 @@ export function ProfileHeader({ profile, onEditClick }) {
         <div className="profile-sub-details">
           {profile.location && (
             <span className="profile-detail-item">
-              📍 {profile.location}
+              <MapPinIcon size={14} /> {profile.location}
             </span>
           )}
           {profile.website && (
@@ -79,7 +80,7 @@ export function ProfileHeader({ profile, onEditClick }) {
               rel="noopener noreferrer"
               className="profile-detail-item profile-link"
             >
-              🔗 {profile.website.replace(/^https?:\/\//, "")}
+              <LinkIcon size={14} /> {profile.website.replace(/^https?:\/\//, "")}
             </a>
           )}
         </div>

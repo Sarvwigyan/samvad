@@ -33,7 +33,7 @@ export default function Followers() {
 
       {loading ? (
         <div className="feed-empty-state">
-          <div className="lotus-spinner">🪷</div>
+          <div className="lotus-spinner">☸</div>
           <p>अनुसारी सूची लोड हो रही है...</p>
         </div>
       ) : followers.length === 0 ? (

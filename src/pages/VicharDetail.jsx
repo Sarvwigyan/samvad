@@ -16,6 +16,12 @@ import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
 import { timeAgo } from "../lib/timeAgo";
 import { playTempleChime } from "../lib/chime";
+import {
+  HeartIcon,
+  RepostIcon,
+  BookmarkIcon,
+  ShareIcon
+} from "../components/ui/Icons";
 
 export default function VicharDetail() {
   const { id } = useParams();
@@ -182,7 +188,7 @@ export default function VicharDetail() {
   if (loading) {
     return (
       <div className="thread-loading-box">
-        <div className="lotus-spinner">🪷</div>
+        <div className="lotus-spinner">☸</div>
         <p>विचार प्रवाह लोड हो रहा है...</p>
       </div>
     );
@@ -294,7 +300,9 @@ export default function VicharDetail() {
             onClick={handleAnumodan}
             title="अनुमोदन (Like)"
           >
-            <span className="action-icon">🪷</span>
+            <span className="action-icon">
+              <HeartIcon size={18} filled={liked} />
+            </span>
             <span>अनुमोदन</span>
           </button>
 
@@ -304,7 +312,9 @@ export default function VicharDetail() {
             onClick={handlePrasar}
             title="प्रसार (Repost)"
           >
-            <span className="action-icon">🔄</span>
+            <span className="action-icon">
+              <RepostIcon size={18} />
+            </span>
             <span>प्रसार</span>
           </button>
 
@@ -314,7 +324,9 @@ export default function VicharDetail() {
             onClick={handleSmaran}
             title="स्मरण (Bookmark)"
           >
-            <span className="action-icon">🔖</span>
+            <span className="action-icon">
+              <BookmarkIcon size={18} filled={bookmarked} />
+            </span>
             <span>स्मरण</span>
           </button>
 
@@ -324,7 +336,9 @@ export default function VicharDetail() {
             onClick={handleShare}
             title="संक्रमण (Share)"
           >
-            <span className="action-icon">↗</span>
+            <span className="action-icon">
+              <ShareIcon size={18} />
+            </span>
             <span>{copiedToast ? "प्रतिलिपि!" : "साझा"}</span>
           </button>
         </div>
@@ -360,7 +374,7 @@ export default function VicharDetail() {
                 className={`anon-toggle-sm ${isAnonymous ? "active" : ""}`}
                 onClick={() => setIsAnonymous(!isAnonymous)}
               >
-                {isAnonymous ? "🪷 गुप्त उत्तर" : "🪪 आत्म-पहचान"}
+                {isAnonymous ? "गुप्त उत्तर" : "आत्म-पहचान"}
               </button>
 
               <Button

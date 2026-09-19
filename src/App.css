@@ -2136,6 +2136,18 @@
   box-shadow: 0 2px 0 #A86F18;
 }
 
+.detail-action-btn .action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 180ms ease;
+}
+
+.detail-action-btn.active-anumodan .action-icon {
+  transform: scale(1.2);
+}
+
+
 /* Reply Composer in Detail View */
 .reply-composer-container {
   padding: 16px;

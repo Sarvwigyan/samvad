@@ -8,6 +8,7 @@ import { PostCard } from "../components/PostCard";
 import { PostCardSkeleton } from "../components/ui/PostCardSkeleton";
 import { FeedTabs, FEED_TAB_KEY, TAB_PRAVAH, TAB_NAYA } from "../components/FeedTabs";
 import { useRankedFeed } from "../hooks/useRankedFeed";
+import { SearchIcon, StreamIcon } from "../components/ui/Icons";
 
 const INITIAL_BATCH_SIZE = 10;
 const BATCH_INCREMENT = 8;
@@ -161,7 +162,9 @@ export default function Home() {
       {/* Active Filter Banner if searching */}
       {filterQuery && (
         <div className="search-filter-banner">
-          <span>🔍 खोज परिणाम: <strong>"{filterQuery}"</strong> ({displayedPosts.length} विचार)</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <SearchIcon size={16} /> खोज परिणाम: <strong>"{filterQuery}"</strong> ({displayedPosts.length} विचार)
+          </span>
           <button
             type="button"
             className="clear-filter-btn"
@@ -190,7 +193,9 @@ export default function Home() {
           <PostCardSkeleton count={3} />
         ) : displayedPosts.length === 0 ? (
           <div className="feed-empty-state">
-            <span className="empty-icon">🪷</span>
+            <span className="empty-icon" style={{ display: "inline-flex", opacity: 0.6 }}>
+              <StreamIcon size={44} />
+            </span>
             <h3 className="empty-title">
               {filterQuery ? "कोई संबंधित विचार नहीं मिला" : "प्रवाह में कोई विचार नहीं है"}
             </h3>

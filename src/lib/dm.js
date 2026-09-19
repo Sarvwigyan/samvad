@@ -204,3 +204,89 @@ export async function markConversationRead(convId, uid) {
     // Non-blocking
   }
 }
+
+/**
+ * Toggles an emoji reaction on a message in a conversation.
+ * @param {string} convId
+ * @param {string} messageId
+ * @param {string} emoji
+ * @param {object} user - { uid, displayName }
+ */
+export async function toggleMessageReaction(convId, messageId, emoji, { uid, displayName }) {
+  if (!convId || !messageId || !emoji || !uid) return;
+  try {
+    const msgRef = doc(db, "conversations", convId, "messages", messageId);
+    const snap = await getDoc(msgRef);
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    const reactions = { ...(data.reactions || {}) };
+
+    if (reactions[uid]?.emoji === emoji) {
+      delete reactions[uid];
+    } else {
+      reactions[uid] = {
+        emoji,
+        displayName: displayName || "साधक",
+        timestamp: Date.now()
+      };
+    }
+
+    await updateDoc(msgRef, { reactions });
+  } catch (err) {
+    console.warn("toggleMessageReaction notice:", err.message);
+  }
+}
+
+/**
+ * Hides a message for the current user ("Delete for me").
+ * @param {string} convId
+ * @param {string} messageId
+ * @param {string} uid
+ */
+export async function deleteMessageForMe(convId, messageId, uid) {
+  if (!convId || !messageId || !uid) return;
+  try {
+    const msgRef = doc(db, "conversations", convId, "messages", messageId);
+    const snap = await getDoc(msgRef);
+    if (!snap.exists()) return;
+
+    const currentDeleted = snap.data().deletedFor || [];
+    if (!currentDeleted.includes(uid)) {
+      await updateDoc(msgRef, {
+        deletedFor: [...currentDeleted, uid]
+      });
+    }
+  } catch (err) {
+    console.warn("deleteMessageForMe notice:", err.message);
+  }
+}
+
+/**
+ * Tombstones a message for all participants ("Delete for everyone").
+ * Only the message sender can execute this.
+ * @param {string} convId
+ * @param {string} messageId
+ * @param {string} uid
+ */
+export async function deleteMessageForEveryone(convId, messageId, uid) {
+  if (!convId || !messageId || !uid) return;
+  try {
+    const msgRef = doc(db, "conversations", convId, "messages", messageId);
+    const snap = await getDoc(msgRef);
+    if (!snap.exists()) return;
+
+    if (snap.data().senderUid !== uid) {
+      throw new Error("केवल प्रेषक ही सभी के लिए संदेश हटा सकता है");
+    }
+
+    await updateDoc(msgRef, {
+      deletedForEveryone: true,
+      text: "यह संदेश हटा दिया गया है",
+      reactions: {}
+    });
+  } catch (err) {
+    console.warn("deleteMessageForEveryone notice:", err.message);
+    throw err;
+  }
+}

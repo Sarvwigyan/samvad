@@ -6,7 +6,10 @@ import {
   listenMessages,
   sendDirectMessage,
   getOrCreateConversation,
-  markConversationRead
+  markConversationRead,
+  toggleMessageReaction,
+  deleteMessageForMe,
+  deleteMessageForEveryone
 } from "../lib/dm";
 import { getUserProfile } from "../lib/firestore";
 import { Avatar } from "../components/ui/Avatar";
@@ -18,8 +21,12 @@ import {
   MailIcon,
   SendIcon,
   ProfileIcon,
-  SearchIcon
+  SearchIcon,
+  SmileIcon,
+  MoreHorizontalIcon,
+  TrashIcon
 } from "../components/ui/Icons";
+import { EmojiPicker } from "../components/ui/EmojiPicker";
 
 export default function DirectMessages() {
   const { id: routeConvId } = useParams();
@@ -35,7 +42,61 @@ export default function DirectMessages() {
   const [inputText, setInputText] = useState("");
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
-  const [convSearch, setConvSearch] = useState("");
+  const [isInputEmojiOpen, setIsInputEmojiOpen] = useState(false);
+  const [activeReactionMenuMsgId, setActiveReactionMenuMsgId] = useState(null);
+  const [activeMsgMenuId, setActiveMsgMenuId] = useState(null);
+  const [activeFullPickerMsgId, setActiveFullPickerMsgId] = useState(null);
+
+  const handleInputEmojiSelect = (emoji) => {
+    if (!inputRef.current) {
+      setInputText((prev) => prev + emoji);
+      return;
+    }
+    const start = inputRef.current.selectionStart ?? inputText.length;
+    const end = inputRef.current.selectionEnd ?? inputText.length;
+    const newText = inputText.slice(0, start) + emoji + inputText.slice(end);
+    setInputText(newText);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        const newPos = start + emoji.length;
+        inputRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 10);
+  };
+
+  const handleReact = async (msgId, emoji) => {
+    if (!activeConvId || !currentUser) return;
+    triggerHaptic(8);
+    setActiveReactionMenuMsgId(null);
+    setActiveFullPickerMsgId(null);
+    await toggleMessageReaction(activeConvId, msgId, emoji, {
+      uid: currentUser.uid,
+      displayName: userProfile?.displayName || currentUser.displayName
+    });
+  };
+
+  const handleDeleteForMe = async (msgId) => {
+    if (!activeConvId || !currentUser) return;
+    triggerHaptic(10);
+    setActiveMsgMenuId(null);
+    await deleteMessageForMe(activeConvId, msgId, currentUser.uid);
+  };
+
+  const handleDeleteForEveryone = async (msgId) => {
+    if (!activeConvId || !currentUser) return;
+    triggerHaptic(10);
+    setActiveMsgMenuId(null);
+    try {
+      await deleteMessageForEveryone(activeConvId, msgId, currentUser.uid);
+    } catch (e) {
+      alert("संदेश हटाया नहीं जा सका: " + e.message);
+    }
+  };
+
+  const visibleMessages = messages.filter(
+    (m) => !m.deletedFor?.includes(currentUser?.uid)
+  );
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -304,12 +365,28 @@ export default function DirectMessages() {
                 </div>
               ) : (
                 <div className="dm-bubbles-list">
-                  {messages.map((msg) => {
+                  {visibleMessages.map((msg) => {
                     const isMine = msg.senderUid === currentUser.uid;
+                    const isDeleted = msg.deletedForEveryone;
+
+                    // Group reactions
+                    const reactionMap = {};
+                    if (msg.reactions) {
+                      Object.entries(msg.reactions).forEach(([uid, r]) => {
+                        if (!r?.emoji) return;
+                        if (!reactionMap[r.emoji]) {
+                          reactionMap[r.emoji] = { count: 0, users: [], emoji: r.emoji };
+                        }
+                        reactionMap[r.emoji].count += 1;
+                        reactionMap[r.emoji].users.push(r.displayName || "साधक");
+                      });
+                    }
+                    const groupedReactions = Object.values(reactionMap);
+
                     return (
                       <div
                         key={msg.id}
-                        className={`dm-bubble-row ${isMine ? "is-mine" : "is-partner"}`}
+                        className={`dm-bubble-row ${isMine ? "is-mine" : "is-partner"} ${isDeleted ? "is-deleted" : ""}`}
                       >
                         {!isMine && (
                           <Avatar
@@ -320,10 +397,132 @@ export default function DirectMessages() {
                             className="dm-bubble-avatar"
                           />
                         )}
+
                         <div className="dm-bubble-container">
-                          <div className={`dm-bubble ${isMine ? "bubble-mine" : "bubble-partner"}`}>
-                            <p className="dm-bubble-text">{msg.text}</p>
+                          {/* Main Bubble */}
+                          <div className={`dm-bubble ${isMine ? "bubble-mine" : "bubble-partner"} ${isDeleted ? "bubble-deleted" : ""}`}>
+                            {isDeleted ? (
+                              <p className="dm-bubble-text text-deleted">🚫 <em>यह संदेश हटा दिया गया है</em></p>
+                            ) : (
+                              <p className="dm-bubble-text">{msg.text}</p>
+                            )}
+
+                            {/* Floating Action Buttons (Hover/Touch) */}
+                            {!isDeleted && (
+                              <div className="dm-bubble-actions">
+                                {/* React Button */}
+                                <button
+                                  type="button"
+                                  className="dm-bubble-action-btn"
+                                  onClick={() => {
+                                    setActiveReactionMenuMsgId(activeReactionMenuMsgId === msg.id ? null : msg.id);
+                                    setActiveMsgMenuId(null);
+                                  }}
+                                  title="प्रतिक्रिया (React)"
+                                >
+                                  <SmileIcon size={14} />
+                                </button>
+
+                                {/* 3-Dot Options Button */}
+                                <button
+                                  type="button"
+                                  className="dm-bubble-action-btn"
+                                  onClick={() => {
+                                    setActiveMsgMenuId(activeMsgMenuId === msg.id ? null : msg.id);
+                                    setActiveReactionMenuMsgId(null);
+                                  }}
+                                  title="विकल्प"
+                                >
+                                  <MoreHorizontalIcon size={14} />
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Quick Reaction Bar (WhatsApp / Arattai Style) */}
+                            {activeReactionMenuMsgId === msg.id && (
+                              <div className="dm-reaction-bar-popup">
+                                {["👍", "❤️", "😂", "😮", "😢", "🙏", "🪷"].map((em) => (
+                                  <button
+                                    key={em}
+                                    type="button"
+                                    className="dm-quick-react-btn"
+                                    onClick={() => handleReact(msg.id, em)}
+                                  >
+                                    {em}
+                                  </button>
+                                ))}
+                                <button
+                                  type="button"
+                                  className="dm-quick-react-btn plus-btn"
+                                  onClick={() => setActiveFullPickerMsgId(activeFullPickerMsgId === msg.id ? null : msg.id)}
+                                  title="अन्य इमोजी..."
+                                >
+                                  ➕
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Full Emoji Picker for Reaction */}
+                            {activeFullPickerMsgId === msg.id && (
+                              <div className="dm-reaction-full-picker-wrap">
+                                <EmojiPicker
+                                  onSelect={(em) => handleReact(msg.id, em)}
+                                  onClose={() => {
+                                    setActiveFullPickerMsgId(null);
+                                    setActiveReactionMenuMsgId(null);
+                                  }}
+                                  align="top"
+                                />
+                              </div>
+                            )}
+
+                            {/* Message 3-Dot Options Dropdown */}
+                            {activeMsgMenuId === msg.id && (
+                              <div className="dm-msg-dropdown">
+                                <button
+                                  type="button"
+                                  className="dm-msg-dropdown-item"
+                                  onClick={() => handleDeleteForMe(msg.id)}
+                                >
+                                  <TrashIcon size={13} />
+                                  <span>मेरे लिए हटाएँ (Delete for me)</span>
+                                </button>
+
+                                {isMine && !isDeleted && (
+                                  <button
+                                    type="button"
+                                    className="dm-msg-dropdown-item item-danger"
+                                    onClick={() => handleDeleteForEveryone(msg.id)}
+                                  >
+                                    <TrashIcon size={13} />
+                                    <span>सभी के लिए हटाएँ (Delete for everyone)</span>
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
+
+                          {/* Reaction Badges Below Bubble */}
+                          {groupedReactions.length > 0 && !isDeleted && (
+                            <div className="dm-reactions-badge-row">
+                              {groupedReactions.map((gr) => {
+                                const hasMine = msg.reactions?.[currentUser?.uid]?.emoji === gr.emoji;
+                                return (
+                                  <button
+                                    key={gr.emoji}
+                                    type="button"
+                                    className={`dm-reaction-pill-badge ${hasMine ? "active-mine" : ""}`}
+                                    onClick={() => handleReact(msg.id, gr.emoji)}
+                                    title={gr.users.join(", ")}
+                                  >
+                                    <span>{gr.emoji}</span>
+                                    {gr.count > 1 && <span className="pill-count">{gr.count}</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
                           <time className="dm-bubble-time">{timeAgo(msg.createdAt)}</time>
                         </div>
                       </div>
@@ -337,6 +536,26 @@ export default function DirectMessages() {
             {/* Message Input Box */}
             <footer className="dm-input-tray">
               <form className="dm-send-form" onSubmit={handleSendMessage}>
+                {/* Emoji Picker in Chat Input */}
+                <div className="dm-input-emoji-wrap" style={{ position: "relative" }}>
+                  <button
+                    type="button"
+                    className={`dm-input-tool-btn ${isInputEmojiOpen ? "active" : ""}`}
+                    onClick={() => setIsInputEmojiOpen(!isInputEmojiOpen)}
+                    title="इमोजी जोड़ें (Emoji)"
+                    aria-label="इमोजी जोड़ें"
+                  >
+                    <SmileIcon size={20} />
+                  </button>
+                  {isInputEmojiOpen && (
+                    <EmojiPicker
+                      onSelect={(emoji) => handleInputEmojiSelect(emoji)}
+                      onClose={() => setIsInputEmojiOpen(false)}
+                      align="top"
+                    />
+                  )}
+                </div>
+
                 <input
                   ref={inputRef}
                   type="text"
@@ -345,7 +564,7 @@ export default function DirectMessages() {
                   onKeyDown={handleKeyDown}
                   placeholder="संदेश लिखें... (Enter दबाकर भेजें)"
                   className="dm-input-field"
-                  maxLength={1000}
+                  maxLength={2000}
                 />
                 <Button
                   type="submit"

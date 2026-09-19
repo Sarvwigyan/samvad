@@ -4277,3 +4277,399 @@
   font-size: 0.78rem;
   color: var(--sona, #d4a24c);
 }
+
+/* ==========================================================================
+   Universal Emoji Picker (X & WhatsApp Style)
+   ========================================================================== */
+.universal-emoji-picker {
+  position: absolute;
+  width: 320px;
+  max-width: 90vw;
+  background: var(--bg-card, #1c1917);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  animation: pickerFadeIn 0.16s ease-out;
+}
+
+@keyframes pickerFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.picker-align-top {
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+}
+
+.picker-align-bottom {
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+}
+
+.emoji-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.emoji-search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.emoji-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text, #fafaf9);
+  font-size: 0.82rem;
+}
+
+.emoji-clear-btn,
+.emoji-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #a8a29e);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.emoji-clear-btn:hover,
+.emoji-close-btn:hover {
+  color: var(--text, #fff);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.emoji-categories-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.emoji-cat-tab {
+  background: transparent;
+  border: none;
+  font-size: 1.15rem;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  opacity: 0.65;
+  transition: all 0.14s ease;
+}
+
+.emoji-cat-tab:hover,
+.emoji-cat-tab.active {
+  opacity: 1;
+  background: rgba(212, 162, 76, 0.2);
+  transform: scale(1.1);
+}
+
+.emoji-grid-scroll {
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 8px 10px;
+}
+
+.emoji-grid-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted, #a8a29e);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+
+.emoji-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.emoji-btn-item {
+  background: transparent;
+  border: none;
+  font-size: 1.28rem;
+  padding: 4px 0;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, transform 0.12s;
+}
+
+.emoji-btn-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.22);
+}
+
+/* ==========================================================================
+   WhatsApp / Arattai Style Direct Messages Reactions & Actions
+   ========================================================================== */
+.dm-bubble-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 78%;
+}
+
+.dm-bubble {
+  position: relative;
+  word-break: break-word;
+}
+
+/* Hover/Touch actions on message */
+.dm-bubble-actions {
+  position: absolute;
+  top: -12px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card, #292524);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  border-radius: 9999px;
+  padding: 2px 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+
+.is-mine .dm-bubble-actions {
+  right: 6px;
+}
+
+.is-partner .dm-bubble-actions {
+  left: 6px;
+}
+
+.dm-bubble-row:hover .dm-bubble-actions,
+.dm-bubble-actions:hover {
+  display: inline-flex;
+}
+
+.dm-bubble-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #a8a29e);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.14s, transform 0.14s;
+}
+
+.dm-bubble-action-btn:hover {
+  color: var(--sona, #d4a24c);
+  transform: scale(1.15);
+}
+
+/* Floating Quick Reactions Bar */
+.dm-reaction-bar-popup {
+  position: absolute;
+  top: -38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-card, #1c1917);
+  border: 1px solid var(--sona, #d4a24c);
+  border-radius: 9999px;
+  padding: 3px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  z-index: 50;
+  animation: pickerFadeIn 0.14s ease-out;
+}
+
+.is-mine .dm-reaction-bar-popup {
+  right: 0;
+}
+
+.is-partner .dm-reaction-bar-popup {
+  left: 0;
+}
+
+.dm-quick-react-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.15rem;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 9999px;
+  transition: transform 0.14s ease;
+}
+
+.dm-quick-react-btn:hover {
+  transform: scale(1.35);
+}
+
+.dm-quick-react-btn.plus-btn {
+  font-size: 0.85rem;
+  color: var(--text-muted, #a8a29e);
+  padding: 2px 6px;
+}
+
+/* Full Emoji Picker wrap inside bubble */
+.dm-reaction-full-picker-wrap {
+  position: absolute;
+  top: -280px;
+  z-index: 100;
+}
+
+.is-mine .dm-reaction-full-picker-wrap {
+  right: 0;
+}
+
+.is-partner .dm-reaction-full-picker-wrap {
+  left: 0;
+}
+
+/* Reaction Badges Below Bubble */
+.dm-reactions-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.is-mine .dm-reactions-badge-row {
+  justify-content: flex-end;
+}
+
+.dm-reaction-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  color: var(--text, #fafaf9);
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.dm-reaction-pill-badge:hover {
+  background: rgba(212, 162, 76, 0.2);
+  border-color: var(--sona, #d4a24c);
+  transform: scale(1.08);
+}
+
+.dm-reaction-pill-badge.active-mine {
+  background: rgba(212, 162, 76, 0.25);
+  border-color: var(--sona, #d4a24c);
+  color: var(--sona, #d4a24c);
+}
+
+.pill-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* 3-Dot Message Dropdown */
+.dm-msg-dropdown {
+  position: absolute;
+  top: 100%;
+  margin-top: 4px;
+  background: var(--bg-card, #1c1917);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  overflow: hidden;
+  min-width: 190px;
+}
+
+.is-mine .dm-msg-dropdown {
+  right: 0;
+}
+
+.is-partner .dm-msg-dropdown {
+  left: 0;
+}
+
+.dm-msg-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text, #fafaf9);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.14s;
+}
+
+.dm-msg-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dm-msg-dropdown-item.item-danger {
+  color: #ef4444;
+}
+
+.dm-msg-dropdown-item.item-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Deleted Message Bubble */
+.bubble-deleted {
+  opacity: 0.65;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+}
+
+.text-deleted {
+  color: var(--text-muted, #a8a29e) !important;
+  font-style: italic;
+  font-size: 0.84rem !important;
+}
+
+/* Chat Input Tool Button */
+.dm-input-tool-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #a8a29e);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  transition: color 0.14s, background 0.14s;
+}
+
+.dm-input-tool-btn:hover,
+.dm-input-tool-btn.active {
+  color: var(--sona, #d4a24c);
+  background: rgba(212, 162, 76, 0.14);
+}

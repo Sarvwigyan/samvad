@@ -3,13 +3,14 @@ import { useAuth } from "../context/AuthContext";
 import { createVichar } from "../lib/firestore";
 import { playTempleChime } from "../lib/chime";
 import { getClientId } from "../lib/clientId";
-import { validatePostText } from "../lib/validation";
+import { validatePostText, countWords, MAX_POST_WORDS } from "../lib/validation";
 import { classifyVichar, BHAV_CATEGORIES } from "../lib/nlp";
 import { compressPostImage } from "../lib/storage";
 import { searchUsersByMention } from "../lib/mentions";
 import { Button } from "./ui/Button";
 import { Avatar } from "./ui/Avatar";
-import { ImageIcon, CloseIcon } from "./ui/Icons";
+import { ImageIcon, CloseIcon, SmileIcon } from "./ui/Icons";
+import { EmojiPicker } from "./ui/EmojiPicker";
 
 export function PostComposer({ onPostCreated }) {
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
@@ -23,6 +24,8 @@ export function PostComposer({ onPostCreated }) {
   const [error, setError] = useState("");
   const [mentionQuery, setMentionQuery] = useState(null);
   const [mentionSuggestions, setMentionSuggestions] = useState([]);
+  const [selectedMentionIdx, setSelectedMentionIdx] = useState(0);
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const isSubmittingRef = useRef(false);
@@ -37,8 +40,9 @@ export function PostComposer({ onPostCreated }) {
     return autoBhav;
   }, [manualBhavId, autoBhav]);
 
+  const wordCount = useMemo(() => countWords(text), [text]);
   const charCount = text.length;
-  const isOverLimit = charCount > 500;
+  const isOverLimit = wordCount > MAX_POST_WORDS;
   const isSendDisabled = isSending || isCompressing || (text.trim().length === 0 && images.length === 0) || isOverLimit;
 
   const handleImageSelect = async (e) => {
@@ -83,8 +87,8 @@ export function PostComposer({ onPostCreated }) {
       return;
     }
 
-    if (trimmed && trimmed.length > 500) {
-      setError("विचार अधिकतम 500 अक्षरों तक ही सीमित है");
+    if (trimmed && wordCount > MAX_POST_WORDS) {
+      setError(`विचार अधिकतम ${MAX_POST_WORDS} शब्दों तक ही सीमित है (वर्तमान: ${wordCount} शब्द)`);
       return;
     }
 
@@ -109,6 +113,9 @@ export function PostComposer({ onPostCreated }) {
       setImages([]);
       setManualBhavId(null);
       setIsDropdownOpen(false);
+      setIsEmojiOpen(false);
+      setMentionQuery(null);
+      setMentionSuggestions([]);
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
@@ -125,6 +132,31 @@ export function PostComposer({ onPostCreated }) {
   };
 
   const handleKeyDown = (e) => {
+    // Keyboard navigation for @mention suggestions
+    if (mentionQuery !== null && mentionSuggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedMentionIdx((prev) => (prev + 1) % mentionSuggestions.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedMentionIdx((prev) => (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        const picked = mentionSuggestions[selectedMentionIdx] || mentionSuggestions[0];
+        if (picked) handleSelectMention(picked);
+        return;
+      }
+      if (e.key === "Escape") {
+        setMentionQuery(null);
+        setMentionSuggestions([]);
+        return;
+      }
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       handleSubmit();
@@ -171,6 +203,24 @@ export function PostComposer({ onPostCreated }) {
       if (textareaRef.current) {
         textareaRef.current.focus();
         const newPos = replacedBefore.length;
+        textareaRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 10);
+  };
+
+  const handleEmojiSelect = (emoji) => {
+    if (!textareaRef.current) {
+      setText((prev) => prev + emoji);
+      return;
+    }
+    const start = textareaRef.current.selectionStart ?? text.length;
+    const end = textareaRef.current.selectionEnd ?? text.length;
+    const newText = text.slice(0, start) + emoji + text.slice(end);
+    setText(newText);
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const newPos = start + emoji.length;
         textareaRef.current.setSelectionRange(newPos, newPos);
       }
     }, 10);
@@ -367,16 +417,36 @@ export function PostComposer({ onPostCreated }) {
             <ImageIcon size={19} />
             {images.length > 0 && <span className="media-badge-pill">{images.length}/4</span>}
           </button>
+
+          {/* Emoji Trigger */}
+          <div className="composer-emoji-trigger-wrap" style={{ position: "relative" }}>
+            <button
+              type="button"
+              className={`composer-action-icon-btn ${isEmojiOpen ? "active" : ""}`}
+              onClick={() => setIsEmojiOpen(!isEmojiOpen)}
+              title="इमोजी जोड़ें (Emoji)"
+              aria-label="इमोजी जोड़ें"
+            >
+              <SmileIcon size={19} />
+            </button>
+            {isEmojiOpen && (
+              <EmojiPicker
+                onSelect={(emoji) => handleEmojiSelect(emoji)}
+                onClose={() => setIsEmojiOpen(false)}
+                align="top"
+              />
+            )}
+          </div>
         </div>
 
         <div className="composer-footer-right">
           <div className="composer-meter">
             <div
               className={`meter-fill ${isOverLimit ? "fill-exceeded" : ""}`}
-              style={{ width: `${Math.min((charCount / 500) * 100, 100)}%` }}
+              style={{ width: `${Math.min((wordCount / MAX_POST_WORDS) * 100, 100)}%` }}
             />
-            <span className={`meter-text ${isOverLimit ? "text-danger" : ""}`}>
-              {charCount} / 500
+            <span className={`meter-text ${isOverLimit ? "text-danger" : ""}`} title={`${charCount} अक्षर`}>
+              {wordCount} / {MAX_POST_WORDS} शब्द
             </span>
           </div>
 

@@ -326,10 +326,11 @@ export async function getFollowing(uid) {
 export async function createVichar({ authorId, authorName, authorPhoto, text, bhav, isAnonymous, clientId, images = [] }) {
   if (!authorId || !text) throw new Error("सामग्री व पहचान अनिवार्य है");
 
-  // Enforce text length limit
+  // Enforce 2100 words limit
   const trimmed = text.trim();
-  if (trimmed.length > 500) {
-    throw new Error("विचार अधिकतम 500 अक्षरों तक ही सीमित है");
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+  if (wordCount > 2100) {
+    throw new Error("विचार अधिकतम 2100 शब्दों तक ही सीमित है");
   }
 
   // Ensure images array is capped at 4 items

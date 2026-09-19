@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -17,14 +17,17 @@ import { Button } from "../components/ui/Button";
 import { timeAgo } from "../lib/timeAgo";
 import { playTempleChime } from "../lib/chime";
 import { extractUrls, getLinkCardData } from "../lib/linkPreview";
+import { searchUsersByMention } from "../lib/mentions";
 import {
   HeartIcon,
   RepostIcon,
   BookmarkIcon,
   ShareIcon,
   ExternalLinkIcon,
-  CloseIcon
+  CloseIcon,
+  SmileIcon
 } from "../components/ui/Icons";
+import { EmojiPicker } from "../components/ui/EmojiPicker";
 
 export default function VicharDetail() {
   const { id } = useParams();
@@ -49,6 +52,70 @@ export default function VicharDetail() {
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [replyError, setReplyError] = useState("");
   const [copiedToast, setCopiedToast] = useState(false);
+  const [replyMentionQuery, setReplyMentionQuery] = useState(null);
+  const [replyMentionSuggestions, setReplyMentionSuggestions] = useState([]);
+  const [isReplyEmojiOpen, setIsReplyEmojiOpen] = useState(false);
+  const replyTextareaRef = useRef(null);
+
+  const handleReplyChange = (e) => {
+    const val = e.target.value;
+    setReplyText(val);
+
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = val.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+
+    if (match) {
+      const q = match[1];
+      setReplyMentionQuery(q);
+      searchUsersByMention(q, 5).then((results) => {
+        setReplyMentionSuggestions(results);
+      }).catch(() => {
+        setReplyMentionSuggestions([]);
+      });
+    } else {
+      setReplyMentionQuery(null);
+      setReplyMentionSuggestions([]);
+    }
+  };
+
+  const handleSelectReplyMention = (user) => {
+    if (!replyTextareaRef.current) return;
+    const cursorPos = replyTextareaRef.current.selectionStart;
+    const textBeforeCursor = replyText.slice(0, cursorPos);
+    const textAfterCursor = replyText.slice(cursorPos);
+
+    const replacedBefore = textBeforeCursor.replace(/@([a-zA-Z0-9_]*)$/, `@${user.username} `);
+    const newText = replacedBefore + textAfterCursor;
+    setReplyText(newText);
+    setReplyMentionQuery(null);
+    setReplyMentionSuggestions([]);
+    setTimeout(() => {
+      if (replyTextareaRef.current) {
+        replyTextareaRef.current.focus();
+        const newPos = replacedBefore.length;
+        replyTextareaRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 10);
+  };
+
+  const handleReplyEmojiSelect = (emoji) => {
+    if (!replyTextareaRef.current) {
+      setReplyText((prev) => prev + emoji);
+      return;
+    }
+    const start = replyTextareaRef.current.selectionStart ?? replyText.length;
+    const end = replyTextareaRef.current.selectionEnd ?? replyText.length;
+    const newText = replyText.slice(0, start) + emoji + replyText.slice(end);
+    setReplyText(newText);
+    setTimeout(() => {
+      if (replyTextareaRef.current) {
+        replyTextareaRef.current.focus();
+        const newPos = start + emoji.length;
+        replyTextareaRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 10);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -447,34 +514,89 @@ export default function VicharDetail() {
       <section className="reply-composer-container">
         {currentUser ? (
           <form className="reply-form" onSubmit={handleSendReply}>
-            <div className="reply-input-row">
+            <div className="reply-input-row" style={{ position: "relative" }}>
               <Avatar
                 src={userProfile?.avatarUrl || currentUser.photoURL}
                 alt={userProfile?.displayName || currentUser.displayName}
                 size="md"
                 fallbackText={userProfile?.displayName || currentUser.displayName}
               />
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="सादर उत्तर प्रेषित करें... (Reply)"
-                className="reply-textarea"
-                rows={2}
-                maxLength={500}
-                disabled={isSendingReply}
-              />
+              <div style={{ flex: 1, position: "relative" }}>
+                <textarea
+                  ref={replyTextareaRef}
+                  value={replyText}
+                  onChange={handleReplyChange}
+                  placeholder="सादर उत्तर प्रेषित करें... @उल्लेख का प्रयोग करें (Reply)"
+                  className="reply-textarea"
+                  rows={2}
+                  maxLength={1000}
+                  disabled={isSendingReply}
+                />
+
+                {/* Reply Mention Suggestions */}
+                {replyMentionQuery !== null && replyMentionSuggestions.length > 0 && (
+                  <div className="composer-mention-suggestions" style={{ bottom: "100%", top: "auto", marginBottom: "6px" }}>
+                    <div className="mention-suggestion-header">
+                      <span>साधक उल्लेख (@Mention)</span>
+                    </div>
+                    <div className="mention-suggestion-list">
+                      {replyMentionSuggestions.map((u) => (
+                        <button
+                          key={u.uid}
+                          type="button"
+                          className="mention-suggestion-item"
+                          onClick={() => handleSelectReplyMention(u)}
+                        >
+                          <Avatar
+                            src={u.avatarUrl}
+                            alt={u.displayName || u.username}
+                            size="sm"
+                            fallbackText={u.displayName || u.username}
+                          />
+                          <div className="mention-item-info">
+                            <span className="mention-item-name">{u.displayName || "सुधी साधक"}</span>
+                            <span className="mention-item-handle">@{u.username}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {replyError && <p className="reply-error-text">⚠️ {replyError}</p>}
 
             <div className="reply-footer-row">
-              <button
-                type="button"
-                className={`anon-toggle-sm ${isAnonymous ? "active" : ""}`}
-                onClick={() => setIsAnonymous(!isAnonymous)}
-              >
-                {isAnonymous ? "गुप्त उत्तर" : "आत्म-पहचान"}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  className={`anon-toggle-sm ${isAnonymous ? "active" : ""}`}
+                  onClick={() => setIsAnonymous(!isAnonymous)}
+                >
+                  {isAnonymous ? "गुप्त उत्तर" : "आत्म-पहचान"}
+                </button>
+
+                {/* Reply Emoji Trigger */}
+                <div style={{ position: "relative" }}>
+                  <button
+                    type="button"
+                    className={`composer-action-icon-btn ${isReplyEmojiOpen ? "active" : ""}`}
+                    onClick={() => setIsReplyEmojiOpen(!isReplyEmojiOpen)}
+                    title="इमोजी जोड़ें"
+                    aria-label="इमोजी जोड़ें"
+                  >
+                    <SmileIcon size={18} />
+                  </button>
+                  {isReplyEmojiOpen && (
+                    <EmojiPicker
+                      onSelect={(emoji) => handleReplyEmojiSelect(emoji)}
+                      onClose={() => setIsReplyEmojiOpen(false)}
+                      align="top"
+                    />
+                  )}
+                </div>
+              </div>
 
               <Button
                 type="submit"

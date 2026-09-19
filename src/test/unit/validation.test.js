@@ -66,10 +66,18 @@ describe("Validation Rules (validation.js)", () => {
   });
 
   describe("validatePostText", () => {
-    it("accepts valid post text between 1 and 500 chars", () => {
+    it("accepts valid post text up to 2100 words", () => {
       const res = validatePostText("एकम् सत् विप्रा बहुधा वदन्ति।");
       expect(res.valid).toBe(true);
       expect(res.sanitized).toBe("एकम् सत् विप्रा बहुधा वदन्ति।");
+      expect(res.words).toBe(5);
+    });
+
+    it("accepts a long essay of 1000 words", () => {
+      const longText = Array(1000).fill("ज्ञान").join(" ");
+      const res = validatePostText(longText);
+      expect(res.valid).toBe(true);
+      expect(res.words).toBe(1000);
     });
 
     it("rejects empty or whitespace-only post text", () => {
@@ -78,8 +86,9 @@ describe("Validation Rules (validation.js)", () => {
       expect(validatePostText(null).valid).toBe(false);
     });
 
-    it("rejects post text over 500 characters", () => {
-      const res = validatePostText("अ".repeat(501));
+    it("rejects post text over 2100 words", () => {
+      const tooLong = Array(2101).fill("विचार").join(" ");
+      const res = validatePostText(tooLong);
       expect(res.valid).toBe(false);
       expect(res.error).toBeDefined();
     });

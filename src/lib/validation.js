@@ -47,10 +47,25 @@ export function validateBio(bio) {
   return { valid: true, sanitized: bio.trim() };
 }
 
+export const MAX_POST_WORDS = 2100;
+export const MAX_POST_CHARS = 25000;
+
 /**
- * Validates post text (1-500 characters).
+ * Counts whitespace-delimited words in text.
  * @param {string} text
- * @returns {{ valid: boolean, error?: string }}
+ * @returns {number}
+ */
+export function countWords(text = "") {
+  if (!text || typeof text !== "string") return 0;
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * Validates post text (up to 2100 words and 25000 characters).
+ * @param {string} text
+ * @returns {{ valid: boolean, error?: string, words?: number }}
  */
 export function validatePostText(text) {
   if (!text || typeof text !== "string") {
@@ -60,8 +75,12 @@ export function validatePostText(text) {
   if (trimmed.length === 0) {
     return { valid: false, error: "विचार में सामग्री अनिवार्य है" };
   }
-  if (trimmed.length > 500) {
-    return { valid: false, error: "विचार अधिकतम 500 अक्षरों तक ही सीमित है" };
+  const words = countWords(trimmed);
+  if (words > MAX_POST_WORDS) {
+    return { valid: false, error: `विचार अधिकतम ${MAX_POST_WORDS} शब्दों तक ही सीमित है (वर्तमान: ${words} शब्द)` };
   }
-  return { valid: true, sanitized: trimmed };
+  if (trimmed.length > MAX_POST_CHARS) {
+    return { valid: false, error: `विचार अधिकतम ${MAX_POST_CHARS} अक्षरों तक ही सीमित है` };
+  }
+  return { valid: true, sanitized: trimmed, words };
 }

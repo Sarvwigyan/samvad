@@ -11,7 +11,7 @@ describe("Phase 4: Kriya (Social Interactions) Unit Tests", () => {
     expect(vocab.share).toEqual({ hi: "संक्रमण", en: "Sankraman" });
   });
 
-  it("should validate reply text bounds (1-500 chars)", () => {
+  it("should validate reply text bounds (up to 2100 words)", () => {
     // Valid reply
     const validRes = validatePostText("सादर विचार। पूर्णतः सहमत।");
     expect(validRes.valid).toBe(true);
@@ -21,8 +21,8 @@ describe("Phase 4: Kriya (Social Interactions) Unit Tests", () => {
     const emptyRes = validatePostText("   ");
     expect(emptyRes.valid).toBe(false);
 
-    // Over length reply rejected
-    const overLengthRes = validatePostText("क".repeat(501));
+    // Over length reply rejected (> 2100 words)
+    const overLengthRes = validatePostText(Array(2101).fill("उत्तर").join(" "));
     expect(overLengthRes.valid).toBe(false);
   });
 

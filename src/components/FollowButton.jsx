@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/Button";
 
 export function FollowButton({ targetUid, onCountChange }) {
-  const { currentUser } = useAuth();
+  const { currentUser, loginWithGoogle } = useAuth();
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialChecked, setInitialChecked] = useState(false);
@@ -21,7 +21,20 @@ export function FollowButton({ targetUid, onCountChange }) {
     return () => { isMounted = false; };
   }, [currentUser, targetUid]);
 
-  if (!currentUser || currentUser.uid === targetUid) return null;
+  if (!currentUser) {
+    return (
+      <Button
+        variant="primary"
+        size="sm"
+        onClick={loginWithGoogle}
+        ariaLabel="अनुसरण हेतु प्रवेश करें"
+      >
+        अनुसरण करें (Follow)
+      </Button>
+    );
+  }
+
+  if (currentUser.uid === targetUid) return null;
 
   const handleToggle = async () => {
     if (loading) return;

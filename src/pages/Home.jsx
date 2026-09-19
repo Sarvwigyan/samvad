@@ -12,6 +12,8 @@ export default function Home() {
   const filterQuery = searchParams.get("q") || "";
 
   useEffect(() => {
+    let unsubscribeFallback = null;
+
     // Listen to posts collection in real-time
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(50));
     const unsubscribe = onSnapshot(
@@ -31,12 +33,40 @@ export default function Home() {
         setLoading(false);
       },
       (err) => {
-        console.warn("Posts fetch notice:", err.message);
-        setLoading(false);
+        console.warn("Primary posts orderBy query notice, falling back to unordered listener:", err.message);
+        const fbQuery = query(collection(db, "posts"), limit(50));
+        unsubscribeFallback = onSnapshot(
+          fbQuery,
+          (fbSnap) => {
+            const items = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            items.sort((a, b) => {
+              const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
+              const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
+              return timeB - timeA;
+            });
+            const unique = [];
+            const seen = new Set();
+            for (const item of items) {
+              if (!seen.has(item.id)) {
+                seen.add(item.id);
+                unique.push(item);
+              }
+            }
+            setPosts(unique);
+            setLoading(false);
+          },
+          (fbErr) => {
+            console.error("Feed snapshot error:", fbErr);
+            setLoading(false);
+          }
+        );
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubscribeFallback) unsubscribeFallback();
+    };
   }, []);
 
   const handlePostCreated = (newPost) => {

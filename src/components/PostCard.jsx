@@ -15,7 +15,7 @@ import {
 import { playTempleChime } from "../lib/chime";
 
 export function PostCard({ post }) {
-  const { currentUser } = useAuth();
+  const { currentUser, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [liked, setLiked] = useState(false);
@@ -40,7 +40,7 @@ export function PostCard({ post }) {
   const handleAnumodan = async (e) => {
     e.stopPropagation();
     if (!currentUser) {
-      alert("अनुमोदन हेतु गूगल से प्रवेश आवश्यक है");
+      loginWithGoogle();
       return;
     }
 
@@ -62,7 +62,7 @@ export function PostCard({ post }) {
   const handlePrasar = async (e) => {
     e.stopPropagation();
     if (!currentUser) {
-      alert("प्रसार हेतु गूगल से प्रवेश आवश्यक है");
+      loginWithGoogle();
       return;
     }
 
@@ -82,7 +82,7 @@ export function PostCard({ post }) {
   const handleSmaran = async (e) => {
     e.stopPropagation();
     if (!currentUser) {
-      alert("स्मरण में संचित करने हेतु गूगल से प्रवेश आवश्यक है");
+      loginWithGoogle();
       return;
     }
 

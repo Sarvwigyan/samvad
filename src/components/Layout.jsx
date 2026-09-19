@@ -5,7 +5,7 @@ import { useTheme } from "../context/ThemeContext";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { usePWAInstall } from "../lib/usePWAInstall";
-import { getSuggestedSadhaks, followUser, isFollowing } from "../lib/firestore";
+import { getSuggestedSadhaks, followUser, unfollowUser, isFollowing } from "../lib/firestore";
 
 const TRENDING_TOPICS = [
   { tag: "#वेदान्त", desc: "उपनिषदों का गहन तत्त्वज्ञान", count: "1.2k विचार" },
@@ -31,7 +31,7 @@ export function Layout() {
   const [followingStates, setFollowingStates] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/";
+  const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/parichay";
 
   useEffect(() => {
     if (currentUser) {
@@ -57,11 +57,16 @@ export function Layout() {
       loginWithGoogle();
       return;
     }
-    const current = followingStates[targetUid];
+    const current = Boolean(followingStates[targetUid]);
     setFollowingStates((prev) => ({ ...prev, [targetUid]: !current }));
     try {
-      await followUser(currentUser.uid, targetUid);
+      if (current) {
+        await unfollowUser(currentUser.uid, targetUid);
+      } else {
+        await followUser(currentUser.uid, targetUid);
+      }
     } catch (e) {
+      console.warn("Follow toggle failed, reverting:", e);
       setFollowingStates((prev) => ({ ...prev, [targetUid]: current }));
     }
   };

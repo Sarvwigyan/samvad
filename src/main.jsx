@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component {
           textAlign: 'center',
           fontFamily: 'sans-serif'
         }}>
-          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🕉️</div>
+          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🪷</div>
           <h2 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>संवाद लोड करने में व्यवधान आया</h2>
           <p style={{ color: '#a39585', maxWidth: '420px', fontSize: '0.9rem', marginBottom: '16px' }}>
             {this.state.error?.message || "कृपया पृष्ठ को पुनः लोड करें।"}

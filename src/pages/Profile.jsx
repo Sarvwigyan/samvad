@@ -5,10 +5,11 @@ import { getUserProfile, getUserVichars } from "../lib/firestore";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { PostCard } from "../components/PostCard";
 import { EditProfile } from "./EditProfile";
+import { Button } from "../components/ui/Button";
 
 export default function Profile() {
   const { uid } = useParams();
-  const { currentUser, userProfile: myLiveProfile } = useAuth();
+  const { currentUser, userProfile: myLiveProfile, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const targetUid = uid || currentUser?.uid;
@@ -92,6 +93,18 @@ export default function Profile() {
   }
 
   if (!profile && !loading) {
+    if (!currentUser && !uid) {
+      return (
+        <div className="smaran-guest-container">
+          <span className="smaran-glyph">🪪</span>
+          <h3>परिचय (Parichay)</h3>
+          <p>अपना परिचय पत्रक देखने, विचार प्रबंधित करने एवं प्रोफ़ाइल संपादित करने हेतु कृपया गूगल से प्रवेश करें।</p>
+          <Button variant="primary" size="md" onClick={loginWithGoogle}>
+            गूगल से प्रवेश करें (Sign in)
+          </Button>
+        </div>
+      );
+    }
     return (
       <div className="profile-not-found">
         <span className="not-found-glyph">❓</span>

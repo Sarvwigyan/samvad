@@ -45,7 +45,7 @@ export default function Followers() {
           {followers.map((u) => (
             <div key={u.uid} className="connection-card">
               <Link to={`/parichay/${u.uid}`} className="connection-user-link">
-                <Avatar src={u.avatarUrl} alt={u.displayName} size="md" fallbackText={u.displayName} />
+                <Avatar src={u.avatarUrl || u.photoURL} alt={u.displayName} size="md" fallbackText={u.displayName} />
                 <div className="connection-details">
                   <span className="connection-name">{u.displayName}</span>
                   <span className="connection-handle">@{u.username}</span>

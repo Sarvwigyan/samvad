@@ -38,6 +38,7 @@ export default function VicharDetail() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [replyError, setReplyError] = useState("");
+  const [copiedToast, setCopiedToast] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -73,7 +74,7 @@ export default function VicharDetail() {
 
   const handleAnumodan = async () => {
     if (!currentUser) {
-      alert("अनुमोदन हेतु प्रवेश आवश्यक है");
+      loginWithGoogle();
       return;
     }
     const prevLiked = liked;
@@ -93,7 +94,7 @@ export default function VicharDetail() {
 
   const handlePrasar = async () => {
     if (!currentUser) {
-      alert("प्रसार हेतु प्रवेश आवश्यक है");
+      loginWithGoogle();
       return;
     }
     const prevReposted = reposted;
@@ -111,7 +112,7 @@ export default function VicharDetail() {
 
   const handleSmaran = async () => {
     if (!currentUser) {
-      alert("स्मरण हेतु प्रवेश आवश्यक है");
+      loginWithGoogle();
       return;
     }
     const prevBookmarked = bookmarked;
@@ -136,7 +137,8 @@ export default function VicharDetail() {
       } catch {}
     } else {
       navigator.clipboard?.writeText(url);
-      alert("कड़ी प्रतिलिपि कर ली गई है (Link copied)");
+      setCopiedToast(true);
+      setTimeout(() => setCopiedToast(false), 2000);
     }
   };
 
@@ -313,7 +315,7 @@ export default function VicharDetail() {
             title="संक्रमण (Share)"
           >
             <span className="action-icon">↗</span>
-            <span>साझा</span>
+            <span>{copiedToast ? "प्रतिलिपि!" : "साझा"}</span>
           </button>
         </div>
       </article>

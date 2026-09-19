@@ -31,4 +31,12 @@ describe("Bharatiya Sanskriti Vocabulary (vocab.js)", () => {
       expect(allValues.includes(term)).toBe(false);
     }
   });
+
+  it("must contain ZERO forbidden religious symbols (Om, Trishul, etc.)", () => {
+    const forbiddenSymbols = ["🕉", "ॐ", "🔱", "卐"];
+    const allValues = JSON.stringify(vocab);
+    for (const sym of forbiddenSymbols) {
+      expect(allValues.includes(sym)).toBe(false);
+    }
+  });
 });

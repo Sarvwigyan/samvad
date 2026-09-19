@@ -132,33 +132,43 @@ export async function isFollowing(currentUid, targetUid) {
 export async function followUser(currentUid, targetUid) {
   if (!currentUid || !targetUid || currentUid === targetUid) return;
 
-  await runTransaction(db, async (transaction) => {
-    const followRef = doc(db, "users", currentUid, "following", targetUid);
-    const followerRef = doc(db, "users", targetUid, "followers", currentUid);
-    const currentUserRef = doc(db, "users", currentUid);
-    const targetUserRef = doc(db, "users", targetUid);
+  const followRef = doc(db, "users", currentUid, "following", targetUid);
+  const followerRef = doc(db, "users", targetUid, "followers", currentUid);
+  const currentUserRef = doc(db, "users", currentUid);
+  const targetUserRef = doc(db, "users", targetUid);
 
-    const followDoc = await transaction.get(followRef);
-    if (followDoc.exists()) return; // Already following
+  try {
+    await runTransaction(db, async (transaction) => {
+      const followDoc = await transaction.get(followRef);
+      if (followDoc.exists()) return; // Already following
 
-    transaction.set(followRef, {
-      targetUid,
-      createdAt: serverTimestamp()
+      transaction.set(followRef, {
+        targetUid,
+        createdAt: serverTimestamp()
+      });
+
+      transaction.set(followerRef, {
+        followerUid: currentUid,
+        createdAt: serverTimestamp()
+      });
+
+      transaction.update(currentUserRef, {
+        followingCount: increment(1)
+      });
+
+      try {
+        transaction.update(targetUserRef, {
+          followersCount: increment(1)
+        });
+      } catch (e) {}
     });
-
-    transaction.set(followerRef, {
-      followerUid: currentUid,
-      createdAt: serverTimestamp()
-    });
-
-    transaction.update(currentUserRef, {
-      followingCount: increment(1)
-    });
-
-    transaction.update(targetUserRef, {
-      followersCount: increment(1)
-    });
-  });
+  } catch (err) {
+    console.warn("Transactional follow notice, applying resilient direct write:", err.message);
+    await setDoc(followRef, { targetUid, createdAt: serverTimestamp() }).catch(() => {});
+    await setDoc(followerRef, { followerUid: currentUid, createdAt: serverTimestamp() }).catch(() => {});
+    await updateDoc(currentUserRef, { followingCount: increment(1) }).catch(() => {});
+    await updateDoc(targetUserRef, { followersCount: increment(1) }).catch(() => {});
+  }
 }
 
 /**
@@ -169,26 +179,36 @@ export async function followUser(currentUid, targetUid) {
 export async function unfollowUser(currentUid, targetUid) {
   if (!currentUid || !targetUid || currentUid === targetUid) return;
 
-  await runTransaction(db, async (transaction) => {
-    const followRef = doc(db, "users", currentUid, "following", targetUid);
-    const followerRef = doc(db, "users", targetUid, "followers", currentUid);
-    const currentUserRef = doc(db, "users", currentUid);
-    const targetUserRef = doc(db, "users", targetUid);
+  const followRef = doc(db, "users", currentUid, "following", targetUid);
+  const followerRef = doc(db, "users", targetUid, "followers", currentUid);
+  const currentUserRef = doc(db, "users", currentUid);
+  const targetUserRef = doc(db, "users", targetUid);
 
-    const followDoc = await transaction.get(followRef);
-    if (!followDoc.exists()) return; // Not following
+  try {
+    await runTransaction(db, async (transaction) => {
+      const followDoc = await transaction.get(followRef);
+      if (!followDoc.exists()) return; // Not following
 
-    transaction.delete(followRef);
-    transaction.delete(followerRef);
+      transaction.delete(followRef);
+      transaction.delete(followerRef);
 
-    transaction.update(currentUserRef, {
-      followingCount: increment(-1)
+      transaction.update(currentUserRef, {
+        followingCount: increment(-1)
+      });
+
+      try {
+        transaction.update(targetUserRef, {
+          followersCount: increment(-1)
+        });
+      } catch (e) {}
     });
-
-    transaction.update(targetUserRef, {
-      followersCount: increment(-1)
-    });
-  });
+  } catch (err) {
+    console.warn("Transactional unfollow notice, applying resilient direct write:", err.message);
+    await deleteDoc(followRef).catch(() => {});
+    await deleteDoc(followerRef).catch(() => {});
+    await updateDoc(currentUserRef, { followingCount: increment(-1) }).catch(() => {});
+    await updateDoc(targetUserRef, { followersCount: increment(-1) }).catch(() => {});
+  }
 }
 
 /**
@@ -465,13 +485,26 @@ export async function toggleSmaran(postId, uid) {
 export async function getUserBookmarks(uid) {
   if (!uid) return [];
   try {
-    const snap = await getDocs(
-      query(collection(db, "users", uid, "bookmarks"), orderBy("createdAt", "desc"), limit(50))
-    );
+    let snap;
+    try {
+      snap = await getDocs(
+        query(collection(db, "users", uid, "bookmarks"), orderBy("createdAt", "desc"), limit(50))
+      );
+    } catch (orderErr) {
+      console.warn("Bookmarks query without orderBy fallback:", orderErr.message);
+      snap = await getDocs(query(collection(db, "users", uid, "bookmarks"), limit(50)));
+    }
+
     const postIds = snap.docs.map((d) => d.id);
     const postPromises = postIds.map((id) => getVicharById(id));
     const posts = await Promise.all(postPromises);
-    return posts.filter(Boolean);
+    const valid = posts.filter(Boolean);
+    valid.sort((a, b) => {
+      const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
+      const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
+      return timeB - timeA;
+    });
+    return valid;
   } catch (err) {
     console.error("Error loading bookmarks:", err);
     return [];
@@ -517,13 +550,23 @@ export async function createUttar(postId, { authorId, authorName, authorPhoto, t
 export async function getPostReplies(postId) {
   if (!postId) return [];
   try {
-    const q = query(
-      collection(db, "posts", postId, "replies"),
-      orderBy("createdAt", "asc"),
-      limit(50)
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    let snap;
+    try {
+      snap = await getDocs(
+        query(collection(db, "posts", postId, "replies"), orderBy("createdAt", "asc"), limit(50))
+      );
+    } catch (orderErr) {
+      console.warn("Replies query fallback without server orderBy:", orderErr.message);
+      snap = await getDocs(query(collection(db, "posts", postId, "replies"), limit(50)));
+    }
+
+    const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    list.sort((a, b) => {
+      const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
+      const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
+      return timeA - timeB;
+    });
+    return list;
   } catch (err) {
     console.error("Error fetching replies:", err);
     return [];

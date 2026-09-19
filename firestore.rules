@@ -14,7 +14,10 @@ service cloud.firestore {
     // User Profiles (Parichay)
     match /users/{userId} {
       allow read: if true; // Public profiles
-      allow create, update: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || (
+        isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followersCount'])
+      );
       allow delete: if false;
 
       // Subcollection: Followers

@@ -64,11 +64,13 @@
   user-select: none;
   outline: none;
   white-space: nowrap;
-  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1),
+  min-height: 40px;
+  transition: transform 80ms ease-out,
+              box-shadow 80ms ease-out,
               background 180ms ease,
               filter 180ms ease;
   position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn-primitive:disabled {
@@ -78,39 +80,63 @@
   box-shadow: none !important;
 }
 
-/* Button Sizes */
+/* Button Sizes — Ensuring Mobile Touch Targets ≥ 48px where appropriate */
 .btn-sm {
   padding: 6px 14px;
   font-size: 0.82rem;
+  min-height: 36px;
 }
 
 .btn-md {
-  padding: 10px 20px;
+  padding: 10px 22px;
   font-size: 0.94rem;
+  min-height: 44px;
 }
 
 .btn-lg {
-  padding: 13px 26px;
+  padding: 13px 28px;
   font-size: 1.05rem;
+  min-height: 48px;
 }
 
-/* Primary Tactile Button (Rich Saffron / Gold with 3D depth) */
+/* Primary Tactile Button (Rich Saffron / Gold with Duolingo 3D depth) */
 .btn-primary {
   background: linear-gradient(135deg, #FF9933 0%, #D4A24C 100%);
   color: #0F0E0C;
   border: none;
-  box-shadow: 0 4px 0 #A86F18, 0 6px 16px rgba(212, 162, 76, 0.28);
+  box-shadow: 0 4px 0 0 var(--sona-dark), 0 6px 16px rgba(212, 162, 76, 0.28);
 }
 
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
   transform: translateY(-1px);
-  box-shadow: 0 5px 0 #A86F18, 0 8px 20px rgba(212, 162, 76, 0.38);
+  box-shadow: 0 5px 0 0 var(--sona-dark), 0 8px 20px rgba(212, 162, 76, 0.38);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #A86F18, 0 2px 6px rgba(212, 162, 76, 0.2);
+  transform: translateY(4px);
+  box-shadow: 0 0 0 0 transparent, 0 1px 4px rgba(212, 162, 76, 0.2);
+  transition: all 40ms ease-out;
+}
+
+/* Sovereign Chakra Navy Tactile Button (High Contrast WCAG AA 12.6:1) */
+.btn-navy {
+  background: var(--chakra-navy);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 0 0 var(--chakra-navy-dark), 0 6px 16px rgba(6, 3, 141, 0.32);
+}
+
+.btn-navy:hover:not(:disabled) {
+  background: var(--chakra-navy-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 0 var(--chakra-navy-dark), 0 8px 20px rgba(6, 3, 141, 0.42);
+}
+
+.btn-navy:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 0 transparent;
+  transition: all 40ms ease-out;
 }
 
 /* Outline Tactile Button */
@@ -270,6 +296,138 @@
 
 .modal-body {
   padding: 20px;
+}
+
+/* ==========================================================================
+   MASTER SHELL & UNIVERSAL SARVWIGYAN ECOSYSTEM RIBBON
+   ========================================================================== */
+.samvad-master-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ecosystem-top-ribbon {
+  width: 100%;
+  background: var(--bg-elevated);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background var(--transition);
+}
+
+.ecosystem-ribbon-content {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 6px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 38px;
+}
+
+.ecosystem-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ecosystem-motto {
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  color: var(--sona);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  padding: 2px 0;
+}
+
+.ecosystem-links-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ecosystem-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: rgba(212, 155, 53, 0.06);
+  border: 1px solid transparent;
+  transition: all 120ms ease;
+  user-select: none;
+}
+
+.ecosystem-nav-link:hover {
+  background: rgba(212, 155, 53, 0.14);
+  border-color: var(--border);
+  color: var(--sona);
+  transform: translateY(-1px);
+}
+
+.ecosystem-nav-link:active {
+  transform: translateY(2px);
+}
+
+.ecosystem-nav-link.active-platform {
+  background: rgba(212, 155, 53, 0.16);
+  border-color: var(--sona);
+  color: var(--sona);
+  font-weight: 700;
+  cursor: default;
+}
+
+.eco-glyph {
+  font-size: 0.86rem;
+}
+
+.eco-label {
+  line-height: 1.4;
+}
+
+.active-chakra {
+  color: var(--sona);
+  animation: spinSlow 20s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.active-dot {
+  width: 6px;
+  height: 6px;
+  background: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10B981;
+  display: inline-block;
+  margin-left: 2px;
+}
+
+@media (max-width: 768px) {
+  .ecosystem-ribbon-content {
+    padding: 6px 12px;
+    justify-content: center;
+  }
+  .ecosystem-motto {
+    font-size: 0.72rem;
+  }
+  .ecosystem-links-row {
+    display: none; /* Accessed via bottom nav 'सर्वविज्ञान' */
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -503,7 +661,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  line-height: 1.25;
+  line-height: 1.4;
+  padding: 2px 0;
   min-width: 0;
 }
 
@@ -513,6 +672,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.35;
+  padding: 1px 0;
 }
 
 .user-badge-handle {
@@ -521,6 +682,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .user-badge-actions {
@@ -875,6 +1037,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.35;
+  padding: 1px 0;
 }
 
 .sadhak-handle {
@@ -883,6 +1047,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .follow-mini-btn {
@@ -890,31 +1055,39 @@
   border: 1.5px solid var(--sona);
   color: var(--sona);
   border-radius: 9999px;
-  padding: 4px 12px;
+  padding: 5px 14px;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 0 rgba(212, 162, 76, 0.3);
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  box-shadow: 0 3px 0 0 rgba(212, 162, 76, 0.4);
+  transition: transform 80ms ease, box-shadow 80ms ease, background 120ms ease;
   flex-shrink: 0;
+  user-select: none;
 }
 
 .follow-mini-btn:hover {
   background: var(--sona);
   color: #0F0E0C;
   transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 rgba(212, 162, 76, 0.5);
 }
 
 .follow-mini-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 transparent;
+  transform: translateY(3px);
+  box-shadow: 0 0 0 0 transparent;
+  transition: all 40ms ease-out;
 }
 
 .follow-mini-btn.following {
   background: var(--bg-elevated);
   border-color: var(--border);
   color: var(--text-muted);
-  box-shadow: none;
+  box-shadow: 0 2px 0 0 var(--border);
+}
+
+.follow-mini-btn.following:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 0 transparent;
 }
 
 /* Daily Subhashita */
@@ -1305,15 +1478,16 @@
 }
 
 .feed-tab-btn:active {
-  transform: translateY(1px);
+  transform: translateY(2px);
 }
 
 .tab-label-main {
   font-family: var(--font-heading);
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   font-weight: 700;
   color: var(--text-muted);
-  line-height: 1.2;
+  line-height: 1.45;
+  padding: 2px 0;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1521,25 +1695,30 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 9999px;
-  box-shadow: 0 2px 0 var(--border);
-  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1),
+  box-shadow: 0 3px 0 0 rgba(212, 155, 53, 0.28);
+  transition: transform 80ms ease-out,
+              box-shadow 80ms ease-out,
               background 160ms ease,
               color 160ms ease;
   user-select: none;
+  min-height: 34px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .action-pill-btn:hover {
   transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 rgba(212, 155, 53, 0.38);
 }
 
 .action-pill-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 transparent !important;
+  transform: translateY(3px);
+  box-shadow: 0 0 0 0 transparent !important;
+  transition: all 40ms ease-out;
 }
 
 .action-pill-btn.action-liked {
@@ -1547,7 +1726,12 @@
   font-weight: 700;
   border-color: #FF5E7E;
   background: rgba(255, 94, 126, 0.12);
-  box-shadow: 0 2px 0 #E04868;
+  box-shadow: 0 3px 0 0 #E04868;
+}
+
+.action-pill-btn.action-liked:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 0 transparent !important;
 }
 
 .action-pill-btn.action-liked .action-glyph {
@@ -1561,7 +1745,12 @@
   font-weight: 700;
   border-color: #10B981;
   background: rgba(16, 185, 129, 0.12);
-  box-shadow: 0 2px 0 #059669;
+  box-shadow: 0 3px 0 0 #059669;
+}
+
+.action-pill-btn.action-reposted:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 0 transparent !important;
 }
 
 .action-pill-btn.action-bookmarked {
@@ -1569,7 +1758,12 @@
   font-weight: 700;
   border-color: var(--sona);
   background: rgba(212, 162, 76, 0.12);
-  box-shadow: 0 2px 0 #A86F18;
+  box-shadow: 0 3px 0 0 var(--sona-dark);
+}
+
+.action-pill-btn.action-bookmarked:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 0 transparent !important;
 }
 
 .action-glyph {
@@ -2392,7 +2586,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   MOBILE BOTTOM NAVIGATION (< 768px)
+   MOBILE BOTTOM NAVIGATION (< 768px) — 5-Item Tactile Touch System (≥48px)
    -------------------------------------------------------------------------- */
 .mobile-bottom-nav {
   display: none;
@@ -2400,14 +2594,16 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 58px;
+  height: 60px;
+  padding-bottom: env(safe-area-inset-bottom);
   background: var(--bg-elevated);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
-  z-index: 50;
+  z-index: 100;
   align-items: center;
   justify-content: space-around;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .mobile-nav-btn {
@@ -2417,23 +2613,144 @@
   justify-content: center;
   color: var(--text-muted);
   text-decoration: none;
+  background: transparent;
+  border: none;
   flex: 1;
+  min-width: 48px;
+  min-height: 48px;
   height: 100%;
   gap: 2px;
-  transition: color var(--transition);
+  cursor: pointer;
+  transition: transform 80ms ease, color 150ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-btn:active {
+  transform: scale(0.92);
 }
 
 .mobile-nav-btn.active {
   color: var(--sona);
 }
 
+.mobile-nav-btn.active .nav-caption {
+  font-weight: 700;
+  color: var(--sona);
+}
+
 .mobile-nav-btn .nav-glyph {
-  font-size: 1.25rem;
+  font-size: 1.28rem;
+  line-height: 1;
 }
 
 .mobile-nav-btn .nav-caption {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 600;
+  line-height: 1.35;
+}
+
+.eco-chakra-spin {
+  display: inline-block;
+  transition: transform 300ms ease;
+}
+
+.mobile-nav-btn.eco-nav-btn.active .eco-chakra-spin {
+  transform: rotate(90deg);
+}
+
+/* Ecosystem Mobile Modal Sheet */
+.eco-modal-container {
+  max-width: 480px;
+  border-radius: var(--radius-xl);
+}
+
+.eco-modal-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eco-modal-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.eco-portals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eco-portal-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  text-decoration: none;
+  transition: all 120ms ease;
+  box-shadow: 0 3px 0 0 var(--border);
+}
+
+.eco-portal-item:hover {
+  border-color: var(--sona);
+  background: rgba(212, 155, 53, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 0 var(--sona);
+}
+
+.eco-portal-item:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 0 transparent;
+}
+
+.eco-portal-item.active-current {
+  border-color: var(--sona);
+  background: rgba(212, 155, 53, 0.12);
+  cursor: default;
+}
+
+.eco-portal-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.eco-portal-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.eco-portal-name {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+  margin-bottom: 2px;
+}
+
+.eco-portal-desc {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.eco-portal-arrow {
+  font-size: 1.1rem;
+  color: var(--sona);
+  font-weight: 700;
+}
+
+.eco-current-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: var(--sona);
+  color: #0F0E0C;
 }
 
 /* --------------------------------------------------------------------------
@@ -2454,7 +2771,7 @@
     max-width: 100%;
     border-left: none;
     border-right: none;
-    padding-bottom: 64px;
+    padding-bottom: 84px; /* Clearance for 60px tactile bottom navigation */
   }
 
   .post-card-body,

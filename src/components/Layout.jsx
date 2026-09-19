@@ -9,6 +9,8 @@ import { Button } from "./ui/Button";
 import { usePWAInstall } from "../lib/usePWAInstall";
 import { getSuggestedSadhaks, followUser, unfollowUser, isFollowing } from "../lib/firestore";
 import { computeTrendingTopics } from "../lib/trending";
+import { EcosystemBar } from "./EcosystemBar";
+import { triggerHaptic } from "../lib/haptics";
 
 const CURATED_SADHAKS = [
   { uid: "curated_vidya", displayName: "भारतीय ज्ञान परम्परा", username: "bharat_vidya", avatarUrl: null, fallbackText: "ज्ञा" },
@@ -26,6 +28,7 @@ export function Layout() {
   const [followingStates, setFollowingStates] = useState({});
   const [liveTrending, setLiveTrending] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isEcoDrawerOpen, setIsEcoDrawerOpen] = useState(false);
 
   const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/parichay";
 
@@ -96,10 +99,12 @@ export function Layout() {
   };
 
   return (
-    <div className="layout-shell-3col">
-      {/* ========================================================
-          LEFT COLUMN: Desktop Navigation Sidebar
-          ======================================================== */}
+    <div className="samvad-master-shell">
+      <EcosystemBar />
+      <div className="layout-shell-3col">
+        {/* ========================================================
+            LEFT COLUMN: Desktop Navigation Sidebar
+            ======================================================== */}
       <aside className="left-sidebar-col">
         <div className="left-sidebar-sticky">
           {/* Logo & Platform Insignia */}
@@ -376,31 +381,140 @@ export function Layout() {
           </footer>
         </div>
       </aside>
+    </div>
 
       {/* ========================================================
           MOBILE BOTTOM NAVIGATION BAR (< 768px)
+          5-Item Tactile 3D Tap Targets (≥ 48px)
           ======================================================== */}
-      <nav className="mobile-bottom-nav">
-        <NavLink to="/" className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}>
+      <nav className="mobile-bottom-nav" aria-label="मुख्य नेविगेशन">
+        <NavLink
+          to="/"
+          className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
+          onClick={() => triggerHaptic(10)}
+        >
           <span className="nav-glyph">🌊</span>
           <span className="nav-caption">प्रवाह</span>
         </NavLink>
 
-        <NavLink to="/smaran" className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}>
+        <NavLink
+          to="/smaran"
+          className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
+          onClick={() => triggerHaptic(10)}
+        >
           <span className="nav-glyph">🔖</span>
           <span className="nav-caption">स्मरण</span>
         </NavLink>
 
-        <NavLink to={myProfilePath} className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}>
+        <button
+          type="button"
+          className={`mobile-nav-btn eco-nav-btn ${isEcoDrawerOpen ? "active" : ""}`}
+          onClick={() => {
+            triggerHaptic(12);
+            setIsEcoDrawerOpen(true);
+          }}
+          aria-label="सर्वविज्ञान पारिस्थितिकी तंत्र"
+        >
+          <span className="nav-glyph eco-chakra-spin">🌐</span>
+          <span className="nav-caption">सर्वविज्ञान</span>
+        </button>
+
+        <NavLink
+          to={myProfilePath}
+          className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
+          onClick={() => triggerHaptic(10)}
+        >
           <span className="nav-glyph">🪪</span>
           <span className="nav-caption">परिचय</span>
         </NavLink>
 
-        <NavLink to="/vyavastha" className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}>
+        <NavLink
+          to="/vyavastha"
+          className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
+          onClick={() => triggerHaptic(10)}
+        >
           <span className="nav-glyph">⚙️</span>
           <span className="nav-caption">व्यवस्था</span>
         </NavLink>
       </nav>
+
+      {/* Mobile Ecosystem Modal / Sheet */}
+      {isEcoDrawerOpen && (
+        <div className="modal-backdrop" onClick={() => setIsEcoDrawerOpen(false)}>
+          <div className="modal-container eco-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="eco-modal-title-group">
+                <h3 className="modal-title">🌐 सर्वविज्ञान पारिस्थितिकी तंत्र</h3>
+                <span className="eco-modal-sub">सार्वभौमिक ज्ञान, शास्त्र एवं अनुसंधान पोर्टल</span>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setIsEcoDrawerOpen(false)}
+                aria-label="बंद करें"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body eco-portals-list">
+              <a
+                href="https://sarvwigyan.github.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="eco-portal-item"
+                onClick={() => triggerHaptic(10)}
+              >
+                <div className="eco-portal-icon">🌐</div>
+                <div className="eco-portal-info">
+                  <h4 className="eco-portal-name">सर्वविज्ञान Hub</h4>
+                  <p className="eco-portal-desc">खुला विज्ञान, शिक्षा एवं शोध केंद्र (sarvwigyan.github.io)</p>
+                </div>
+                <span className="eco-portal-arrow">↗</span>
+              </a>
+
+              <a
+                href="https://sarvwigyan.github.io/sarvpedia/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="eco-portal-item"
+                onClick={() => triggerHaptic(10)}
+              >
+                <div className="eco-portal-icon">📖</div>
+                <div className="eco-portal-info">
+                  <h4 className="eco-portal-name">सर्वपीडिया (Sarvpedia)</h4>
+                  <p className="eco-portal-desc">वैदिक एवं आधुनिक तत्वों का ज्ञानकोश (१०८ विषय)</p>
+                </div>
+                <span className="eco-portal-arrow">↗</span>
+              </a>
+
+              <a
+                href="https://sarvwigyan.github.io/sarvstore/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="eco-portal-item"
+                onClick={() => triggerHaptic(10)}
+              >
+                <div className="eco-portal-icon">📚</div>
+                <div className="eco-portal-info">
+                  <h4 className="eco-portal-name">सर्वसंग्रह (Sarvstore / Kosh)</h4>
+                  <p className="eco-portal-desc">प्राचीन ग्रंथ, संहिताएँ एवं आधुनिक शोध-पत्रिकाएँ</p>
+                </div>
+                <span className="eco-portal-arrow">↗</span>
+              </a>
+
+              <div className="eco-portal-item active-current">
+                <div className="eco-portal-icon">☸</div>
+                <div className="eco-portal-info">
+                  <h4 className="eco-portal-name">संवाद (Samwad)</h4>
+                  <p className="eco-portal-desc">सक्रिय विचार-विमर्श एवं सामुदायिक संवाद मंच (वर्तमान)</p>
+                </div>
+                <span className="eco-current-badge">सक्रिय</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

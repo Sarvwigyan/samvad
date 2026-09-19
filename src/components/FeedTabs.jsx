@@ -1,4 +1,5 @@
 import React from "react";
+import { triggerHaptic } from "../lib/haptics";
 
 export const FEED_TAB_KEY = "samwad_feed_tab";
 export const TAB_PRAVAH = "pravah";
@@ -15,6 +16,7 @@ export const TAB_NAYA = "naya";
 export function FeedTabs({ activeTab, onTabChange }) {
   const handleSelect = (tab) => {
     if (tab === activeTab) return;
+    triggerHaptic(12);
     try {
       localStorage.setItem(FEED_TAB_KEY, tab);
     } catch (e) {}

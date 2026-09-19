@@ -17,6 +17,7 @@ export function PostComposer({ onPostCreated }) {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const textareaRef = useRef(null);
+  const isSubmittingRef = useRef(false);
 
   // Smart dynamic classification
   const autoBhav = useMemo(() => classifyVichar(text), [text]);
@@ -34,6 +35,8 @@ export function PostComposer({ onPostCreated }) {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (isSubmittingRef.current || isSending) return;
+
     if (!currentUser) {
       setError("विचार प्रेषित करने हेतु गूगल से प्रवेश आवश्यक है");
       return;
@@ -45,6 +48,7 @@ export function PostComposer({ onPostCreated }) {
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSending(true);
     setError("");
 
@@ -74,6 +78,7 @@ export function PostComposer({ onPostCreated }) {
       setError("विचार प्रेषित नहीं हो सका। कृपया नेटवर्क अथवा सुरक्षा नियम जाँचें।");
     } finally {
       setIsSending(false);
+      isSubmittingRef.current = false;
     }
   };
 

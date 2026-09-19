@@ -8,20 +8,31 @@
   /* Divine Elemental Palette */
   --kesari:          #FF7A00;   /* Pure Sacred Agni Saffron */
   --sona:            #D49B35;   /* Radiant Molten Gold */
+  --sona-dark:       #A86F18;   /* 3D Deep Gold Push Shadow */
   --sona-glow:       rgba(212, 155, 53, 0.35);
   --maroon:          #822014;   /* Deep Royal Kumkum */
   --van:             #164E35;   /* Sacred Tulsi Forest Green */
+  --chakra-navy:     #06038D;   /* Sovereign Ashoka Chakra Navy (WCAG AA 12.6:1) */
+  --chakra-navy-hover: #0A06A8;
+  --chakra-navy-dark: #040260;  /* 3D Navy Shadow */
+  --kesari-dark:     #C44E12;   /* 3D Saffron Shadow */
 
-  /* Surface & Canvas Tokens */
-  --font-heading:    'Tiro Devanagari Hindi', 'Rozha One', 'Cinzel', serif;
-  --font-body:       'Mukta', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-  --font-script:     'Noto Sans Devanagari', sans-serif;
+  /* Surface & Canvas Tokens — Devanagari Precision */
+  --font-heading:    'Tiro Devanagari Hindi', 'Noto Sans Devanagari', 'Mukta', 'Segoe UI Historic', 'Nirmala UI', 'Cinzel', serif;
+  --font-body:       'Noto Sans Devanagari', 'Mukta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Nirmala UI', 'SF Pro Text', system-ui, sans-serif;
+  --font-script:     'Noto Sans Devanagari', 'Mukta', 'Nirmala UI', sans-serif;
 
   --radius-xl:       22px;
   --radius-lg:       16px;
   --radius:          14px;
   --radius-sm:       10px;
   --radius-pill:     9999px;
+
+  /* Duolingo 3D Tactile Button Tokens */
+  --shadow-btn-3d:        0 4px 0 0 var(--sona-dark);
+  --shadow-btn-navy-3d:   0 4px 0 0 var(--chakra-navy-dark);
+  --shadow-btn-kesari-3d: 0 4px 0 0 var(--kesari-dark);
+  --shadow-pill-3d:       0 3px 0 0 rgba(212, 155, 53, 0.28);
 
   /* Apple Liquid Spring Motion */
   --spring-bounce:   cubic-bezier(0.175, 0.885, 0.32, 1.15);

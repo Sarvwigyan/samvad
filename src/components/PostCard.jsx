@@ -13,6 +13,7 @@ import {
   toggleSmaran
 } from "../lib/firestore";
 import { playTempleChime } from "../lib/chime";
+import { triggerHaptic } from "../lib/haptics";
 
 export function PostCard({ post, debug = false }) {
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
@@ -39,6 +40,7 @@ export function PostCard({ post, debug = false }) {
 
   const handleAnumodan = async (e) => {
     e.stopPropagation();
+    triggerHaptic(10);
     if (!currentUser) {
       loginWithGoogle();
       return;
@@ -61,6 +63,7 @@ export function PostCard({ post, debug = false }) {
 
   const handlePrasar = async (e) => {
     e.stopPropagation();
+    triggerHaptic(10);
     if (!currentUser) {
       loginWithGoogle();
       return;
@@ -81,6 +84,7 @@ export function PostCard({ post, debug = false }) {
 
   const handleSmaran = async (e) => {
     e.stopPropagation();
+    triggerHaptic(10);
     if (!currentUser) {
       loginWithGoogle();
       return;
@@ -98,6 +102,7 @@ export function PostCard({ post, debug = false }) {
 
   const handleShare = async (e) => {
     e.stopPropagation();
+    triggerHaptic(10);
     const url = `${window.location.origin}${window.location.pathname}#/vichar/${post.id}`;
     if (navigator.share) {
       try {

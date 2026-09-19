@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs, startAfter, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { PostComposer } from "../components/PostComposer";
@@ -10,8 +10,8 @@ import { FeedTabs, FEED_TAB_KEY, TAB_PRAVAH, TAB_NAYA } from "../components/Feed
 import { useRankedFeed } from "../hooks/useRankedFeed";
 import { SearchIcon, StreamIcon } from "../components/ui/Icons";
 
-const INITIAL_BATCH_SIZE = 10;
-const BATCH_INCREMENT = 8;
+const INITIAL_BATCH_SIZE = 15;
+const BATCH_INCREMENT = 10;
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -21,7 +21,9 @@ export default function Home() {
   const filterQuery = searchParams.get("q") || "";
   const isDebug = searchParams.get("debug") === "1";
 
-  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
+  // Cursor pagination states
+  const [lastVisible, setLastVisible] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = useRef(null);
 
@@ -37,68 +39,77 @@ export default function Home() {
 
   const { rankedPosts } = useRankedFeed(posts, currentUser, activeTab === TAB_PRAVAH);
 
-  useEffect(() => {
-    let unsubscribeFallback = null;
+  const fetchPosts = async (isNextBatch = false) => {
+    if (loadingMore) return;
+    if (isNextBatch && !hasMore) return;
+    
+    setLoadingMore(isNextBatch);
+    if (!isNextBatch) {
+      setLoading(true);
+      setPosts([]);
+      setLastVisible(null);
+      setHasMore(true);
+    }
 
-    // Listen to posts collection in real-time
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(50));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        // Strict deduplication by ID
-        const unique = [];
-        const seen = new Set();
-        for (const item of items) {
-          if (!seen.has(item.id)) {
-            seen.add(item.id);
-            unique.push(item);
-          }
-        }
-        setPosts(unique);
-        setLoading(false);
-      },
-      (err) => {
-        console.warn("Primary posts orderBy query notice, falling back to unordered listener:", err.message);
-        const fbQuery = query(collection(db, "posts"), limit(50));
-        unsubscribeFallback = onSnapshot(
-          fbQuery,
-          (fbSnap) => {
-            const items = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-            items.sort((a, b) => {
-              const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
-              const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
-              return timeB - timeA;
-            });
-            const unique = [];
-            const seen = new Set();
-            for (const item of items) {
-              if (!seen.has(item.id)) {
-                seen.add(item.id);
-                unique.push(item);
-              }
-            }
-            setPosts(unique);
-            setLoading(false);
-          },
-          (fbErr) => {
-            console.error("Feed snapshot error:", fbErr);
-            setLoading(false);
-          }
-        );
+    try {
+      let q;
+      if (isNextBatch && lastVisible) {
+        q = query(collection(db, "posts"), orderBy("createdAt", "desc"), startAfter(lastVisible), limit(BATCH_INCREMENT));
+      } else {
+        q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(INITIAL_BATCH_SIZE));
       }
-    );
 
-    return () => {
-      unsubscribe();
-      if (unsubscribeFallback) unsubscribeFallback();
-    };
-  }, []);
+      const snapshot = await getDocs(q);
+      const newPosts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      if (snapshot.docs.length > 0) {
+        setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+      }
+      
+      if (snapshot.docs.length < (isNextBatch ? BATCH_INCREMENT : INITIAL_BATCH_SIZE)) {
+        setHasMore(false);
+      }
 
-  // Reset lazy load window on tab change or search filter
+      setPosts(prev => {
+        if (!isNextBatch) return newPosts;
+        const existingIds = new Set(prev.map(p => p.id));
+        const filteredNew = newPosts.filter(p => !existingIds.has(p.id));
+        return [...prev, ...filteredNew];
+      });
+    } catch (err) {
+      console.error("Feed error:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
-    setVisibleCount(INITIAL_BATCH_SIZE);
-  }, [activeTab, filterQuery]);
+    fetchPosts(false);
+  }, [activeTab, filterQuery]); // Refetch on tab or search change
+
+  // Optional: Listen for very new posts to prepend them (lightweight listener)
+  useEffect(() => {
+    // Only listen to the top 1 newest post to catch new creations by others quickly
+    const qNewest = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(1));
+    const unsubscribe = onSnapshot(qNewest, (snapshot) => {
+      if (snapshot.docs.length > 0) {
+        const newest = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+        setPosts((prev) => {
+          if (!prev.length) return prev;
+          if (prev.some(p => p.id === newest.id)) return prev;
+          // Avoid pushing really old posts if the database is mostly empty
+          const firstPostTime = prev[0]?.createdAt?.toMillis?.() || 0;
+          const newestTime = newest.createdAt?.toMillis?.() || 0;
+          if (newestTime >= firstPostTime) {
+            return [newest, ...prev];
+          }
+          return prev;
+        });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handlePostCreated = (newPost) => {
     if (!newPost?.id) return;
@@ -126,15 +137,13 @@ export default function Home() {
       })
     : candidatePosts;
 
-  const visiblePosts = displayedPosts.slice(0, visibleCount);
-
-  // Advanced IntersectionObserver for progressive infinite lazy loading (like YouTube & X)
+  // Advanced IntersectionObserver for progressive infinite lazy loading (Server-side)
   useEffect(() => {
     if (
       !sentinelRef.current ||
       typeof window === "undefined" ||
       !("IntersectionObserver" in window) ||
-      visibleCount >= displayedPosts.length
+      !hasMore || loadingMore || loading
     ) {
       return;
     }
@@ -142,20 +151,16 @@ export default function Home() {
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
-        if (first.isIntersecting && visibleCount < displayedPosts.length) {
-          setLoadingMore(true);
-          setTimeout(() => {
-            setVisibleCount((prev) => Math.min(prev + BATCH_INCREMENT, displayedPosts.length));
-            setLoadingMore(false);
-          }, 120);
+        if (first.isIntersecting && hasMore && !loadingMore) {
+          fetchPosts(true);
         }
       },
-      { rootMargin: "300px" } // Pre-loads next batch 300px before reaching the bottom
+      { rootMargin: "400px" } // Pre-loads next batch 400px before reaching the bottom
     );
 
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [visibleCount, displayedPosts.length]);
+  }, [hasMore, loadingMore, loading, lastVisible, filterQuery, activeTab]);
 
   return (
     <div className="home-pravah-page">
@@ -189,7 +194,7 @@ export default function Home() {
 
       {/* Posts Stream */}
       <section className="home-feed-section">
-        {loading ? (
+        {loading && posts.length === 0 ? (
           <PostCardSkeleton count={3} />
         ) : displayedPosts.length === 0 ? (
           <div className="feed-empty-state">
@@ -207,7 +212,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="feed-stream-list">
-            {visiblePosts.map((post) => (
+            {displayedPosts.map((post) => (
               <PostCard
                 key={post.id}
                 post={post}
@@ -217,9 +222,14 @@ export default function Home() {
             ))}
 
             {/* Infinite Scroll Lazy-Loading Sentinel (YouTube & X style) */}
-            {visibleCount < displayedPosts.length && (
-              <div ref={sentinelRef} className="feed-sentinel">
+            {hasMore && (
+              <div ref={sentinelRef} className="feed-sentinel" style={{ padding: "20px 0", textAlign: "center" }}>
                 {loadingMore && <PostCardSkeleton count={1} />}
+              </div>
+            )}
+            {!hasMore && displayedPosts.length > 0 && (
+              <div className="feed-end-message" style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                आपने सभी विचार देख लिए हैं।
               </div>
             )}
           </div>

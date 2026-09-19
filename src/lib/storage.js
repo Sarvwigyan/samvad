@@ -98,3 +98,23 @@ export async function uploadUserBanner(uid, file) {
   const compressed = await compressAndResizeImage(file, 1200, 450, 0.82);
   return compressed.dataUrl;
 }
+
+/**
+ * Compresses an image specifically for post attachments.
+ * Sized to max 800x800 at 0.58 quality (~40-80KB base64).
+ * Ensures up to 4 images fit easily within Firestore's 1MB document limit.
+ *
+ * @param {File|Blob} file - Image to compress
+ * @returns {Promise<string>} Base64 data URL
+ */
+export async function compressPostImage(file) {
+  if (!file) throw new Error("संचिका अनुपस्थित है");
+  // Primary compression: 800x800, quality 0.58
+  let compressed = await compressAndResizeImage(file, 800, 800, 0.58);
+  // Guard: if still large (> 160KB base64), compress further down to 600x600, 0.48
+  if (compressed.dataUrl.length > 160000) {
+    compressed = await compressAndResizeImage(file, 600, 600, 0.48);
+  }
+  return compressed.dataUrl;
+}
+

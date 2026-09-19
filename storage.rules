@@ -18,16 +18,26 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
 
-    // Post attachments / general media
+    // Post attachments / general media — now with size and type limits
     match /posts/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('(image|video)/.*');
     }
 
-    // Allow authenticated access across general storage
+    // Pruning archives (JSON backups)
+    match /archive/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 50 * 1024 * 1024
+                   && request.resource.contentType == 'application/json';
+    }
+
+    // Default: deny all other writes, allow reads for authenticated users
     match /{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if false;
     }
   }
 }

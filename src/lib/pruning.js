@@ -136,16 +136,16 @@ export async function pruneIfNeeded(options = {}) {
       }
     }
 
-    // 2. Random sampling: 1 in 10 users triggers count check
+    // 2. Update check timestamp early to prevent repeated triggers
+    try {
+      localStorage.setItem(LAST_PRUNE_KEY, Date.now().toString());
+    } catch (e) {}
+
+    // 3. Random sampling: 1 in 10 users triggers count check
     if (Math.random() >= 0.1) {
       return { pruned: false, deletedCount: 0, reason: "not_sampled" };
     }
   }
-
-  // Update check timestamp early to prevent repeated triggers
-  try {
-    localStorage.setItem(LAST_PRUNE_KEY, Date.now().toString());
-  } catch (e) {}
 
   try {
     // 3. Fast, cheap aggregation read for total post count (1 read only)

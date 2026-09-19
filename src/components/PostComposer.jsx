@@ -5,18 +5,23 @@ import { playTempleChime } from "../lib/chime";
 import { getClientId } from "../lib/clientId";
 import { validatePostText } from "../lib/validation";
 import { classifyVichar, BHAV_CATEGORIES } from "../lib/nlp";
+import { compressPostImage } from "../lib/storage";
 import { Button } from "./ui/Button";
 import { Avatar } from "./ui/Avatar";
+import { ImageIcon, CloseIcon } from "./ui/Icons";
 
 export function PostComposer({ onPostCreated }) {
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
   const [text, setText] = useState("");
+  const [images, setImages] = useState([]);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [manualBhavId, setManualBhavId] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
   const isSubmittingRef = useRef(false);
 
   // Smart dynamic classification
@@ -31,20 +36,52 @@ export function PostComposer({ onPostCreated }) {
 
   const charCount = text.length;
   const isOverLimit = charCount > 500;
-  const isSendDisabled = isSending || text.trim().length === 0 || isOverLimit;
+  const isSendDisabled = isSending || isCompressing || (text.trim().length === 0 && images.length === 0) || isOverLimit;
+
+  const handleImageSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const remaining = 4 - images.length;
+    if (remaining <= 0) {
+      setError("अधिकतम 4 चित्र ही संलग्न किए जा सकते हैं");
+      return;
+    }
+    const selected = files.slice(0, remaining);
+    setIsCompressing(true);
+    setError("");
+    try {
+      const compressedList = await Promise.all(selected.map((f) => compressPostImage(f)));
+      setImages((prev) => [...prev, ...compressedList].slice(0, 4));
+    } catch (err) {
+      console.error("Image compression error:", err);
+      setError("चित्र संपीड़न में त्रुटि हुई। कृपया पुनः प्रयास करें।");
+    } finally {
+      setIsCompressing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (isSubmittingRef.current || isSending) return;
+    if (isSubmittingRef.current || isSending || isCompressing) return;
 
     if (!currentUser) {
       setError("विचार प्रेषित करने हेतु गूगल से प्रवेश आवश्यक है");
       return;
     }
 
-    const val = validatePostText(text);
-    if (!val.valid) {
-      setError(val.error);
+    const trimmed = text.trim();
+    if (!trimmed && images.length === 0) {
+      setError("विचार अथवा चित्र अनिवार्य है");
+      return;
+    }
+
+    if (trimmed && trimmed.length > 500) {
+      setError("विचार अधिकतम 500 अक्षरों तक ही सीमित है");
       return;
     }
 
@@ -57,14 +94,16 @@ export function PostComposer({ onPostCreated }) {
         authorId: currentUser.uid,
         authorName: userProfile?.displayName || currentUser.displayName || "सुधी साधक",
         authorPhoto: userProfile?.avatarUrl || currentUser.photoURL || null,
-        text: val.sanitized,
+        text: trimmed || "(चित्र विचार)",
         bhav: activeBhav.short,
         isAnonymous,
+        images,
         clientId: getClientId()
       });
 
       playTempleChime();
       setText("");
+      setImages([]);
       setManualBhavId(null);
       setIsDropdownOpen(false);
       if (textareaRef.current) {
@@ -195,7 +234,7 @@ export function PostComposer({ onPostCreated }) {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             className={`composer-textarea ${isOverLimit ? "has-error" : ""}`}
-            placeholder="कल्याणकारी विचारों को प्रवाह में व्यक्त करें... #हैशटैग का प्रयोग करें (Ctrl + Enter)"
+            placeholder="कल्याणकारी विचारों को प्रवाह में व्यक्त करें... #हैशटैग अथवा @साधक का प्रयोग करें (Ctrl + Enter)"
             rows={2}
             maxLength={600}
             disabled={isSending}
@@ -204,29 +243,81 @@ export function PostComposer({ onPostCreated }) {
         </div>
       </div>
 
+      {/* Attached Images Preview Grid (X-style 1-4 images) */}
+      {images.length > 0 && (
+        <div className={`composer-image-grid img-grid-${images.length}`}>
+          {images.map((imgSrc, idx) => (
+            <div key={idx} className="composer-preview-item">
+              <img src={imgSrc} alt={`संलग्न चित्र ${idx + 1}`} className="composer-thumb-img" />
+              <button
+                type="button"
+                className="composer-remove-img-btn"
+                onClick={() => removeImage(idx)}
+                title="चित्र हटाएँ"
+                aria-label="चित्र हटाएँ"
+              >
+                <CloseIcon size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isCompressing && (
+        <div className="composer-compressing-banner">
+          <span className="btn-spinner" aria-hidden="true" />
+          <span>चित्र संपीड़न व अनुकूलन जारी है...</span>
+        </div>
+      )}
+
       {error && <p className="composer-error-msg">⚠️ {error}</p>}
 
       {/* Actions & Meter */}
       <div className="composer-footer-row">
-        <div className="composer-meter">
-          <div
-            className={`meter-fill ${isOverLimit ? "fill-exceeded" : ""}`}
-            style={{ width: `${Math.min((charCount / 500) * 100, 100)}%` }}
+        <div className="composer-tools-left">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageSelect}
+            accept="image/*"
+            multiple
+            style={{ display: "none" }}
+            id="composer-file-input"
           />
-          <span className={`meter-text ${isOverLimit ? "text-danger" : ""}`}>
-            {charCount} / 500
-          </span>
+          <button
+            type="button"
+            className="composer-action-icon-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={images.length >= 4 || isCompressing}
+            title={images.length >= 4 ? "अधिकतम 4 चित्र संलग्न हो चुके हैं" : "चित्र संलग्न करें (अधिकतम 4)"}
+            aria-label="चित्र संलग्न करें"
+          >
+            <ImageIcon size={19} />
+            {images.length > 0 && <span className="media-badge-pill">{images.length}/4</span>}
+          </button>
         </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="md"
-          disabled={isSendDisabled}
-          loading={isSending}
-        >
-          विचार प्रेषित करें (Post)
-        </Button>
+        <div className="composer-footer-right">
+          <div className="composer-meter">
+            <div
+              className={`meter-fill ${isOverLimit ? "fill-exceeded" : ""}`}
+              style={{ width: `${Math.min((charCount / 500) * 100, 100)}%` }}
+            />
+            <span className={`meter-text ${isOverLimit ? "text-danger" : ""}`}>
+              {charCount} / 500
+            </span>
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            disabled={isSendDisabled}
+            loading={isSending || isCompressing}
+          >
+            विचार प्रेषित करें (Post)
+          </Button>
+        </div>
       </div>
     </form>
   );

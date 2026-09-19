@@ -17,6 +17,8 @@ const Followers = lazy(() => import("./pages/Followers"));
 const Following = lazy(() => import("./pages/Following"));
 const VicharDetail = lazy(() => import("./pages/VicharDetail"));
 const Smaran = lazy(() => import("./pages/Smaran"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const DirectMessages = lazy(() => import("./pages/DirectMessages"));
 const SettingsLayout = lazy(() => import("./pages/Settings/SettingsLayout"));
 
 function ScrollToTop() {
@@ -69,6 +71,13 @@ export default function App() {
 
                 {/* Bookmarks / Smaran */}
                 <Route path="/smaran" element={<Smaran />} />
+
+                {/* Notifications / Soochna */}
+                <Route path="/soochna" element={<Notifications />} />
+
+                {/* Direct Messages / Sandesh */}
+                <Route path="/sandesh" element={<DirectMessages />} />
+                <Route path="/sandesh/:id" element={<DirectMessages />} />
 
                 {/* Profile / Parichay */}
                 <Route path="/parichay" element={<Profile />} />

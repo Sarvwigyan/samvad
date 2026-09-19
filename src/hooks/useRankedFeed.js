@@ -16,6 +16,7 @@ const RANK_CACHE_TTL = 60000; // 60 seconds cache
 export function useRankedFeed(rawPosts = [], currentUser = null, enabled = true) {
   const [rankedPosts, setRankedPosts] = useState([]);
   const [isRanking, setIsRanking] = useState(false);
+  const isMountedRef = useRef(true);
 
   const cacheRef = useRef({
     timestamp: 0,
@@ -25,12 +26,12 @@ export function useRankedFeed(rawPosts = [], currentUser = null, enabled = true)
 
   const refreshRanking = async (force = false) => {
     if (!rawPosts || rawPosts.length === 0) {
-      setRankedPosts([]);
+      if (isMountedRef.current) setRankedPosts([]);
       return;
     }
 
     if (!enabled) {
-      setRankedPosts(rawPosts);
+      if (isMountedRef.current) setRankedPosts(rawPosts);
       return;
     }
 
@@ -39,11 +40,11 @@ export function useRankedFeed(rawPosts = [], currentUser = null, enabled = true)
 
     // Use cached result if within 60 seconds and raw posts haven't mutated
     if (!force && cacheRef.current.postsKey === postsKey && (now - cacheRef.current.timestamp) < RANK_CACHE_TTL) {
-      setRankedPosts(cacheRef.current.result);
+      if (isMountedRef.current) setRankedPosts(cacheRef.current.result);
       return;
     }
 
-    setIsRanking(true);
+    if (isMountedRef.current) setIsRanking(true);
 
     try {
       let uiv = null;
@@ -71,21 +72,23 @@ export function useRankedFeed(rawPosts = [], currentUser = null, enabled = true)
         result: ranked
       };
 
-      setRankedPosts(ranked);
+      if (isMountedRef.current) setRankedPosts(ranked);
     } catch (err) {
       // Fallback gracefully to raw unranked candidates if ranking fails
-      setRankedPosts(rawPosts);
+      if (isMountedRef.current) setRankedPosts(rawPosts);
     } finally {
-      setIsRanking(false);
+      if (isMountedRef.current) setIsRanking(false);
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     if (enabled) {
       refreshRanking(false);
     } else {
       setRankedPosts(rawPosts);
     }
+    return () => { isMountedRef.current = false; };
   }, [rawPosts, currentUser?.uid, enabled]);
 
   return {

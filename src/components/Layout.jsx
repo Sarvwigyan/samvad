@@ -11,6 +11,7 @@ import { getSuggestedSadhaks, followUser, unfollowUser, isFollowing } from "../l
 import { computeTrendingTopics } from "../lib/trending";
 import { EcosystemBar } from "./EcosystemBar";
 import { triggerHaptic } from "../lib/haptics";
+import { listenUnreadCount } from "../lib/notifications";
 import {
   StreamIcon,
   BookmarkIcon,
@@ -26,7 +27,9 @@ import {
   QuoteIcon,
   MoonIcon,
   SunIcon,
-  LogoutIcon
+  LogoutIcon,
+  BellIcon,
+  MailIcon
 } from "./ui/Icons";
 
 const CURATED_SADHAKS = [
@@ -46,8 +49,20 @@ export function Layout() {
   const [liveTrending, setLiveTrending] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isEcoDrawerOpen, setIsEcoDrawerOpen] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/parichay";
+
+  useEffect(() => {
+    if (!currentUser) {
+      setUnreadNotifCount(0);
+      return;
+    }
+    const unsubscribe = listenUnreadCount(currentUser.uid, (cnt) => {
+      setUnreadNotifCount(cnt);
+    });
+    return () => unsubscribe();
+  }, [currentUser]);
 
   useEffect(() => {
     // Real-time trending topics listener (lightweight 30 recent posts)
@@ -66,22 +81,31 @@ export function Layout() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (currentUser) {
       getSuggestedSadhaks(currentUser.uid).then((sadhaks) => {
+        if (!isMounted) return;
         if (sadhaks && sadhaks.length > 0) {
           setSuggestedSadhaks(sadhaks);
           sadhaks.forEach((s) => {
             isFollowing(currentUser.uid, s.uid).then((isF) => {
-              setFollowingStates((prev) => ({ ...prev, [s.uid]: isF }));
-            });
+              if (isMounted) {
+                setFollowingStates((prev) => ({ ...prev, [s.uid]: isF }));
+              }
+            }).catch(() => {});
           });
         } else {
           setSuggestedSadhaks(CURATED_SADHAKS);
         }
+      }).catch(() => {
+        if (isMounted) setSuggestedSadhaks(CURATED_SADHAKS);
       });
     } else {
       setSuggestedSadhaks(CURATED_SADHAKS);
     }
+
+    return () => { isMounted = false; };
   }, [currentUser]);
 
   const handleFollowToggle = async (targetUid) => {
@@ -145,6 +169,33 @@ export function Layout() {
               <div className="nav-item-text">
                 <span className="nav-label-hi">प्रवाह</span>
                 <span className="nav-label-sub">Pravah (Stream)</span>
+              </div>
+            </NavLink>
+
+            <NavLink
+              to="/soochna"
+              className={({ isActive }) => `nav-menu-item ${isActive ? "active" : ""}`}
+            >
+              <span className="nav-item-icon notif-icon-wrapper">
+                <BellIcon size={22} />
+                {unreadNotifCount > 0 && (
+                  <span className="sidebar-unread-pill">{unreadNotifCount > 99 ? "99+" : unreadNotifCount}</span>
+                )}
+              </span>
+              <div className="nav-item-text">
+                <span className="nav-label-hi">सूचना</span>
+                <span className="nav-label-sub">Soochna (Alerts)</span>
+              </div>
+            </NavLink>
+
+            <NavLink
+              to="/sandesh"
+              className={({ isActive }) => `nav-menu-item ${isActive ? "active" : ""}`}
+            >
+              <span className="nav-item-icon"><MailIcon size={22} /></span>
+              <div className="nav-item-text">
+                <span className="nav-label-hi">संदेश</span>
+                <span className="nav-label-sub">Sandesh (DMs)</span>
               </div>
             </NavLink>
 
@@ -438,6 +489,29 @@ export function Layout() {
         </NavLink>
 
         <NavLink
+          to="/soochna"
+          className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
+          onClick={() => triggerHaptic(10)}
+        >
+          <span className="nav-glyph mobile-notif-wrap">
+            <BellIcon size={22} />
+            {unreadNotifCount > 0 && (
+              <span className="mobile-unread-badge">{unreadNotifCount > 99 ? "99+" : unreadNotifCount}</span>
+            )}
+          </span>
+          <span className="nav-caption">सूचना</span>
+        </NavLink>
+
+        <NavLink
+          to="/sandesh"
+          className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
+          onClick={() => triggerHaptic(10)}
+        >
+          <span className="nav-glyph"><MailIcon size={22} /></span>
+          <span className="nav-caption">संदेश</span>
+        </NavLink>
+
+        <NavLink
           to="/smaran"
           className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
           onClick={() => triggerHaptic(10)}
@@ -446,19 +520,6 @@ export function Layout() {
           <span className="nav-caption">स्मरण</span>
         </NavLink>
 
-        <button
-          type="button"
-          className={`mobile-nav-btn eco-nav-btn ${isEcoDrawerOpen ? "active" : ""}`}
-          onClick={() => {
-            triggerHaptic(12);
-            setIsEcoDrawerOpen(true);
-          }}
-          aria-label="सर्वविज्ञान पारिस्थितिकी तंत्र"
-        >
-          <span className="nav-glyph eco-chakra-spin"><GlobeIcon size={22} /></span>
-          <span className="nav-caption">सर्वविज्ञान</span>
-        </button>
-
         <NavLink
           to={myProfilePath}
           className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
@@ -466,15 +527,6 @@ export function Layout() {
         >
           <span className="nav-glyph"><ProfileIcon size={22} /></span>
           <span className="nav-caption">परिचय</span>
-        </NavLink>
-
-        <NavLink
-          to="/vyavastha"
-          className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
-          onClick={() => triggerHaptic(10)}
-        >
-          <span className="nav-glyph"><SettingsIcon size={22} /></span>
-          <span className="nav-caption">व्यवस्था</span>
         </NavLink>
       </nav>
 

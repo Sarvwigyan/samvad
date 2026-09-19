@@ -25,6 +25,8 @@ import {
   shouldPreserve,
   YEAR_2099_MS
 } from "./pruning";
+import { createNotification } from "./notifications";
+import { extractMentions, lookupMentionedUsers } from "./mentions";
 
 /**
  * Fetches user profile from users/{uid}
@@ -212,11 +214,13 @@ export async function followUser(currentUid, targetUid) {
         followingCount: increment(1)
       });
 
-      try {
+      // Verify target user doc exists before updating their follower count
+      const targetDoc = await transaction.get(targetUserRef);
+      if (targetDoc.exists()) {
         transaction.update(targetUserRef, {
           followersCount: increment(1)
         });
-      } catch (e) {}
+      }
     });
   } catch (err) {
     console.warn("Transactional follow notice, applying resilient direct write:", err.message);
@@ -225,6 +229,16 @@ export async function followUser(currentUid, targetUid) {
     await updateDoc(currentUserRef, { followingCount: increment(1) }).catch(() => {});
     await updateDoc(targetUserRef, { followersCount: increment(1) }).catch(() => {});
   }
+
+  // Asynchronously notify target user of new follower
+  getUserProfile(currentUid).then((prof) => {
+    createNotification(targetUid, {
+      type: "follow",
+      fromUid: currentUid,
+      fromName: prof?.displayName || "सुधी साधक",
+      fromPhoto: prof?.avatarUrl || null
+    }).catch(() => {});
+  }).catch(() => {});
 }
 
 /**
@@ -252,11 +266,13 @@ export async function unfollowUser(currentUid, targetUid) {
         followingCount: increment(-1)
       });
 
-      try {
+      // Verify target user doc exists before updating their follower count
+      const targetDoc = await transaction.get(targetUserRef);
+      if (targetDoc.exists()) {
         transaction.update(targetUserRef, {
           followersCount: increment(-1)
         });
-      } catch (e) {}
+      }
     });
   } catch (err) {
     console.warn("Transactional unfollow notice, applying resilient direct write:", err.message);
@@ -307,15 +323,25 @@ export async function getFollowing(uid) {
  * Creates a post / vichar
  * @param {object} param0
  */
-export async function createVichar({ authorId, authorName, authorPhoto, text, bhav, isAnonymous, clientId }) {
+export async function createVichar({ authorId, authorName, authorPhoto, text, bhav, isAnonymous, clientId, images = [] }) {
   if (!authorId || !text) throw new Error("सामग्री व पहचान अनिवार्य है");
+
+  // Enforce text length limit
+  const trimmed = text.trim();
+  if (trimmed.length > 500) {
+    throw new Error("विचार अधिकतम 500 अक्षरों तक ही सीमित है");
+  }
+
+  // Ensure images array is capped at 4 items
+  const cleanImages = Array.isArray(images) ? images.slice(0, 4).filter(Boolean) : [];
 
   const postData = {
     authorId,
     uid: authorId,
     authorName: isAnonymous ? "साधक (गुप्त)" : (authorName || "सुधी पाठक"),
     authorPhoto: isAnonymous ? null : (authorPhoto || null),
-    text: text.trim(),
+    text: trimmed,
+    images: cleanImages,
     bhav: bhav || "विचार",
     isAnonymous: Boolean(isAnonymous),
     likeCount: 0,
@@ -341,6 +367,25 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
     // User profile doc might not exist yet
   }
 
+  // Asynchronously process @mentions and notify mentioned users
+  const mentions = extractMentions(trimmed);
+  if (mentions.length > 0) {
+    lookupMentionedUsers(mentions).then((users) => {
+      users.forEach((u) => {
+        if (u.uid && u.uid !== authorId) {
+          createNotification(u.uid, {
+            type: "mention",
+            fromUid: authorId,
+            fromName: isAnonymous ? "साधक (गुप्त)" : (authorName || "सुधी पाठक"),
+            fromPhoto: isAnonymous ? null : authorPhoto,
+            postId: docRef.id,
+            postText: trimmed
+          }).catch(() => {});
+        }
+      });
+    }).catch(() => {});
+  }
+
   return { id: docRef.id, ...postData };
 }
 
@@ -352,10 +397,10 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
 export async function getUserVichars(uid, limitCount = 50) {
   if (!uid) return [];
   try {
-    const q1 = query(collection(db, "posts"), where("authorId", "==", uid));
+    const q1 = query(collection(db, "posts"), where("authorId", "==", uid), limit(limitCount));
     const snap1 = await getDocs(q1);
 
-    const q2 = query(collection(db, "posts"), where("uid", "==", uid));
+    const q2 = query(collection(db, "posts"), where("uid", "==", uid), limit(limitCount));
     const snap2 = await getDocs(q2);
 
     const map = new Map();
@@ -364,8 +409,8 @@ export async function getUserVichars(uid, limitCount = 50) {
 
     const posts = Array.from(map.values());
     posts.sort((a, b) => {
-      const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
-      const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
+      const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+      const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
       return timeB - timeA;
     });
     return posts.slice(0, limitCount);
@@ -470,6 +515,26 @@ export async function toggleAnumodan(postId, uid) {
       });
       syncPostPreservation(postId);
     } catch (e) {}
+
+    // Asynchronously notify post author
+    getDoc(postRef).then((snap) => {
+      if (snap.exists()) {
+        const p = snap.data();
+        if (p.authorId && p.authorId !== uid) {
+          getUserProfile(uid).then((prof) => {
+            createNotification(p.authorId, {
+              type: "like",
+              fromUid: uid,
+              fromName: prof?.displayName || "सुधी साधक",
+              fromPhoto: prof?.avatarUrl || null,
+              postId,
+              postText: p.text
+            }).catch(() => {});
+          }).catch(() => {});
+        }
+      }
+    }).catch(() => {});
+
     return { liked: true, likeCountDelta: 1 };
   }
 }
@@ -519,6 +584,26 @@ export async function togglePrasar(postId, uid) {
       });
       syncPostPreservation(postId);
     } catch (e) {}
+
+    // Asynchronously notify post author
+    getDoc(postRef).then((snap) => {
+      if (snap.exists()) {
+        const p = snap.data();
+        if (p.authorId && p.authorId !== uid) {
+          getUserProfile(uid).then((prof) => {
+            createNotification(p.authorId, {
+              type: "repost",
+              fromUid: uid,
+              fromName: prof?.displayName || "सुधी साधक",
+              fromPhoto: prof?.avatarUrl || null,
+              postId,
+              postText: p.text
+            }).catch(() => {});
+          }).catch(() => {});
+        }
+      }
+    }).catch(() => {});
+
     return { reposted: true, repostCountDelta: 1 };
   }
 }
@@ -630,6 +715,23 @@ export async function createUttar(postId, { authorId, authorName, authorPhoto, t
     });
     syncPostPreservation(postId);
   } catch (e) {}
+
+  // Asynchronously notify post author
+  getDoc(doc(db, "posts", postId)).then((snap) => {
+    if (snap.exists()) {
+      const p = snap.data();
+      if (p.authorId && p.authorId !== authorId) {
+        createNotification(p.authorId, {
+          type: "reply",
+          fromUid: authorId,
+          fromName: isAnonymous ? "साधक (गुप्त)" : (authorName || "सुधी पाठक"),
+          fromPhoto: isAnonymous ? null : authorPhoto,
+          postId,
+          postText: text.trim()
+        }).catch(() => {});
+      }
+    }
+  }).catch(() => {});
 
   return { id: replyRef.id, ...replyData };
 }

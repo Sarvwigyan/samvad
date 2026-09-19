@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { FollowButton } from "./FollowButton";
-import { MapPinIcon, LinkIcon } from "./ui/Icons";
+import { MapPinIcon, LinkIcon, MailIcon } from "./ui/Icons";
 
 export function ProfileHeader({ profile, onEditClick }) {
-  const { currentUser } = useAuth();
+  const { currentUser, loginWithGoogle } = useAuth();
+  const navigate = useNavigate();
   const isOwnProfile = currentUser && currentUser.uid === profile.uid;
   const [followerOffset, setFollowerOffset] = useState(0);
 
@@ -42,10 +43,28 @@ export function ProfileHeader({ profile, onEditClick }) {
                 संशोधन (Edit)
               </Button>
             ) : (
-              <FollowButton
-                targetUid={profile.uid}
-                onCountChange={(delta) => setFollowerOffset((prev) => prev + delta)}
-              />
+              <div className="profile-other-actions">
+                <FollowButton
+                  targetUid={profile.uid}
+                  onCountChange={(delta) => setFollowerOffset((prev) => prev + delta)}
+                />
+                <button
+                  type="button"
+                  className="profile-dm-btn"
+                  onClick={() => {
+                    if (currentUser) {
+                      navigate(`/sandesh?with=${profile.uid}`);
+                    } else {
+                      loginWithGoogle();
+                    }
+                  }}
+                  title="व्यक्तिगत संदेश (DM) भेजें"
+                  aria-label="संदेश भेजें"
+                >
+                  <MailIcon size={16} />
+                  <span>संदेश</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -73,7 +92,7 @@ export function ProfileHeader({ profile, onEditClick }) {
               <MapPinIcon size={14} /> {profile.location}
             </span>
           )}
-          {profile.website && (
+          {typeof profile.website === 'string' && profile.website && (
             <a
               href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`}
               target="_blank"

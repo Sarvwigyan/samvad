@@ -16,11 +16,14 @@ import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
 import { timeAgo } from "../lib/timeAgo";
 import { playTempleChime } from "../lib/chime";
+import { extractUrls, getLinkCardData } from "../lib/linkPreview";
 import {
   HeartIcon,
   RepostIcon,
   BookmarkIcon,
-  ShareIcon
+  ShareIcon,
+  ExternalLinkIcon,
+  CloseIcon
 } from "../components/ui/Icons";
 
 export default function VicharDetail() {
@@ -38,6 +41,7 @@ export default function VicharDetail() {
   const [reposted, setReposted] = useState(false);
   const [repostCount, setRepostCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
+  const [activeLightboxImg, setActiveLightboxImg] = useState(null);
 
   // Reply Composer state
   const [replyText, setReplyText] = useState("");
@@ -142,7 +146,9 @@ export default function VicharDetail() {
         });
       } catch {}
     } else {
-      navigator.clipboard?.writeText(url);
+      try {
+        await navigator.clipboard?.writeText(url);
+      } catch {}
       setCopiedToast(true);
       setTimeout(() => setCopiedToast(false), 2000);
     }
@@ -272,8 +278,101 @@ export default function VicharDetail() {
         </header>
 
         <div className="main-vichar-text">
-          {post.text}
+          {post.text?.split(/(#[a-zA-Z0-9_\u0900-\u097F]+|@[a-zA-Z0-9_]{3,20})/gu).map((part, i) => {
+            if (part.startsWith("#")) {
+              return (
+                <span
+                  key={i}
+                  className="post-hashtag-link"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/?q=${encodeURIComponent(part)}`);
+                  }}
+                  title={`'${part}' विषय के विचार खोजें`}
+                >
+                  {part}
+                </span>
+              );
+            }
+            if (part.startsWith("@")) {
+              const handle = part.slice(1);
+              return (
+                <span
+                  key={i}
+                  className="post-mention-link"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/?q=${encodeURIComponent(handle)}`);
+                  }}
+                  title={`@${handle} का परिचय खोजें`}
+                >
+                  {part}
+                </span>
+              );
+            }
+            return part;
+          })}
         </div>
+
+        {/* Attached Images Grid (X-style 1-4 images) */}
+        {post.images && post.images.length > 0 && (
+          <div className={`post-media-grid grid-count-${Math.min(post.images.length, 4)}`}>
+            {post.images.slice(0, 4).map((imgUrl, idx) => (
+              <div
+                key={idx}
+                className="post-media-cell"
+                onClick={() => setActiveLightboxImg(imgUrl)}
+                role="button"
+                tabIndex={0}
+                title="चित्र बड़ा करके देखें"
+              >
+                <img
+                  src={imgUrl}
+                  alt={`संलग्न चित्र ${idx + 1}`}
+                  className="post-media-img"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Link Preview Card */}
+        {(() => {
+          const urls = extractUrls(post.text);
+          if (!urls || urls.length === 0) return null;
+          const card = getLinkCardData(urls[0]);
+          return (
+            <div
+              className="post-link-card"
+              onClick={() => window.open(card.url, "_blank", "noopener,noreferrer")}
+              role="link"
+              tabIndex={0}
+              title={`खोलें: ${card.url}`}
+            >
+              <div className="link-card-content">
+                <div className="link-card-header-line">
+                  {card.favicon ? (
+                    <img
+                      src={card.favicon}
+                      alt=""
+                      className="link-card-favicon"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  ) : null}
+                  <span className="link-card-domain">{card.domain}</span>
+                  <ExternalLinkIcon size={12} className="link-card-external-icon" />
+                </div>
+                <span className="link-card-url-text">{card.displayUrl}</span>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="main-vichar-timestamp">
           <span>{timeAgo(post.createdAt)}</span> • <span>सार्वजनिक प्रवाह</span>
@@ -461,6 +560,28 @@ export default function VicharDetail() {
           </div>
         )}
       </section>
+
+      {/* Lightbox Modal */}
+      {activeLightboxImg && (
+        <div
+          className="media-lightbox-backdrop"
+          onClick={() => setActiveLightboxImg(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="media-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="media-lightbox-close-btn"
+              onClick={() => setActiveLightboxImg(null)}
+              aria-label="बंद करें"
+            >
+              <CloseIcon size={20} />
+            </button>
+            <img src={activeLightboxImg} alt="विस्तृत चित्र" className="lightbox-full-img" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

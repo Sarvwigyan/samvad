@@ -51,11 +51,6 @@ export function classifyVichar(text = "") {
 
   const clean = text.toLowerCase();
 
-  // 1. High-priority check for questions / inquiry
-  if (clean.includes("?") || clean.includes("؟")) {
-    return BHAV_CATEGORIES.JIGYASA;
-  }
-
   // Count keyword occurrences for each category
   const scores = {
     jigyasa: 0,
@@ -67,6 +62,11 @@ export function classifyVichar(text = "") {
 
   for (const word of JIGYASA_MARKERS) {
     if (clean.includes(word)) scores.jigyasa += 2;
+  }
+
+  // Strong boost for explicit question marks (but don't bypass other analysis)
+  if (clean.includes("?") || clean.includes("؟")) {
+    scores.jigyasa += 5;
   }
 
   for (const word of ADHYATMA_MARKERS) {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "../components/ui/Modal";
 import { Input, Textarea } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
@@ -21,6 +21,18 @@ export function EditProfile({ isOpen, onClose, profile, onSaved }) {
 
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Revoke object URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+      if (bannerPreview && bannerPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(bannerPreview);
+      }
+    };
+  }, [avatarPreview, bannerPreview]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];

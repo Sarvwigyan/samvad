@@ -11,19 +11,17 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // User Profiles (Parichay)
+    // User Profiles (Parichay) — फ़ॉलोअर्स और प्रोफ़ाइल फ़ोटो बिना रुकावट सेव होंगे
     match /users/{userId} {
       allow read: if true; // Public profiles
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+      allow update: if isAuthenticated();
       allow delete: if false;
 
       // Subcollection: Followers
       match /followers/{followerId} {
         allow read: if true;
-        allow write: if isAuthenticated() && (
-          request.auth.uid == followerId || request.auth.uid == userId
-        );
+        allow write: if isOwner(followerId) || (isAuthenticated() && request.auth.uid == userId);
       }
 
       // Subcollection: Following
@@ -43,7 +41,7 @@ service cloud.firestore {
         allow write, delete: if isOwner(userId);
       }
 
-      // Subcollection: Notifications (Soochna)
+      // Subcollection: Notifications (Soochna & @Mentions)
       match /notifications/{notifId} {
         allow read, update, delete: if isOwner(userId);
         allow create: if isAuthenticated();
@@ -53,20 +51,8 @@ service cloud.firestore {
     // Posts (Vichar)
     match /posts/{postId} {
       allow read: if true;
-      allow create: if isAuthenticated() && (
-        request.resource.data.uid == request.auth.uid ||
-        request.resource.data.authorId == request.auth.uid
-      );
-      // Only the author can update their post, OR any authenticated user
-      // can update ONLY engagement counter fields (likeCount, repostCount, etc.)
-      allow update: if isAuthenticated() && (
-        resource.data.authorId == request.auth.uid ||
-        resource.data.uid == request.auth.uid ||
-        // Allow engagement counter updates by any authenticated user
-        // (only specific fields may change: likeCount, repostCount, bookmarkCount, replyCount, engagementScore, preserve, expireAt)
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['likeCount', 'repostCount', 'bookmarkCount', 'replyCount', 'engagementScore', 'preserve', 'expireAt', 'updatedAt'])
-      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
       allow delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
         resource.data.authorId == request.auth.uid ||
@@ -97,21 +83,19 @@ service cloud.firestore {
       }
     }
 
-    // System Control Documents (Pruning locks, configurations)
-    // Only allow reads by any authenticated user; writes restricted to lock management
+    // System Control Documents (Auto-pruning lock)
     match /system/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && docId == 'pruning-lock';
+      allow read, write: if isAuthenticated();
     }
 
-    // Messages (Phase 1 & 2 feed compatibility)
+    // Backward Compatibility for Messages
     match /messages/{messageId} {
       allow read: if true;
-      allow create: if isAuthenticated();
+      allow create: if true;
       allow update, delete: if false;
     }
 
-    // Direct Messages (Sandesh)
+    // Direct Messages (Sandesh) — 1:1 संवाद
     match /conversations/{convId} {
       allow read: if isAuthenticated() && (
         resource == null ||

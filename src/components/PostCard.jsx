@@ -339,9 +339,9 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
                   tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/?q=${encodeURIComponent(handle)}`);
+                    navigate(`/parichay/${encodeURIComponent(handle)}`);
                   }}
-                  title={`@${handle} का परिचय खोजें`}
+                  title={`@${handle} का परिचय पत्रक देखें`}
                 >
                   {part}
                 </span>

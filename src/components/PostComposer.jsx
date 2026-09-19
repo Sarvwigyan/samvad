@@ -6,6 +6,7 @@ import { getClientId } from "../lib/clientId";
 import { validatePostText } from "../lib/validation";
 import { classifyVichar, BHAV_CATEGORIES } from "../lib/nlp";
 import { compressPostImage } from "../lib/storage";
+import { searchUsersByMention } from "../lib/mentions";
 import { Button } from "./ui/Button";
 import { Avatar } from "./ui/Avatar";
 import { ImageIcon, CloseIcon } from "./ui/Icons";
@@ -20,6 +21,8 @@ export function PostComposer({ onPostCreated }) {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const [mentionQuery, setMentionQuery] = useState(null);
+  const [mentionSuggestions, setMentionSuggestions] = useState([]);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const isSubmittingRef = useRef(false);
@@ -129,9 +132,48 @@ export function PostComposer({ onPostCreated }) {
   };
 
   const handleChange = (e) => {
-    setText(e.target.value);
+    const val = e.target.value;
+    setText(val);
     e.target.style.height = "auto";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
+
+    // Detect @mention trigger at cursor
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = val.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+
+    if (match) {
+      const q = match[1];
+      setMentionQuery(q);
+      searchUsersByMention(q, 5).then((results) => {
+        setMentionSuggestions(results);
+      }).catch(() => {
+        setMentionSuggestions([]);
+      });
+    } else {
+      setMentionQuery(null);
+      setMentionSuggestions([]);
+    }
+  };
+
+  const handleSelectMention = (user) => {
+    if (!textareaRef.current) return;
+    const cursorPos = textareaRef.current.selectionStart;
+    const textBeforeCursor = text.slice(0, cursorPos);
+    const textAfterCursor = text.slice(cursorPos);
+
+    const replacedBefore = textBeforeCursor.replace(/@([a-zA-Z0-9_]*)$/, `@${user.username} `);
+    const newText = replacedBefore + textAfterCursor;
+    setText(newText);
+    setMentionQuery(null);
+    setMentionSuggestions([]);
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const newPos = replacedBefore.length;
+        textareaRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 10);
   };
 
   if (!currentUser) {
@@ -240,6 +282,36 @@ export function PostComposer({ onPostCreated }) {
             disabled={isSending}
             aria-label="विचार लिखें"
           />
+
+          {/* Mention Suggestions Popover */}
+          {mentionQuery !== null && mentionSuggestions.length > 0 && (
+            <div className="composer-mention-suggestions">
+              <div className="mention-suggestion-header">
+                <span>साधक उल्लेख (@Mention)</span>
+              </div>
+              <div className="mention-suggestion-list">
+                {mentionSuggestions.map((u) => (
+                  <button
+                    key={u.uid}
+                    type="button"
+                    className="mention-suggestion-item"
+                    onClick={() => handleSelectMention(u)}
+                  >
+                    <Avatar
+                      src={u.avatarUrl}
+                      alt={u.displayName || u.username}
+                      size="sm"
+                      fallbackText={u.displayName || u.username}
+                    />
+                    <div className="mention-item-info">
+                      <span className="mention-item-name">{u.displayName || "सुधी साधक"}</span>
+                      <span className="mention-item-handle">@{u.username}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

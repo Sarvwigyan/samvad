@@ -44,3 +44,30 @@ export async function lookupMentionedUsers(usernames = []) {
 
   return found;
 }
+
+/**
+ * Searches users for mention autocomplete as user types after @.
+ * @param {string} queryText
+ * @param {number} limitCount
+ * @returns {Promise<Array<{ uid: string, username: string, displayName: string, avatarUrl: string|null }>>}
+ */
+export async function searchUsersByMention(queryText = "", limitCount = 5) {
+  try {
+    const q = query(collection(db, "users"), limit(25));
+    const snap = await getDocs(q);
+    const users = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+    const cleanQuery = (queryText || "").toLowerCase().trim();
+
+    const filtered = users.filter((u) => {
+      if (!cleanQuery) return true;
+      const uname = (u.username || "").toLowerCase();
+      const dname = (u.displayName || "").toLowerCase();
+      return uname.includes(cleanQuery) || dname.includes(cleanQuery);
+    });
+
+    return filtered.slice(0, limitCount);
+  } catch (err) {
+    console.warn("searchUsersByMention notice:", err.message);
+    return [];
+  }
+}

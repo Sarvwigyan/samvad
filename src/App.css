@@ -4198,3 +4198,82 @@
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   Composer Mention Suggestions Popover
+   ========================================================================== */
+.composer-textarea-box {
+  position: relative;
+  width: 100%;
+}
+
+.composer-mention-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-card, #1c1917);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  overflow: hidden;
+  margin-top: 6px;
+  backdrop-filter: blur(12px);
+}
+
+.mention-suggestion-header {
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted, #a8a29e);
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mention-suggestion-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.mention-suggestion-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text, #fafaf9);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.mention-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.mention-suggestion-item:hover,
+.mention-suggestion-item:focus {
+  background: rgba(212, 162, 76, 0.15);
+}
+
+.mention-item-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.mention-item-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.mention-item-handle {
+  font-size: 0.78rem;
+  color: var(--sona, #d4a24c);
+}

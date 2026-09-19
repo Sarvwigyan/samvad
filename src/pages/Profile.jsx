@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getUserProfile, getUserVichars } from "../lib/firestore";
+import { getUserProfile, getUserVichars, getProfileByUsername } from "../lib/firestore";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { PostCard } from "../components/PostCard";
 import { EditProfile } from "./EditProfile";
@@ -63,26 +63,35 @@ export default function Profile() {
       createdAt: new Date()
     } : null;
 
-    Promise.all([
-      getUserProfile(targetUid),
-      getUserVichars(targetUid)
-    ]).then(([prof, userPosts]) => {
-      if (isMounted) {
-        const finalProf = prof || fallbackProfile;
-        if (finalProf && !finalProf.postsCount && userPosts) {
-          finalProf.postsCount = userPosts.length;
+    async function loadData() {
+      try {
+        let prof = await getUserProfile(targetUid);
+        let actualUid = targetUid;
+        if (!prof) {
+          prof = await getProfileByUsername(targetUid);
+          if (prof?.uid) actualUid = prof.uid;
         }
-        setProfile(finalProf);
-        setPosts(userPosts || []);
-        setLoading(false);
+
+        const userPosts = await getUserVichars(actualUid);
+        if (isMounted) {
+          const finalProf = prof || fallbackProfile;
+          if (finalProf && !finalProf.postsCount && userPosts) {
+            finalProf.postsCount = userPosts.length;
+          }
+          setProfile(finalProf);
+          setPosts(userPosts || []);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Error loading profile page:", err);
+        if (isMounted) {
+          if (fallbackProfile) setProfile(fallbackProfile);
+          setLoading(false);
+        }
       }
-    }).catch((err) => {
-      console.error("Error loading profile page:", err);
-      if (isMounted) {
-        if (fallbackProfile) setProfile(fallbackProfile);
-        setLoading(false);
-      }
-    });
+    }
+
+    loadData();
 
     return () => { isMounted = false; };
   }, [targetUid, isOwnProfile, myLiveProfile, currentUser]);

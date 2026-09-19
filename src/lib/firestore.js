@@ -686,3 +686,15 @@ export async function getSuggestedSadhaks(currentUid, limitCount = 4) {
   }
 }
 
+/**
+ * Deletes a post/vichar from Firestore.
+ * Requires authenticated user to be author or preserve == false per firestore.rules.
+ * @param {string} postId
+ */
+export async function deleteVichar(postId) {
+  if (!postId) return;
+  const postRef = doc(db, "posts", postId);
+  await deleteDoc(postRef);
+}
+
+

@@ -94,6 +94,11 @@ export default function Home() {
     });
   };
 
+  const handlePostDeleted = (deletedPostId) => {
+    if (!deletedPostId) return;
+    setPosts((prev) => prev.filter((p) => p.id !== deletedPostId));
+  };
+
   const candidatePosts = activeTab === TAB_PRAVAH ? rankedPosts : posts;
 
   const displayedPosts = filterQuery
@@ -157,7 +162,12 @@ export default function Home() {
         ) : (
           <div className="feed-stream-list">
             {displayedPosts.map((post) => (
-              <PostCard key={post.id} post={post} debug={isDebug} />
+              <PostCard
+                key={post.id}
+                post={post}
+                debug={isDebug}
+                onPostDeleted={handlePostDeleted}
+              />
             ))}
           </div>
         )}

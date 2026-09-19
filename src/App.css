@@ -454,13 +454,33 @@
 
 .left-sidebar-sticky {
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: 38px;
+  height: calc(100vh - 38px);
+  max-height: calc(100vh - 38px);
   padding: 16px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 162, 76, 0.4) transparent;
+}
+
+.left-sidebar-sticky::-webkit-scrollbar {
+  width: 5px;
+}
+
+.left-sidebar-sticky::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.left-sidebar-sticky::-webkit-scrollbar-thumb {
+  background: rgba(212, 162, 76, 0.35);
+  border-radius: 9999px;
+}
+
+.left-sidebar-sticky::-webkit-scrollbar-thumb:hover {
+  background: var(--sona);
 }
 
 /* Brand Box */
@@ -748,13 +768,40 @@
   display: none;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 8px 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobile-avatar-trigger {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  transition: transform 100ms ease;
+}
+
+.mobile-avatar-trigger:active {
+  transform: scale(0.9);
+}
+
+.mobile-brand-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
 }
 
 .dharmachakra-mobile {
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   color: var(--sona);
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .mobile-header-title {
@@ -762,6 +809,7 @@
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--text);
+  line-height: 1;
 }
 
 .mobile-header-controls {
@@ -838,13 +886,33 @@
 
 .right-widgets-sticky {
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: 38px;
+  height: calc(100vh - 38px);
+  max-height: calc(100vh - 38px);
   padding-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 162, 76, 0.4) transparent;
+}
+
+.right-widgets-sticky::-webkit-scrollbar {
+  width: 5px;
+}
+
+.right-widgets-sticky::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.right-widgets-sticky::-webkit-scrollbar-thumb {
+  background: rgba(212, 162, 76, 0.35);
+  border-radius: 9999px;
+}
+
+.right-widgets-sticky::-webkit-scrollbar-thumb:hover {
+  background: var(--sona);
 }
 
 /* Search Box */
@@ -1641,6 +1709,119 @@
 
 .post-bhav-badge.clickable:active {
   transform: translateY(1px);
+}
+
+/* Three-Dot Options Menu & Dropdown */
+.post-header-menu-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.post-menu-trigger-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.post-menu-trigger-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--sona);
+}
+
+.post-options-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-elevated);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  min-width: 155px;
+  z-index: 50;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: postMenuPop 120ms ease-out;
+}
+
+@keyframes postMenuPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.post-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background var(--transition), color var(--transition);
+}
+
+.post-dropdown-item:hover {
+  background: var(--border);
+  color: var(--sona);
+}
+
+.post-dropdown-item.item-delete {
+  color: #E74C3C;
+}
+
+.post-dropdown-item.item-delete:hover {
+  background: rgba(231, 76, 60, 0.12);
+  color: #FF6B6B;
+}
+
+.post-action-toast {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 18, 15, 0.94);
+  color: var(--sona);
+  border: 1px solid var(--sona);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  z-index: 60;
+  pointer-events: none;
+  animation: toastFade 2s ease forwards;
+}
+
+@keyframes toastFade {
+  0% { opacity: 0; transform: translate(-50%, -8px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -8px); }
 }
 
 .post-card-body {
@@ -2763,15 +2944,65 @@
 }
 
 @media (max-width: 768px) {
+  html, body, #root {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+    position: relative;
+  }
+
+  .samvad-master-shell {
+    max-width: 100vw !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .layout-shell-3col {
+    max-width: 100vw !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
   .left-sidebar-col {
-    display: none;
+    display: none !important;
+  }
+
+  .right-widgets-col {
+    display: none !important;
   }
 
   .center-stream-col {
-    max-width: 100%;
+    width: 100% !important;
+    max-width: 100vw !important;
     border-left: none;
     border-right: none;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
     padding-bottom: 84px; /* Clearance for 60px tactile bottom navigation */
+  }
+
+  .center-stream-header {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .center-stream-content {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .post-card-container {
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
   }
 
   .post-card-body,

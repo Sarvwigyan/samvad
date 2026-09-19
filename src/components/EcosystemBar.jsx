@@ -1,5 +1,6 @@
 import React from "react";
 import { triggerHaptic } from "../lib/haptics";
+import { GlobeIcon, BookIcon, LibraryIcon } from "./ui/Icons";
 
 /**
  * Universal Sarvwigyan Knowledge Ecosystem Ribbon
@@ -30,7 +31,7 @@ export function EcosystemBar() {
             onClick={handleLinkClick}
             title="सर्वविज्ञान — मुख्य विज्ञान एवं ज्ञान पोर्टल"
           >
-            <span className="eco-glyph">🌐</span>
+            <span className="eco-glyph"><GlobeIcon size={15} /></span>
             <span className="eco-label">सर्वविज्ञान Hub</span>
           </a>
 
@@ -42,7 +43,7 @@ export function EcosystemBar() {
             onClick={handleLinkClick}
             title="सर्वपीडिया — वैदिक एवं आधुनिक ज्ञानकोश"
           >
-            <span className="eco-glyph">📖</span>
+            <span className="eco-glyph"><BookIcon size={15} /></span>
             <span className="eco-label">सर्वपीडिया</span>
           </a>
 
@@ -54,7 +55,7 @@ export function EcosystemBar() {
             onClick={handleLinkClick}
             title="सर्वसंग्रह — ग्रंथ, शास्त्र एवं शोध-पत्रिकाएँ"
           >
-            <span className="eco-glyph">📚</span>
+            <span className="eco-glyph"><LibraryIcon size={15} /></span>
             <span className="eco-label">सर्वसंग्रह</span>
           </a>
 

@@ -10,12 +10,24 @@ import {
   isPostReposted,
   togglePrasar,
   isPostBookmarked,
-  toggleSmaran
+  toggleSmaran,
+  deleteVichar
 } from "../lib/firestore";
 import { playTempleChime } from "../lib/chime";
 import { triggerHaptic } from "../lib/haptics";
+import {
+  HeartIcon,
+  ReplyIcon,
+  RepostIcon,
+  BookmarkIcon,
+  ShareIcon,
+  MoreHorizontalIcon,
+  TrashIcon,
+  CopyIcon,
+  InfinityIcon
+} from "./ui/Icons";
 
-export function PostCard({ post, debug = false }) {
+export function PostCard({ post, debug = false, onPostDeleted }) {
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
@@ -25,7 +37,8 @@ export function PostCard({ post, debug = false }) {
   const [repostCount, setRepostCount] = useState(post.repostCount || 0);
   const [bookmarked, setBookmarked] = useState(false);
   const [replyCount] = useState(post.replyCount || 0);
-  const [copiedToast, setCopiedToast] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
 
   useEffect(() => {
     if (!currentUser || !post.id) return;
@@ -114,8 +127,35 @@ export function PostCard({ post, debug = false }) {
       } catch {}
     } else {
       navigator.clipboard?.writeText(url);
-      setCopiedToast(true);
-      setTimeout(() => setCopiedToast(false), 2000);
+      setToastMsg("लिंक कॉपी किया गया");
+      setTimeout(() => setToastMsg(""), 2000);
+    }
+  };
+
+  const handleCopy = (e) => {
+    e.stopPropagation();
+    triggerHaptic(10);
+    setIsMenuOpen(false);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(post.text);
+      setToastMsg("विचार कॉपी किया गया");
+      setTimeout(() => setToastMsg(""), 2000);
+    }
+  };
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    triggerHaptic(15);
+    setIsMenuOpen(false);
+    if (window.confirm("क्या आप इस विचार को हटाना चाहते हैं?")) {
+      try {
+        await deleteVichar(post.id);
+        setToastMsg("विचार हटा दिया गया");
+        if (onPostDeleted) onPostDeleted(post.id);
+      } catch (err) {
+        console.error("Delete post error:", err);
+        alert("विचार हटाने में त्रुटि हुई।");
+      }
     }
   };
 
@@ -140,6 +180,9 @@ export function PostCard({ post, debug = false }) {
 
   return (
     <article className="post-card-container" onClick={handleCardClick} role="button" tabIndex={0}>
+      {/* Toast Notification */}
+      {toastMsg && <div className="post-action-toast">{toastMsg}</div>}
+
       {/* Header */}
       <header className="post-card-header">
         <div className="post-author-block">
@@ -192,8 +235,9 @@ export function PostCard({ post, debug = false }) {
               className="preserved-badge"
               title="अमर विचार (Preserved Forever — 10+ सहभागिता या संजोया गया)"
               aria-label="अमर विचार"
+              style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
             >
-              ♾️ अमर
+              <InfinityIcon size={14} /> अमर
             </span>
           )}
 
@@ -220,6 +264,39 @@ export function PostCard({ post, debug = false }) {
               {post.bhav}
             </span>
           )}
+
+          {/* Three-Dot Options Menu */}
+          <div className="post-header-menu-wrap">
+            <button
+              type="button"
+              className="post-menu-trigger-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic(8);
+                setIsMenuOpen(!isMenuOpen);
+              }}
+              aria-label="विचार विकल्प"
+              title="विकल्प"
+            >
+              <MoreHorizontalIcon size={18} />
+            </button>
+
+            {isMenuOpen && (
+              <div className="post-options-dropdown" onClick={(e) => e.stopPropagation()}>
+                <button type="button" className="post-dropdown-item" onClick={handleCopy}>
+                  <CopyIcon size={15} />
+                  <span>विचार कॉपी करें</span>
+                </button>
+
+                {currentUser && post.authorId === currentUser.uid && (
+                  <button type="button" className="post-dropdown-item item-delete" onClick={handleDelete}>
+                    <TrashIcon size={15} />
+                    <span>विचार हटाएँ</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -249,7 +326,7 @@ export function PostCard({ post, debug = false }) {
         </p>
       </div>
 
-      {/* Actions Row using Sanskrit Vocabulary */}
+      {/* Actions Row using Symbolic SVG Vector Icons */}
       <footer className="post-card-actions">
         {/* Anumodan (Like) */}
         <button
@@ -259,7 +336,9 @@ export function PostCard({ post, debug = false }) {
           title="अनुमोदन (Like)"
           aria-label="अनुमोदन"
         >
-          <span className="action-glyph">{liked ? "🪷" : "🌸"}</span>
+          <span className="action-glyph">
+            <HeartIcon size={16} filled={liked} />
+          </span>
           <span className="action-count">{likeCount}</span>
           <span className="action-text">{vocab.like.hi}</span>
         </button>
@@ -275,7 +354,9 @@ export function PostCard({ post, debug = false }) {
           title="उत्तर (Reply)"
           aria-label="उत्तर"
         >
-          <span className="action-glyph">💬</span>
+          <span className="action-glyph">
+            <ReplyIcon size={16} />
+          </span>
           <span className="action-count">{replyCount}</span>
           <span className="action-text">{vocab.reply.hi}</span>
         </button>
@@ -288,7 +369,9 @@ export function PostCard({ post, debug = false }) {
           title="प्रसार (Repost)"
           aria-label="प्रसार"
         >
-          <span className="action-glyph">🔄</span>
+          <span className="action-glyph">
+            <RepostIcon size={16} />
+          </span>
           <span className="action-count">{repostCount}</span>
           <span className="action-text">{vocab.repost.hi}</span>
         </button>
@@ -301,7 +384,9 @@ export function PostCard({ post, debug = false }) {
           title="स्मरण (Bookmark)"
           aria-label="स्मरण"
         >
-          <span className="action-glyph">{bookmarked ? "🔖" : "🏷️"}</span>
+          <span className="action-glyph">
+            <BookmarkIcon size={16} filled={bookmarked} />
+          </span>
           <span className="action-text">{vocab.bookmark.hi}</span>
         </button>
 
@@ -313,13 +398,15 @@ export function PostCard({ post, debug = false }) {
           title="संक्रमण (Share)"
           aria-label="साझा करें"
         >
-          <span className="action-glyph">↗</span>
-          <span className="action-text">{copiedToast ? "प्रतिलिपि!" : vocab.share.hi}</span>
+          <span className="action-glyph">
+            <ShareIcon size={16} />
+          </span>
+          <span className="action-text">{vocab.share.hi}</span>
         </button>
       </footer>
 
       <div className="lotus-separator" aria-hidden="true">
-        <span>🪷</span>
+        <span>☸</span>
       </div>
     </article>
   );

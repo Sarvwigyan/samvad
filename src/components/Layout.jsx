@@ -11,6 +11,23 @@ import { getSuggestedSadhaks, followUser, unfollowUser, isFollowing } from "../l
 import { computeTrendingTopics } from "../lib/trending";
 import { EcosystemBar } from "./EcosystemBar";
 import { triggerHaptic } from "../lib/haptics";
+import {
+  StreamIcon,
+  BookmarkIcon,
+  ProfileIcon,
+  SettingsIcon,
+  DownloadIcon,
+  GlobeIcon,
+  BookIcon,
+  LibraryIcon,
+  SearchIcon,
+  TrendingIcon,
+  UsersIcon,
+  QuoteIcon,
+  MoonIcon,
+  SunIcon,
+  LogoutIcon
+} from "./ui/Icons";
 
 const CURATED_SADHAKS = [
   { uid: "curated_vidya", displayName: "भारतीय ज्ञान परम्परा", username: "bharat_vidya", avatarUrl: null, fallbackText: "ज्ञा" },
@@ -124,7 +141,7 @@ export function Layout() {
               to="/"
               className={({ isActive }) => `nav-menu-item ${isActive ? "active" : ""}`}
             >
-              <span className="nav-item-icon">🌊</span>
+              <span className="nav-item-icon"><StreamIcon size={22} /></span>
               <div className="nav-item-text">
                 <span className="nav-label-hi">प्रवाह</span>
                 <span className="nav-label-sub">Pravah (Stream)</span>
@@ -135,7 +152,7 @@ export function Layout() {
               to="/smaran"
               className={({ isActive }) => `nav-menu-item ${isActive ? "active" : ""}`}
             >
-              <span className="nav-item-icon">🔖</span>
+              <span className="nav-item-icon"><BookmarkIcon size={22} /></span>
               <div className="nav-item-text">
                 <span className="nav-label-hi">स्मरण</span>
                 <span className="nav-label-sub">Smaran (Saved)</span>
@@ -146,7 +163,7 @@ export function Layout() {
               to={myProfilePath}
               className={({ isActive }) => `nav-menu-item ${isActive ? "active" : ""}`}
             >
-              <span className="nav-item-icon">🪪</span>
+              <span className="nav-item-icon"><ProfileIcon size={22} /></span>
               <div className="nav-item-text">
                 <span className="nav-label-hi">परिचय</span>
                 <span className="nav-label-sub">Parichay (Profile)</span>
@@ -157,7 +174,7 @@ export function Layout() {
               to="/vyavastha"
               className={({ isActive }) => `nav-menu-item ${isActive ? "active" : ""}`}
             >
-              <span className="nav-item-icon">⚙️</span>
+              <span className="nav-item-icon"><SettingsIcon size={22} /></span>
               <div className="nav-item-text">
                 <span className="nav-label-hi">व्यवस्था</span>
                 <span className="nav-label-sub">Vyavastha (Settings)</span>
@@ -173,7 +190,7 @@ export function Layout() {
               onClick={promptInstall}
               title="संवाद ऐप अपने उपकरण पर स्थापित करें"
             >
-              <span className="pwa-icon">📲</span>
+              <span className="pwa-icon"><DownloadIcon size={20} /></span>
               <div className="pwa-text">
                 <strong>ऐप डाउनलोड / स्थापित करें</strong>
                 <small>Install Standalone App</small>
@@ -209,7 +226,7 @@ export function Layout() {
                     onClick={toggleTheme}
                     title="थीम बदलें"
                   >
-                    {theme === "dark" ? "☀️" : "🌙"}
+                    {theme === "dark" ? <SunIcon size={17} /> : <MoonIcon size={17} />}
                   </button>
                   <button
                     type="button"
@@ -217,7 +234,7 @@ export function Layout() {
                     onClick={logout}
                     title="बहिर्गम (Logout)"
                   >
-                    🚪
+                    <LogoutIcon size={17} />
                   </button>
                 </div>
               </div>
@@ -236,24 +253,47 @@ export function Layout() {
           CENTER COLUMN: Main Stream & Pages Viewport
           ======================================================== */}
       <main className="center-stream-col">
-        {/* Sticky Mobile / Viewport Header */}
+        {/* Sticky Mobile / Viewport Header with Top Parichay Profile Avatar */}
         <header className="center-stream-header">
           <div className="mobile-brand-row">
-            <div className="dharmachakra-mobile" onClick={() => navigate("/")}>☸</div>
-            <h2 className="mobile-header-title">संवाद</h2>
+            {/* Parichay/Profile Avatar on Mobile Top Left (just like X and WhatsApp) */}
+            <div
+              className="mobile-avatar-trigger"
+              onClick={() => {
+                triggerHaptic(10);
+                if (currentUser) {
+                  navigate(myProfilePath);
+                } else {
+                  loginWithGoogle();
+                }
+              }}
+              title={currentUser ? "परिचय (Profile)" : "प्रवेश करें"}
+              role="button"
+              tabIndex={0}
+            >
+              <Avatar
+                src={userProfile?.avatarUrl || currentUser?.photoURL}
+                alt={userProfile?.displayName || currentUser?.displayName || "साधक"}
+                size="sm"
+                fallbackText={userProfile?.displayName || currentUser?.displayName || "साधक"}
+              />
+            </div>
+
+            <div className="mobile-brand-center" onClick={() => navigate("/")} role="button" tabIndex={0}>
+              <span className="dharmachakra-mobile">☸</span>
+              <h2 className="mobile-header-title">संवाद</h2>
+            </div>
+
             <div className="mobile-header-controls">
-              <button type="button" className="theme-quick-btn" onClick={toggleTheme}>
-                {theme === "dark" ? "☀️" : "🌙"}
+              <button type="button" className="theme-quick-btn" onClick={toggleTheme} title="थीम बदलें">
+                {theme === "dark" ? <SunIcon size={18} /> : <MoonIcon size={18} />}
               </button>
               {canInstall && !isInstalled && (
                 <button type="button" className="mobile-pwa-btn" onClick={promptInstall} title="ऐप इंस्टॉल करें">
-                  📲
+                  <DownloadIcon size={18} />
                 </button>
               )}
             </div>
-          </div>
-          <div className="shloka-header-banner">
-            <span>✦ सत्यं वद • धर्मं चर • ज्ञानमेव जयते ✦</span>
           </div>
         </header>
 
@@ -270,7 +310,7 @@ export function Layout() {
         <div className="right-widgets-sticky">
           {/* Functional Search Box */}
           <form className="search-widget-card" onSubmit={handleSearchSubmit}>
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><SearchIcon size={18} /></span>
             <input
               type="text"
               value={searchQuery}
@@ -294,7 +334,7 @@ export function Layout() {
           <section className="widget-card trending-widget-card">
             <div className="widget-header">
               <h3 className="widget-title">प्रवाहित विषय (Trending)</h3>
-              <span className="widget-lotus">🪷</span>
+              <span className="widget-lotus"><TrendingIcon size={18} /></span>
             </div>
             <div className="trending-list">
               {liveTrending.length > 0 ? (
@@ -315,7 +355,7 @@ export function Layout() {
                 ))
               ) : (
                 <div className="trending-empty-hint">
-                  <span className="hint-glyph">#️⃣</span>
+                  <span className="hint-glyph"><TrendingIcon size={18} /></span>
                   <p className="hint-text">
                     विचारों में <strong>#हैशटैग</strong> का प्रयोग करें। वास्तविक समय में यहाँ लोकप्रिय विषय स्वतः प्रवाहित होंगे।
                   </p>
@@ -328,7 +368,7 @@ export function Layout() {
           <section className="widget-card">
             <div className="widget-header">
               <h3 className="widget-title">सुझावित साधक</h3>
-              <span className="widget-lotus">👥</span>
+              <span className="widget-lotus"><UsersIcon size={18} /></span>
             </div>
             <div className="sadhaks-list">
               {suggestedSadhaks.map((s) => (
@@ -361,7 +401,7 @@ export function Layout() {
           <section className="widget-card subhashita-card">
             <div className="widget-header">
               <h3 className="widget-title">दैनिक सुभाषित</h3>
-              <span className="subhashita-feather">📜</span>
+              <span className="subhashita-feather"><QuoteIcon size={18} /></span>
             </div>
             <blockquote className="subhashita-quote">
               "अयं निजः परो वेति गणना लघुचेतसाम्।<br />
@@ -393,7 +433,7 @@ export function Layout() {
           className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
           onClick={() => triggerHaptic(10)}
         >
-          <span className="nav-glyph">🌊</span>
+          <span className="nav-glyph"><StreamIcon size={22} /></span>
           <span className="nav-caption">प्रवाह</span>
         </NavLink>
 
@@ -402,7 +442,7 @@ export function Layout() {
           className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
           onClick={() => triggerHaptic(10)}
         >
-          <span className="nav-glyph">🔖</span>
+          <span className="nav-glyph"><BookmarkIcon size={22} /></span>
           <span className="nav-caption">स्मरण</span>
         </NavLink>
 
@@ -415,7 +455,7 @@ export function Layout() {
           }}
           aria-label="सर्वविज्ञान पारिस्थितिकी तंत्र"
         >
-          <span className="nav-glyph eco-chakra-spin">🌐</span>
+          <span className="nav-glyph eco-chakra-spin"><GlobeIcon size={22} /></span>
           <span className="nav-caption">सर्वविज्ञान</span>
         </button>
 
@@ -424,7 +464,7 @@ export function Layout() {
           className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
           onClick={() => triggerHaptic(10)}
         >
-          <span className="nav-glyph">🪪</span>
+          <span className="nav-glyph"><ProfileIcon size={22} /></span>
           <span className="nav-caption">परिचय</span>
         </NavLink>
 
@@ -433,7 +473,7 @@ export function Layout() {
           className={({ isActive }) => `mobile-nav-btn ${isActive ? "active" : ""}`}
           onClick={() => triggerHaptic(10)}
         >
-          <span className="nav-glyph">⚙️</span>
+          <span className="nav-glyph"><SettingsIcon size={22} /></span>
           <span className="nav-caption">व्यवस्था</span>
         </NavLink>
       </nav>
@@ -444,7 +484,9 @@ export function Layout() {
           <div className="modal-container eco-modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="eco-modal-title-group">
-                <h3 className="modal-title">🌐 सर्वविज्ञान पारिस्थितिकी तंत्र</h3>
+                <h3 className="modal-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <GlobeIcon size={20} /> सर्वविज्ञान पारिस्थितिकी तंत्र
+                </h3>
                 <span className="eco-modal-sub">सार्वभौमिक ज्ञान, शास्त्र एवं अनुसंधान पोर्टल</span>
               </div>
               <button
@@ -465,7 +507,7 @@ export function Layout() {
                 className="eco-portal-item"
                 onClick={() => triggerHaptic(10)}
               >
-                <div className="eco-portal-icon">🌐</div>
+                <div className="eco-portal-icon"><GlobeIcon size={24} /></div>
                 <div className="eco-portal-info">
                   <h4 className="eco-portal-name">सर्वविज्ञान Hub</h4>
                   <p className="eco-portal-desc">खुला विज्ञान, शिक्षा एवं शोध केंद्र (sarvwigyan.github.io)</p>
@@ -480,7 +522,7 @@ export function Layout() {
                 className="eco-portal-item"
                 onClick={() => triggerHaptic(10)}
               >
-                <div className="eco-portal-icon">📖</div>
+                <div className="eco-portal-icon"><BookIcon size={24} /></div>
                 <div className="eco-portal-info">
                   <h4 className="eco-portal-name">सर्वपीडिया (Sarvpedia)</h4>
                   <p className="eco-portal-desc">वैदिक एवं आधुनिक तत्वों का ज्ञानकोश (१०८ विषय)</p>
@@ -495,7 +537,7 @@ export function Layout() {
                 className="eco-portal-item"
                 onClick={() => triggerHaptic(10)}
               >
-                <div className="eco-portal-icon">📚</div>
+                <div className="eco-portal-icon"><LibraryIcon size={24} /></div>
                 <div className="eco-portal-info">
                   <h4 className="eco-portal-name">सर्वसंग्रह (Sarvstore / Kosh)</h4>
                   <p className="eco-portal-desc">प्राचीन ग्रंथ, संहिताएँ एवं आधुनिक शोध-पत्रिकाएँ</p>

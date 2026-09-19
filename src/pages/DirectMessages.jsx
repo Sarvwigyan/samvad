@@ -46,6 +46,7 @@ export default function DirectMessages() {
   const [activeReactionMenuMsgId, setActiveReactionMenuMsgId] = useState(null);
   const [activeMsgMenuId, setActiveMsgMenuId] = useState(null);
   const [activeFullPickerMsgId, setActiveFullPickerMsgId] = useState(null);
+  const [convSearch, setConvSearch] = useState("");
 
   const handleInputEmojiSelect = (emoji) => {
     if (!inputRef.current) {

@@ -16,7 +16,7 @@ import {
 import { playTempleChime } from "../lib/chime";
 import { triggerHaptic } from "../lib/haptics";
 import {
-  HeartIcon,
+  LotusIcon,
   ReplyIcon,
   RepostIcon,
   BookmarkIcon,
@@ -337,7 +337,7 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
           aria-label="अनुमोदन"
         >
           <span className="action-glyph">
-            <HeartIcon size={16} filled={liked} />
+            <LotusIcon size={18} filled={liked} />
           </span>
           <span className="action-count">{likeCount}</span>
           <span className="action-text">{vocab.like.hi}</span>

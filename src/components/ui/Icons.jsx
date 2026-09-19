@@ -169,6 +169,29 @@ export function LibraryIcon({ size = 20, className = "" }) {
   );
 }
 
+export function LotusIcon({ size = 18, className = "", filled = false }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={filled ? "1.2" : "1.8"}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12 3C10.2 7 9.5 11 10 15.5c.8 3 2 4 2 4s1.2-1 2-4c.5-4.5-.2-8.5-2-12.5z" />
+      <path d="M10 15c-2.8-2-5-2-7 0 1.2 3.5 3.8 4.8 7 4.5" />
+      <path d="M14 15c2.8-2 5-2 7 0-1.2 3.5-3.8 4.8-7 4.5" />
+      <path d="M5.5 17.5c-2 1.5-2 3.5 1 4.5 2.5.5 5 0 5.5-2" />
+      <path d="M18.5 17.5c2 1.5 2 3.5-1 4.5-2.5.5-5 0-5.5-2" />
+    </svg>
+  );
+}
+
 export function HeartIcon({ size = 18, className = "", filled = false }) {
   return (
     <svg

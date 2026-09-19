@@ -1867,6 +1867,8 @@
               color 160ms ease;
   user-select: none;
   min-height: 34px;
+  white-space: nowrap !important;
+  flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1928,15 +1930,23 @@
 
 .action-glyph {
   font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-count {
   font-size: 0.78rem;
   font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .action-text {
   font-size: 0.74rem;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 /* --------------------------------------------------------------------------
@@ -2984,9 +2994,35 @@
     word-break: break-word !important;
   }
 
-  .post-card-body,
+  .post-card-body {
+    padding-left: 0;
+    margin: 8px 0 12px;
+  }
+
   .post-card-actions {
     padding-left: 0;
+    padding-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 4px;
+    box-sizing: border-box;
+  }
+
+  /* On mobile: Hide text labels so buttons stay clean, spacious, and never wrap single letters like X/Twitter */
+  .action-pill-btn .action-text {
+    display: none !important;
+  }
+
+  .action-pill-btn {
+    padding: 6px 10px !important;
+    gap: 5px !important;
+    min-height: 36px !important;
+    flex: 1;
+    max-width: 64px;
+    justify-content: center;
+    border-radius: 9999px;
   }
 
   .mobile-brand-row {

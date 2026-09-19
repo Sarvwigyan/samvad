@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { PostComposer } from "../components/PostComposer";
 import { PostCard } from "../components/PostCard";
+import { PostCardSkeleton } from "../components/ui/PostCardSkeleton";
 import { FeedTabs, FEED_TAB_KEY, TAB_PRAVAH, TAB_NAYA } from "../components/FeedTabs";
 import { useRankedFeed } from "../hooks/useRankedFeed";
+
+const INITIAL_BATCH_SIZE = 10;
+const BATCH_INCREMENT = 8;
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -15,6 +19,10 @@ export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filterQuery = searchParams.get("q") || "";
   const isDebug = searchParams.get("debug") === "1";
+
+  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef(null);
 
   const [activeTab, setActiveTab] = useState(() => {
     try {
@@ -86,6 +94,11 @@ export default function Home() {
     };
   }, []);
 
+  // Reset lazy load window on tab change or search filter
+  useEffect(() => {
+    setVisibleCount(INITIAL_BATCH_SIZE);
+  }, [activeTab, filterQuery]);
+
   const handlePostCreated = (newPost) => {
     if (!newPost?.id) return;
     setPosts((prev) => {
@@ -111,6 +124,37 @@ export default function Home() {
         );
       })
     : candidatePosts;
+
+  const visiblePosts = displayedPosts.slice(0, visibleCount);
+
+  // Advanced IntersectionObserver for progressive infinite lazy loading (like YouTube & X)
+  useEffect(() => {
+    if (
+      !sentinelRef.current ||
+      typeof window === "undefined" ||
+      !("IntersectionObserver" in window) ||
+      visibleCount >= displayedPosts.length
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && visibleCount < displayedPosts.length) {
+          setLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => Math.min(prev + BATCH_INCREMENT, displayedPosts.length));
+            setLoadingMore(false);
+          }, 120);
+        }
+      },
+      { rootMargin: "300px" } // Pre-loads next batch 300px before reaching the bottom
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [visibleCount, displayedPosts.length]);
 
   return (
     <div className="home-pravah-page">
@@ -143,10 +187,7 @@ export default function Home() {
       {/* Posts Stream */}
       <section className="home-feed-section">
         {loading ? (
-          <div className="feed-empty-state">
-            <div className="lotus-spinner">🪷</div>
-            <p className="empty-title">प्रवाह लोड हो रहा है...</p>
-          </div>
+          <PostCardSkeleton count={3} />
         ) : displayedPosts.length === 0 ? (
           <div className="feed-empty-state">
             <span className="empty-icon">🪷</span>
@@ -161,7 +202,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="feed-stream-list">
-            {displayedPosts.map((post) => (
+            {visiblePosts.map((post) => (
               <PostCard
                 key={post.id}
                 post={post}
@@ -169,6 +210,13 @@ export default function Home() {
                 onPostDeleted={handlePostDeleted}
               />
             ))}
+
+            {/* Infinite Scroll Lazy-Loading Sentinel (YouTube & X style) */}
+            {visibleCount < displayedPosts.length && (
+              <div ref={sentinelRef} className="feed-sentinel">
+                {loadingMore && <PostCardSkeleton count={1} />}
+              </div>
+            )}
           </div>
         )}
       </section>

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getUserBookmarks } from "../lib/firestore";
 import { PostCard } from "../components/PostCard";
+import { PostCardSkeleton } from "../components/ui/PostCardSkeleton";
 import { Button } from "../components/ui/Button";
+import { BookmarkIcon } from "../components/ui/Icons";
 import { useNavigate } from "react-router-dom";
 
 export default function Smaran() {
@@ -38,7 +40,7 @@ export default function Smaran() {
   if (!currentUser) {
     return (
       <div className="smaran-guest-container">
-        <span className="smaran-glyph">🔖</span>
+        <span className="smaran-glyph"><BookmarkIcon size={32} /></span>
         <h3>स्मरण (Bookmarks)</h3>
         <p>अपने प्रिय विचारों को संचित एवं सुरक्षित रखने हेतु कृपया गूगल से प्रवेश करें।</p>
         <Button variant="primary" size="md" onClick={loginWithGoogle}>
@@ -51,15 +53,14 @@ export default function Smaran() {
   return (
     <div className="smaran-page">
       <div className="smaran-header-bar">
-        <h2 className="smaran-page-title">🔖 संचित स्मरण (Bookmarks)</h2>
+        <h2 className="smaran-page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <BookmarkIcon size={20} /> संचित स्मरण (Bookmarks)
+        </h2>
         <span className="smaran-count-badge">{bookmarks.length} विचार</span>
       </div>
 
       {loading ? (
-        <div className="feed-empty-state">
-          <div className="lotus-spinner">🪷</div>
-          <p className="empty-title">स्मरण संचयन लोड हो रहा है...</p>
-        </div>
+        <PostCardSkeleton count={3} />
       ) : bookmarks.length === 0 ? (
         <div className="smaran-empty-state">
           <span className="smaran-empty-icon">🪷</span>

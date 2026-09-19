@@ -1,19 +1,23 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Layout } from "./components/Layout";
-import Home from "./pages/Home";
-import Profile from "./pages/Profile";
-import Followers from "./pages/Followers";
-import Following from "./pages/Following";
-import VicharDetail from "./pages/VicharDetail";
-import Smaran from "./pages/Smaran";
-import SettingsLayout from "./pages/Settings/SettingsLayout";
+import { RouteLoadingFallback } from "./components/ui/RouteLoadingFallback";
+import { TopProgressBar } from "./components/ui/TopProgressBar";
 import { pruneIfNeeded } from "./lib/pruning";
 import "./theme/tokens.css";
 import "./theme/global.css";
 import "./App.css";
+
+// Lazy-loaded routes for lightning-fast initial load (YouTube & X style code splitting)
+const Home = lazy(() => import("./pages/Home"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Followers = lazy(() => import("./pages/Followers"));
+const Following = lazy(() => import("./pages/Following"));
+const VicharDetail = lazy(() => import("./pages/VicharDetail"));
+const Smaran = lazy(() => import("./pages/Smaran"));
+const SettingsLayout = lazy(() => import("./pages/Settings/SettingsLayout"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -23,6 +27,20 @@ function ScrollToTop() {
     if (centerCol) centerCol.scrollTop = 0;
   }, [pathname]);
   return null;
+}
+
+function NavigationWatcher() {
+  const { pathname } = useLocation();
+  const [navigating, setNavigating] = React.useState(false);
+
+  useEffect(() => {
+    setNavigating(true);
+    const timer = setTimeout(() => setNavigating(false), 350);
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  if (!navigating) return null;
+  return <TopProgressBar />;
 }
 
 export default function App() {
@@ -39,30 +57,33 @@ export default function App() {
       <AuthProvider>
         <HashRouter>
           <ScrollToTop />
-          <Routes>
-            <Route element={<Layout />}>
-              {/* Home / Pravah Feed */}
-              <Route path="/" element={<Home />} />
+          <NavigationWatcher />
+          <Suspense fallback={<RouteLoadingFallback />}>
+            <Routes>
+              <Route element={<Layout />}>
+                {/* Home / Pravah Feed */}
+                <Route path="/" element={<Home />} />
 
-              {/* Individual Vichar Thread / Detail View */}
-              <Route path="/vichar/:id" element={<VicharDetail />} />
+                {/* Individual Vichar Thread / Detail View */}
+                <Route path="/vichar/:id" element={<VicharDetail />} />
 
-              {/* Bookmarks / Smaran */}
-              <Route path="/smaran" element={<Smaran />} />
+                {/* Bookmarks / Smaran */}
+                <Route path="/smaran" element={<Smaran />} />
 
-              {/* Profile / Parichay */}
-              <Route path="/parichay" element={<Profile />} />
-              <Route path="/parichay/:uid" element={<Profile />} />
-              <Route path="/parichay/:uid/anusari" element={<Followers />} />
-              <Route path="/parichay/:uid/anusarit" element={<Following />} />
+                {/* Profile / Parichay */}
+                <Route path="/parichay" element={<Profile />} />
+                <Route path="/parichay/:uid" element={<Profile />} />
+                <Route path="/parichay/:uid/anusari" element={<Followers />} />
+                <Route path="/parichay/:uid/anusarit" element={<Following />} />
 
-              {/* Settings / Vyavastha */}
-              <Route path="/vyavastha" element={<SettingsLayout />} />
+                {/* Settings / Vyavastha */}
+                <Route path="/vyavastha" element={<SettingsLayout />} />
 
-              {/* Catch-all fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
+                {/* Catch-all fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </Suspense>
         </HashRouter>
       </AuthProvider>
     </ThemeProvider>

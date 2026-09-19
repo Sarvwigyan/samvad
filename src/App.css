@@ -3033,3 +3033,138 @@
     display: flex;
   }
 }
+
+/* ==========================================================================
+   YOUTUBE & X STYLE SKELETON SHIMMER & PROGRESS BAR
+   ========================================================================== */
+
+/* Top Nano Progress Bar (YouTube Style) */
+.top-nano-progress-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9999;
+  pointer-events: none;
+  background: transparent;
+}
+
+.top-nano-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #FF9933 0%, #D4A24C 50%, #FFD700 100%);
+  box-shadow: 0 0 10px rgba(212, 162, 76, 0.8), 0 0 4px #FF9933;
+  transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Skeleton Container */
+.skeleton-feed-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.post-skeleton-card {
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Shimmer Animation */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(212, 155, 53, 0.05) 0%,
+    rgba(212, 155, 53, 0.14) 50%,
+    rgba(212, 155, 53, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerPulse 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmerPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.skeleton-header-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.skeleton-author {
+  width: 140px;
+  height: 14px;
+}
+
+.skeleton-handle {
+  width: 90px;
+  height: 11px;
+}
+
+.skeleton-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 56px;
+}
+
+@media (max-width: 768px) {
+  .skeleton-body {
+    padding-left: 0;
+  }
+}
+
+.skeleton-text {
+  height: 13px;
+}
+
+.skeleton-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 56px;
+  padding-top: 6px;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .skeleton-actions {
+    padding-left: 0;
+  }
+}
+
+.skeleton-pill {
+  width: 52px;
+  height: 28px;
+  border-radius: 9999px !important;
+}
+
+.feed-sentinel {
+  width: 100%;
+  height: 24px;
+  pointer-events: none;
+}

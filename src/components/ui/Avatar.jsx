@@ -20,6 +20,8 @@ export function Avatar({
           src={src}
           alt={alt}
           className="avatar-img"
+          loading="lazy"
+          decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
         />

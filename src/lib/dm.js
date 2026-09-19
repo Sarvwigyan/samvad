@@ -101,10 +101,25 @@ export async function sendDirectMessage(convId, { senderUid, senderName, senderA
   if (audioData) msgPayload.audioData = audioData;
   if (poll) {
     msgPayload.poll = {
-      question: poll.question || "मतदान (Poll)",
-      options: poll.options.map((opt) => ({ text: opt, votes: 0 })),
-      voters: {},
-      totalVotes: 0
+      question: typeof poll.question === "string" ? poll.question : "मतदान (Poll)",
+      options: (poll.options || []).map((opt) => {
+        let optText = "";
+        if (typeof opt === "string") {
+          optText = opt;
+        } else if (typeof opt?.text === "string") {
+          optText = opt.text;
+        } else if (typeof opt?.text === "object" && opt.text !== null) {
+          optText = typeof opt.text.text === "string" ? opt.text.text : String(opt.text.text || "");
+        } else {
+          optText = String(opt?.text || opt || "");
+        }
+        return {
+          text: optText.trim(),
+          votes: typeof opt === "object" && typeof opt?.votes === "number" ? opt.votes : 0
+        };
+      }),
+      voters: poll.voters || {},
+      totalVotes: typeof poll.totalVotes === "number" ? poll.totalVotes : 0
     };
   }
 
@@ -157,10 +172,21 @@ export async function voteDmPoll(convId, messageId, optionIndex, uid) {
 
     voters[uid] = optionIndex;
     const options = poll.options.map((opt, i) => {
-      if (i === optionIndex) {
-        return { ...opt, votes: (opt.votes || 0) + 1 };
+      let optText = "";
+      if (typeof opt === "string") {
+        optText = opt;
+      } else if (typeof opt?.text === "string") {
+        optText = opt.text;
+      } else if (typeof opt?.text === "object" && opt.text !== null) {
+        optText = typeof opt.text.text === "string" ? opt.text.text : String(opt.text.text || "");
+      } else {
+        optText = String(opt?.text || opt || "");
       }
-      return opt;
+      const curVotes = typeof opt === "object" && typeof opt?.votes === "number" ? opt.votes : 0;
+      if (i === optionIndex) {
+        return { text: optText, votes: curVotes + 1 };
+      }
+      return { text: optText, votes: curVotes };
     });
 
     poll.options = options;

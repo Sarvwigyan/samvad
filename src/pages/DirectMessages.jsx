@@ -33,6 +33,14 @@ import {
 } from "../components/ui/Icons";
 import { EmojiPicker } from "../components/ui/EmojiPicker";
 
+function resolveOptionText(opt) {
+  if (!opt) return "";
+  if (typeof opt === "string") return opt;
+  if (typeof opt.text === "string") return opt.text;
+  if (typeof opt.text === "object" && opt.text !== null) return resolveOptionText(opt.text);
+  return String(opt.text || opt.title || "");
+}
+
 export default function DirectMessages() {
   const { id: routeConvId } = useParams();
   const [searchParams] = useSearchParams();
@@ -230,7 +238,7 @@ export default function DirectMessages() {
     (m) => !m.deletedFor?.includes(currentUser?.uid)
   );
 
-  const messagesEndRef = useRef(null);
+  const messagesViewportRef = useRef(null);
   const inputRef = useRef(null);
 
   // Sync route param with activeConvId
@@ -297,10 +305,17 @@ export default function DirectMessages() {
     return () => unsubscribe();
   }, [activeConvId, currentUser]);
 
-  // Auto-scroll to bottom of messages
+  // Auto-scroll messages viewport to bottom strictly inside container, never scrolling the page/window
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesViewportRef.current) {
+      messagesViewportRef.current.scrollTop = messagesViewportRef.current.scrollHeight;
+    }
   }, [messages]);
+
+  // Keep window at top when opening DMs so headers are never cut off
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeConvId]);
 
   const handleSelectConversation = (cId) => {
     triggerHaptic(8);
@@ -338,11 +353,7 @@ export default function DirectMessages() {
     if (hasValidPoll) {
       payload.poll = {
         question: pollQuestion.trim(),
-        options: validPollOptions.map((text) => ({
-          text: text.trim(),
-          votes: 0,
-          voters: []
-        })),
+        options: validPollOptions.map((text) => text.trim()),
         totalVotes: 0
       };
     }
@@ -507,7 +518,7 @@ export default function DirectMessages() {
             </header>
 
             {/* Messages Scroll View */}
-            <div className="dm-messages-viewport">
+            <div className="dm-messages-viewport" ref={messagesViewportRef}>
               {loadingMsgs ? (
                 <div className="dm-loading-box">
                   <span className="lotus-spinner">☸</span>
@@ -579,22 +590,28 @@ export default function DirectMessages() {
                                 {/* Interactive Poll in DM */}
                                 {msg.poll && (
                                   <div className="dm-bubble-poll-card">
-                                    <p className="dm-poll-card-question">📊 {msg.poll.question}</p>
+                                    <p className="dm-poll-card-question">
+                                      📊 {typeof msg.poll.question === "string" ? msg.poll.question : "मतदान"}
+                                    </p>
                                     <div className="dm-poll-options-stack">
                                       {(() => {
-                                        const userVotedIndex = msg.poll.options?.findIndex((o) =>
-                                          o.voters?.includes(currentUser.uid)
-                                        );
+                                        const userVotedIndex = msg.poll.voters?.[currentUser.uid] !== undefined
+                                          ? msg.poll.voters[currentUser.uid]
+                                          : msg.poll.options?.findIndex((o) =>
+                                              Array.isArray(o?.voters) && o.voters.includes(currentUser.uid)
+                                            );
                                         const hasVoted = userVotedIndex !== -1 && userVotedIndex !== undefined;
                                         const totalVotes =
-                                          msg.poll.totalVotes ||
-                                          msg.poll.options?.reduce((sum, o) => sum + (o.votes || 0), 0) ||
-                                          0;
+                                          typeof msg.poll.totalVotes === "number"
+                                            ? msg.poll.totalVotes
+                                            : msg.poll.options?.reduce((sum, o) => sum + (typeof o?.votes === "number" ? o.votes : 0), 0) ||
+                                              0;
 
                                         return msg.poll.options?.map((opt, optIdx) => {
-                                          const votes = opt.votes || 0;
+                                          const votes = typeof opt?.votes === "number" ? opt.votes : 0;
                                           const percent = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
                                           const isSelected = userVotedIndex === optIdx;
+                                          const optText = resolveOptionText(opt);
 
                                           return (
                                             <button
@@ -612,7 +629,7 @@ export default function DirectMessages() {
                                               )}
                                               <div className="dm-poll-opt-content">
                                                 <span className="dm-poll-opt-name">
-                                                  {opt.text} {isSelected && "✓"}
+                                                  {optText} {isSelected && "✓"}
                                                 </span>
                                                 {hasVoted && (
                                                   <span className="dm-poll-opt-pct">{percent}%</span>
@@ -624,7 +641,7 @@ export default function DirectMessages() {
                                       })()}
                                     </div>
                                     <div className="dm-poll-card-footer">
-                                      <span>{msg.poll.totalVotes || 0} मत (Votes)</span>
+                                      <span>{typeof msg.poll.totalVotes === "number" ? msg.poll.totalVotes : 0} मत (Votes)</span>
                                     </div>
                                   </div>
                                 )}
@@ -752,7 +769,6 @@ export default function DirectMessages() {
                       </div>
                     );
                   })}
-                  <div ref={messagesEndRef} />
                 </div>
               )}
             </div>

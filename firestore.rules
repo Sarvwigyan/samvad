@@ -102,7 +102,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Direct Messages (Sandesh) — 1:1 संवाद
+    // Direct Messages (Sandesh) — 1:1 संवाद, Voice Notes, Polls, Reactions
     match /conversations/{convId} {
       allow read: if isAuthenticated() && (
         resource == null ||
@@ -110,13 +110,15 @@ service cloud.firestore {
       );
       allow create: if isAuthenticated() && request.auth.uid in request.resource.data.participants;
       allow update: if isAuthenticated() && request.auth.uid in resource.data.participants;
-      allow delete: if false;
+      allow delete: if isAuthenticated() && request.auth.uid in resource.data.participants;
 
+      // Messages subcollection
       match /messages/{messageId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
+        // Updating for reactions, poll voting, and soft-delete (deletedFor / deletedForEveryone)
         allow update: if isAuthenticated();
-        allow delete: if false;
+        allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
       }
     }
   }

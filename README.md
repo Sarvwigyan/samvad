@@ -1,6 +1,6 @@
-# Samvad — Sovereign Anonymous Message Board (Phase 1)
+# Samwad — Sovereign Anonymous Message Board (Phase 1)
 
-Samvad is an anonymous, real-time message stream built with React (Vite) and Firebase Firestore.
+Samwad is an anonymous, real-time message stream built with React (Vite) and Firebase Firestore.
 Every visitor can post messages instantly visible to anyone worldwide without registration, login, usernames, or identifying profiles.
 
 ---

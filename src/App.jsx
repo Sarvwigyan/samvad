@@ -122,7 +122,7 @@ export default function App() {
       <header className="app-header">
         <div className="header-content">
           <div className="brand">
-            <h1 className="brand-title">Samvad</h1>
+            <h1 className="brand-title">Samwad</h1>
             <span className="brand-badge">Phase 1</span>
           </div>
           <div className="anonymous-indicator">

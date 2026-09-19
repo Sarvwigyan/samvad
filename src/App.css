@@ -1,39 +1,37 @@
 /* ==========================================================================
-   Samwad (Phase 1) — Design Tokens & Theme Variables
-   These CSS custom properties allow seamless re-theming in Phase 3.
+   संवाद (Samwad) — भारतीय व संस्कृत शैली (Vedic & Sanskrit Theme)
+   Kesariya Saffron, Sacred Swarna Gold & Deep Temple Slate Palette
    ========================================================================== */
+
 :root {
-  --bg-primary: #0a0e14;
-  --bg-secondary: #131920;
-  --bg-card: #18202b;
-  --bg-card-hover: #1e2836;
-  --border-subtle: #243041;
-  --border-highlight: #3b82f6;
+  --bg-deep: #0a0705;
+  --bg-surface: #140d09;
+  --bg-card: #1b120c;
+  --bg-card-hover: #24180f;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --saffron-bright: #ff6b00;
+  --saffron-deep: #ea580c;
+  --saffron-aura: rgba(234, 88, 12, 0.25);
 
-  --accent-cyan: #06b6d4;
-  --accent-blue: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-disabled: #1e293b;
+  --gold-divine: #f59e0b;
+  --gold-bright: #fbbf24;
+  --gold-aura: rgba(245, 158, 11, 0.35);
 
-  --status-live: #10b981;
-  --status-error-bg: #450a0a;
-  --status-error-text: #fca5a5;
-  --status-error-border: #991b1b;
+  --border-vedic: rgba(245, 158, 11, 0.24);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-gold-glow: rgba(251, 191, 36, 0.5);
 
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  --max-content-width: 640px;
-  --header-height: 58px;
-  --tap-min-target: 44px;
+  --text-pure: #fffaf0;
+  --text-sand: #e2d9cc;
+  --text-muted: #a39585;
+
+  --font-vedic-title: "Rozha One", "Cinzel", "Noto Sans Devanagari", serif;
+  --font-vedic-body: "Noto Sans Devanagari", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --max-width: 680px;
 }
 
-/* ==========================================================================
-   Base Reset & Layout
-   ========================================================================== */
+/* Reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -43,9 +41,9 @@
 html, body {
   width: 100%;
   height: 100%;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-family);
+  background-color: var(--bg-deep);
+  color: var(--text-pure);
+  font-family: var(--font-vedic-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -55,217 +53,458 @@ html, body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  background-color: var(--bg-primary);
+  background: radial-gradient(circle at 50% 0%, #201309 0%, #0a0705 60%);
 }
 
-.app-layout {
+.vedic-layout {
   width: 100%;
-  max-width: var(--max-content-width);
+  max-width: var(--max-width);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
-  border-left: 1px solid var(--border-subtle);
-  border-right: 1px solid var(--border-subtle);
-  background-color: var(--bg-secondary);
+  background-color: rgba(20, 13, 9, 0.96);
+  border-left: 1px solid var(--border-vedic);
+  border-right: 1px solid var(--border-vedic);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--saffron-aura);
 }
 
 /* ==========================================================================
-   Header
+   Sacred Vedic Header
    ========================================================================== */
-.app-header {
+.vedic-header {
   position: sticky;
   top: 0;
-  z-index: 20;
-  height: var(--header-height);
-  background: rgba(19, 25, 32, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
+  z-index: 30;
+  background: rgba(18, 12, 8, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-vedic);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
-.header-content {
-  width: 100%;
+.header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 12px 18px;
 }
 
-.brand {
+.brand-zone {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.om-crest {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, #3d2210 0%, #1c0e06 100%);
+  border: 1px solid var(--gold-divine);
+  border-radius: 50%;
+  box-shadow: 0 0 14px var(--gold-aura);
+}
+
+.om-symbol {
+  font-family: var(--font-vedic-title);
+  font-size: 1.6rem;
+  color: var(--gold-bright);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+  line-height: 1;
+}
+
+.om-glow-ring {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  animation: pulse-ring 3s infinite ease-in-out;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.12); opacity: 0.2; }
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.title-row {
+  display: flex;
+  align-items: baseline;
   gap: 8px;
 }
 
 .brand-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  font-family: var(--font-vedic-title);
+  font-size: 1.55rem;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #ffffff 0%, #fcd34d 50%, #f59e0b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.2;
 }
 
-.brand-badge {
-  font-size: 0.7rem;
+.brand-tag {
+  font-family: "Cinzel", serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--saffron-bright);
+  letter-spacing: 0.12em;
+  background: rgba(234, 88, 12, 0.15);
+  border: 1px solid rgba(234, 88, 12, 0.35);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.brand-subtitle {
+  font-size: 0.725rem;
+  color: var(--text-sand);
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sound-toggle {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid var(--border-vedic);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sound-toggle:hover {
+  background: rgba(245, 158, 11, 0.18);
+  transform: scale(1.05);
+}
+
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid var(--border-vedic);
+  border-radius: 9999px;
+  padding: 3px 8px 3px 4px;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-divine);
+}
+
+.user-avatar-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--saffron-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 0.78rem;
   font-weight: 600;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--gold-bright);
+  line-height: 1.1;
 }
 
-.anonymous-indicator {
+.user-status-dot {
+  font-size: 0.62rem;
+  color: #10b981;
+}
+
+.signout-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+  margin-left: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.signout-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.google-signin-btn-compact {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 4px 10px;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  color: #fffaf0;
+  border: 1px solid #f97316;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.anonymous-indicator strong {
-  color: var(--text-primary);
+  padding: 6px 14px;
+  font-size: 0.8rem;
   font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.3);
+  transition: all 0.2s ease;
 }
 
-.dot-live {
-  width: 7px;
-  height: 7px;
-  background-color: var(--status-live);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--status-live);
-  display: inline-block;
-  animation: pulse-glow 2s infinite ease-in-out;
+.google-signin-btn-compact:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.45);
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+/* Auspicious Shloka Ribbon */
+.shloka-ribbon {
+  background: linear-gradient(90deg, #180e07 0%, #30170a 50%, #180e07 100%);
+  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 5px 12px;
+}
+
+.shloka-text {
+  font-family: var(--font-vedic-title);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  text-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+}
+
+.shloka-flourish {
+  color: var(--saffron-bright);
+  font-size: 0.6rem;
 }
 
 /* ==========================================================================
-   Error Alert Banner
+   Alert Banner
    ========================================================================== */
-.error-banner {
-  background-color: var(--status-error-bg);
-  border-bottom: 1px solid var(--status-error-border);
-  color: var(--status-error-text);
+.vedic-alert-banner {
+  background: #3b0d0c;
+  border-bottom: 1px solid #991b1b;
+  color: #fca5a5;
   padding: 10px 16px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.875rem;
-  z-index: 15;
+  font-size: 0.85rem;
 }
 
-.error-icon {
-  font-size: 1rem;
-}
-
-.error-text {
-  flex: 1;
-  word-break: break-word;
-}
-
-.error-dismiss-btn {
-  background: transparent;
+.alert-text { flex: 1; }
+.alert-dismiss {
+  background: none;
   border: none;
-  color: var(--status-error-text);
+  color: #fca5a5;
   font-size: 1.25rem;
   cursor: pointer;
-  padding: 4px;
-  line-height: 1;
 }
 
 /* ==========================================================================
-   Feed Container & Message List
+   Main Feed & Cards
    ========================================================================== */
-.feed-container {
+.vedic-feed {
   flex: 1;
-  padding: 16px 16px 140px 16px;
+  padding: 20px 16px 200px 16px;
   overflow-y: auto;
 }
 
-.message-list {
+.messages-stream {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.message-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 14px 16px;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+.vedic-message-card {
+  background: linear-gradient(145deg, var(--bg-card) 0%, rgba(20, 13, 9, 0.95) 100%);
+  border: 1px solid var(--border-vedic);
+  border-radius: 14px;
+  padding: 16px 18px;
+  position: relative;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.message-card:hover {
-  background-color: var(--bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.12);
+.vedic-message-card:hover {
+  border-color: var(--border-gold-glow);
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.15);
+  transform: translateY(-1px);
 }
 
-.message-body {
-  font-size: 0.95rem;
-  line-height: 1.55;
-  color: var(--text-primary);
-  white-space: pre-wrap;       /* Preserve intentional line breaks */
-  word-break: break-word;      /* Break long continuous strings */
-  overflow-wrap: break-word;
-}
-
-.message-meta {
-  margin-top: 8px;
+.card-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
-.message-timestamp {
-  font-size: 0.75rem;
+.card-author-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.author-avatar-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-divine);
+}
+
+.author-avatar-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3d200e 0%, #1c0e06 100%);
+  border: 1px solid var(--gold-divine);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--gold-bright);
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-pure);
+}
+
+.author-subtext {
+  font-size: 0.72rem;
   color: var(--text-muted);
-  letter-spacing: 0.01em;
 }
 
-/* Empty State / Loading */
-.feed-empty-state {
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.bhav-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--gold-bright);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.card-timestamp {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.card-body {
+  margin-top: 4px;
+}
+
+.card-content {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: #f3ece1;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.card-footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.card-divider-motif {
+  font-family: var(--font-vedic-title);
+  font-size: 0.68rem;
+  color: rgba(245, 158, 11, 0.35);
+  letter-spacing: 0.2em;
+}
+
+/* Feed Empty & Loading State */
+.feed-status-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
+  padding: 70px 20px;
   text-align: center;
-  color: var(--text-muted);
 }
 
-.empty-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+.vedic-loader {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 2px solid var(--border-vedic);
+  border-top-color: var(--gold-divine);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: spin 1.2s linear infinite;
+  margin-bottom: 16px;
+}
+
+.loader-om {
+  font-size: 1.4rem;
+  color: var(--gold-bright);
+}
+
+.empty-lotus {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  animation: float-lotus 3s ease-in-out infinite;
+}
+
+@keyframes float-lotus {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.status-title {
+  font-family: var(--font-vedic-title);
+  font-size: 1.15rem;
+  color: var(--gold-bright);
   margin-bottom: 6px;
 }
 
-.empty-subtitle {
-  font-size: 0.875rem;
-  max-width: 300px;
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border-subtle);
-  border-top-color: var(--accent-blue);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 16px;
+.status-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 320px;
 }
 
 @keyframes spin {
@@ -273,116 +512,286 @@ html, body {
 }
 
 /* ==========================================================================
-   Sticky Bottom Composer
+   Advanced Vedic Composer (Sticky Bottom)
    ========================================================================== */
-.composer-container {
+.vedic-composer {
   position: sticky;
   bottom: 0;
-  z-index: 25;
-  background: rgba(19, 25, 32, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid var(--border-subtle);
+  z-index: 35;
+  background: rgba(18, 11, 7, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid var(--border-vedic);
   padding: 12px 16px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6);
 }
 
-.composer-form {
+.composer-active-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.composer-input-wrapper {
-  position: relative;
-}
-
-.composer-textarea {
-  width: 100%;
-  min-height: 48px;
-  max-height: 180px;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 12px 14px;
-  color: var(--text-primary);
-  /* 16px minimum prevents iOS auto-zoom on focus */
-  font-size: 16px;
-  font-family: inherit;
-  line-height: 1.45;
-  resize: none;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.composer-textarea:focus {
-  border-color: var(--border-highlight);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-.composer-textarea::placeholder {
-  color: var(--text-muted);
-}
-
-.composer-textarea.textarea-error {
-  border-color: #ef4444;
-}
-
-.composer-actions {
+.composer-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.char-counter {
-  font-size: 0.775rem;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
+.bhav-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
 }
 
-.char-counter.counter-over {
-  color: #ef4444;
-  font-weight: 600;
+.bhav-selector::-webkit-scrollbar {
+  display: none;
 }
 
-.send-button {
-  min-height: var(--tap-min-target);
-  min-width: 84px;
-  padding: 8px 20px;
-  background-color: var(--accent-blue);
-  color: #ffffff;
-  border: none;
+.bhav-btn {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid var(--border-vedic);
+  color: var(--text-sand);
+  padding: 4px 10px;
   border-radius: 9999px;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.bhav-btn:hover {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--gold-bright);
+}
+
+.bhav-btn.bhav-selected {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(245, 158, 11, 0.3) 100%);
+  border-color: var(--gold-bright);
+  color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
+.identity-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-vedic);
+  color: var(--gold-bright);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.identity-btn.id-anon {
+  background: rgba(234, 88, 12, 0.2);
+  border-color: var(--saffron-bright);
+}
+
+.textarea-box {
+  position: relative;
+}
+
+.vedic-textarea {
+  width: 100%;
+  min-height: 52px;
+  max-height: 180px;
+  background: rgba(10, 7, 5, 0.9);
+  border: 1px solid var(--border-vedic);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text-pure);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.vedic-textarea:focus {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 12px var(--gold-aura);
+}
+
+.vedic-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.vedic-textarea.textarea-limit-exceeded {
+  border-color: #ef4444;
+}
+
+.composer-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.char-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 140px;
+  background: rgba(255, 255, 255, 0.05);
+  height: 6px;
+  border-radius: 9999px;
+  overflow: visible;
+  position: relative;
+}
+
+.char-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #ea580c);
+  border-radius: 9999px;
+  transition: width 0.15s ease;
+}
+
+.char-bar-inner.bar-exceeded {
+  background: #ef4444;
+}
+
+.char-number {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  position: absolute;
+  left: 150px;
+  white-space: nowrap;
+}
+
+.char-number.char-over {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.vedic-send-button {
+  min-height: 44px;
+  padding: 8px 22px;
+  background: linear-gradient(135deg, #ff6b00 0%, #ea580c 50%, #c2410c 100%);
+  color: #ffffff;
+  border: 1px solid #f97316;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  transition: background-color 0.15s ease, transform 0.05s ease;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.4);
+  transition: all 0.2s ease;
 }
 
-.send-button:hover:not(:disabled) {
-  background-color: var(--accent-hover);
+.vedic-send-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.55);
 }
 
-.send-button:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.send-button:disabled {
-  background-color: var(--accent-disabled);
-  color: var(--text-muted);
+.vedic-send-button:disabled {
+  background: #281d15;
+  border-color: #3b281b;
+  color: #705b4c;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* ==========================================================================
-   Responsive Viewports
-   ========================================================================== */
+.send-glyph {
+  font-size: 1.1rem;
+}
+
+.send-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Locked Composer Card (for unauthenticated visitors) */
+.composer-locked-card {
+  background: linear-gradient(135deg, rgba(36, 21, 13, 0.95) 0%, rgba(22, 13, 8, 0.95) 100%);
+  border: 1px solid var(--border-vedic);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.locked-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.locked-crest {
+  font-size: 2rem;
+  color: var(--gold-bright);
+}
+
+.locked-title {
+  font-family: var(--font-vedic-title);
+  font-size: 1.05rem;
+  color: var(--gold-bright);
+  margin-bottom: 3px;
+}
+
+.locked-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-sand);
+}
+
+.google-signin-btn-large {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  color: #ffffff;
+  border: 1px solid #f97316;
+  border-radius: 9999px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(234, 88, 12, 0.4);
+  transition: all 0.2s ease;
+}
+
+.google-signin-btn-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(234, 88, 12, 0.6);
+}
+
+/* Responsive */
 @media (max-width: 640px) {
-  .app-layout {
+  .vedic-layout {
     border-left: none;
     border-right: none;
+  }
+  .header-top {
+    padding: 10px 12px;
+  }
+  .brand-title {
+    font-size: 1.35rem;
+  }
+  .composer-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .identity-toggle-wrapper {
+    align-self: flex-start;
   }
 }

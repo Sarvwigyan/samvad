@@ -11,7 +11,7 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // User Profiles
+    // User Profiles (Parichay)
     match /users/{userId} {
       allow read: if true; // Public profiles
       allow create, update: if isOwner(userId);
@@ -28,6 +28,17 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isOwner(userId);
       }
+
+      // Subcollection: Bookmarks (Smaran)
+      match /bookmarks/{postId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      // Subcollection: Likes
+      match /likes/{postId} {
+        allow read: if true;
+        allow write, delete: if isOwner(userId);
+      }
     }
 
     // Posts (Vichar)
@@ -42,12 +53,35 @@ service cloud.firestore {
         resource.data.uid == request.auth.uid ||
         resource.data.authorId == request.auth.uid
       );
+
+      // Subcollection: Likes (Anumodan)
+      match /likes/{userId} {
+        allow read: if true;
+        allow write, delete: if isOwner(userId);
+      }
+
+      // Subcollection: Reposts (Prasar)
+      match /reposts/{userId} {
+        allow read: if true;
+        allow write, delete: if isOwner(userId);
+      }
+
+      // Subcollection: Replies (Uttar)
+      match /replies/{replyId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update: if false;
+        allow delete: if isAuthenticated() && (
+          resource.data.authorId == request.auth.uid ||
+          resource.data.uid == request.auth.uid
+        );
+      }
     }
 
-    // Messages (Backward compatibility with Phase 1 & 2)
+    // Messages (Phase 1 & 2 feed compatibility)
     match /messages/{messageId} {
       allow read: if true;
-      allow create: if true; // Allows both anonymous and authenticated postings
+      allow create: if true;
       allow update, delete: if false;
     }
   }

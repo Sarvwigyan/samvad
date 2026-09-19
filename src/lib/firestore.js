@@ -10,6 +10,7 @@ import {
   limit,
   getDocs,
   addDoc,
+  deleteDoc,
   serverTimestamp,
   increment,
   runTransaction
@@ -285,3 +286,259 @@ export async function getUserVichars(uid, limitCount = 30) {
     return [];
   }
 }
+
+/**
+ * Fetches a single Vichar by its ID
+ * @param {string} postId
+ * @returns {Promise<object|null>}
+ */
+export async function getVicharById(postId) {
+  if (!postId) return null;
+  try {
+    const docSnap = await getDoc(doc(db, "posts", postId));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  } catch (err) {
+    console.error("Error fetching Vichar by ID:", err);
+    return null;
+  }
+}
+
+/**
+ * Checks if current user has liked (anumodan) a post
+ * @param {string} postId
+ * @param {string} uid
+ * @returns {Promise<boolean>}
+ */
+export async function isPostLiked(postId, uid) {
+  if (!postId || !uid) return false;
+  try {
+    const likeDoc = await getDoc(doc(db, "posts", postId, "likes", uid));
+    return likeDoc.exists();
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Toggles Anumodan (Like) on a post
+ * @param {string} postId
+ * @param {string} uid
+ * @returns {Promise<{ liked: boolean, likeCountDelta: number }>}
+ */
+export async function toggleAnumodan(postId, uid) {
+  if (!postId || !uid) throw new Error("प्रयोक्ता व विचार पहचान अनिवार्य है");
+  const likeRef = doc(db, "posts", postId, "likes", uid);
+  const postRef = doc(db, "posts", postId);
+  const userLikeRef = doc(db, "users", uid, "likes", postId);
+
+  const likeDoc = await getDoc(likeRef);
+  if (likeDoc.exists()) {
+    // Unlike
+    await deleteDoc(likeRef);
+    try { await deleteDoc(userLikeRef); } catch (e) {}
+    try {
+      await updateDoc(postRef, {
+        likeCount: increment(-1)
+      });
+    } catch (e) {}
+    return { liked: false, likeCountDelta: -1 };
+  } else {
+    // Like
+    await setDoc(likeRef, { uid, createdAt: serverTimestamp() });
+    try { await setDoc(userLikeRef, { postId, createdAt: serverTimestamp() }); } catch (e) {}
+    try {
+      await updateDoc(postRef, {
+        likeCount: increment(1)
+      });
+    } catch (e) {}
+    return { liked: true, likeCountDelta: 1 };
+  }
+}
+
+/**
+ * Checks if current user has reposted (prasar) a post
+ * @param {string} postId
+ * @param {string} uid
+ * @returns {Promise<boolean>}
+ */
+export async function isPostReposted(postId, uid) {
+  if (!postId || !uid) return false;
+  try {
+    const repostDoc = await getDoc(doc(db, "posts", postId, "reposts", uid));
+    return repostDoc.exists();
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Toggles Prasar (Repost) on a post
+ * @param {string} postId
+ * @param {string} uid
+ * @returns {Promise<{ reposted: boolean, repostCountDelta: number }>}
+ */
+export async function togglePrasar(postId, uid) {
+  if (!postId || !uid) throw new Error("प्रयोक्ता व विचार पहचान अनिवार्य है");
+  const repostRef = doc(db, "posts", postId, "reposts", uid);
+  const postRef = doc(db, "posts", postId);
+
+  const repostDoc = await getDoc(repostRef);
+  if (repostDoc.exists()) {
+    await deleteDoc(repostRef);
+    try {
+      await updateDoc(postRef, {
+        repostCount: increment(-1)
+      });
+    } catch (e) {}
+    return { reposted: false, repostCountDelta: -1 };
+  } else {
+    await setDoc(repostRef, { uid, createdAt: serverTimestamp() });
+    try {
+      await updateDoc(postRef, {
+        repostCount: increment(1)
+      });
+    } catch (e) {}
+    return { reposted: true, repostCountDelta: 1 };
+  }
+}
+
+/**
+ * Checks if current user has bookmarked (smaran) a post
+ * @param {string} postId
+ * @param {string} uid
+ * @returns {Promise<boolean>}
+ */
+export async function isPostBookmarked(postId, uid) {
+  if (!postId || !uid) return false;
+  try {
+    const markDoc = await getDoc(doc(db, "users", uid, "bookmarks", postId));
+    return markDoc.exists();
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Toggles Smaran (Bookmark) for a post
+ * @param {string} postId
+ * @param {string} uid
+ * @returns {Promise<{ bookmarked: boolean }>}
+ */
+export async function toggleSmaran(postId, uid) {
+  if (!postId || !uid) throw new Error("पहचान अनिवार्य है");
+  const markRef = doc(db, "users", uid, "bookmarks", postId);
+  const postRef = doc(db, "posts", postId);
+
+  const markDoc = await getDoc(markRef);
+  if (markDoc.exists()) {
+    await deleteDoc(markRef);
+    try {
+      await updateDoc(postRef, { bookmarkCount: increment(-1) });
+    } catch (e) {}
+    return { bookmarked: false };
+  } else {
+    await setDoc(markRef, { postId, createdAt: serverTimestamp() });
+    try {
+      await updateDoc(postRef, { bookmarkCount: increment(1) });
+    } catch (e) {}
+    return { bookmarked: true };
+  }
+}
+
+/**
+ * Fetches all bookmarked posts for a user
+ * @param {string} uid
+ * @returns {Promise<Array<object>>}
+ */
+export async function getUserBookmarks(uid) {
+  if (!uid) return [];
+  try {
+    const snap = await getDocs(
+      query(collection(db, "users", uid, "bookmarks"), orderBy("createdAt", "desc"), limit(50))
+    );
+    const postIds = snap.docs.map((d) => d.id);
+    const postPromises = postIds.map((id) => getVicharById(id));
+    const posts = await Promise.all(postPromises);
+    return posts.filter(Boolean);
+  } catch (err) {
+    console.error("Error loading bookmarks:", err);
+    return [];
+  }
+}
+
+/**
+ * Creates an Uttar (Reply) for a Vichar
+ * @param {string} postId
+ * @param {object} reply
+ */
+export async function createUttar(postId, { authorId, authorName, authorPhoto, text, isAnonymous }) {
+  if (!postId || !authorId || !text) throw new Error("उत्तर सामग्री व पहचान अनिवार्य है");
+
+  const replyData = {
+    postId,
+    authorId,
+    uid: authorId,
+    authorName: isAnonymous ? "साधक (गुप्त)" : (authorName || "सुधी पाठक"),
+    authorPhoto: isAnonymous ? null : (authorPhoto || null),
+    text: text.trim(),
+    isAnonymous: Boolean(isAnonymous),
+    likeCount: 0,
+    createdAt: serverTimestamp()
+  };
+
+  const replyRef = await addDoc(collection(db, "posts", postId, "replies"), replyData);
+
+  try {
+    await updateDoc(doc(db, "posts", postId), {
+      replyCount: increment(1)
+    });
+  } catch (e) {}
+
+  return { id: replyRef.id, ...replyData };
+}
+
+/**
+ * Fetches all replies for a given Vichar
+ * @param {string} postId
+ * @returns {Promise<Array<object>>}
+ */
+export async function getPostReplies(postId) {
+  if (!postId) return [];
+  try {
+    const q = query(
+      collection(db, "posts", postId, "replies"),
+      orderBy("createdAt", "asc"),
+      limit(50)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    console.error("Error fetching replies:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetches suggested sadhaks / users to follow
+ * @param {string} currentUid
+ * @param {number} limitCount
+ * @returns {Promise<Array<object>>}
+ */
+export async function getSuggestedSadhaks(currentUid, limitCount = 4) {
+  try {
+    const snap = await getDocs(
+      query(collection(db, "users"), limit(10))
+    );
+    return snap.docs
+      .map((d) => ({ uid: d.id, ...d.data() }))
+      .filter((u) => u.uid !== currentUid)
+      .slice(0, limitCount);
+  } catch (err) {
+    console.warn("Could not fetch suggested sadhaks:", err);
+    return [];
+  }
+}
+

@@ -1,0 +1,20 @@
+{
+  "name": "संवाद — Sovereign Bharatiya Thought Platform",
+  "short_name": "संवाद",
+  "description": "A sovereign digital agora rooted in Bharatiya Sanskriti, philosophical inquiry, and thoughtful discourse.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B0A08",
+  "theme_color": "#D4A24C",
+  "lang": "hi",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "news", "philosophy"]
+}

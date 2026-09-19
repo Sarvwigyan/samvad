@@ -1,35 +1,135 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Avatar } from "./ui/Avatar";
 import { timeAgo } from "../lib/timeAgo";
 import { vocab } from "../lib/vocab";
+import { useAuth } from "../context/AuthContext";
+import {
+  isPostLiked,
+  toggleAnumodan,
+  isPostReposted,
+  togglePrasar,
+  isPostBookmarked,
+  toggleSmaran
+} from "../lib/firestore";
+import { playTempleChime } from "../lib/chime";
 
 export function PostCard({ post }) {
-  const isAnonymous = post.isAnonymous;
-  const authorProfileLink = isAnonymous || !post.authorId ? null : `/parichay/${post.authorId}`;
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
-  const handleShare = async () => {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [reposted, setReposted] = useState(false);
+  const [repostCount, setRepostCount] = useState(post.repostCount || 0);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [replyCount] = useState(post.replyCount || 0);
+  const [copiedToast, setCopiedToast] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser || !post.id) return;
+    let isMounted = true;
+
+    isPostLiked(post.id, currentUser.uid).then((val) => isMounted && setLiked(val));
+    isPostReposted(post.id, currentUser.uid).then((val) => isMounted && setReposted(val));
+    isPostBookmarked(post.id, currentUser.uid).then((val) => isMounted && setBookmarked(val));
+
+    return () => { isMounted = false; };
+  }, [post.id, currentUser]);
+
+  const handleAnumodan = async (e) => {
+    e.stopPropagation();
+    if (!currentUser) {
+      alert("अनुमोदन हेतु गूगल से प्रवेश आवश्यक है");
+      return;
+    }
+
+    const prevLiked = liked;
+    const prevCount = likeCount;
+    setLiked(!prevLiked);
+    setLikeCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
+
+    if (!prevLiked) playTempleChime();
+
+    try {
+      await toggleAnumodan(post.id, currentUser.uid);
+    } catch (err) {
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+    }
+  };
+
+  const handlePrasar = async (e) => {
+    e.stopPropagation();
+    if (!currentUser) {
+      alert("प्रसार हेतु गूगल से प्रवेश आवश्यक है");
+      return;
+    }
+
+    const prevReposted = reposted;
+    const prevCount = repostCount;
+    setReposted(!prevReposted);
+    setRepostCount(prevReposted ? Math.max(0, prevCount - 1) : prevCount + 1);
+
+    try {
+      await togglePrasar(post.id, currentUser.uid);
+    } catch (err) {
+      setReposted(prevReposted);
+      setRepostCount(prevCount);
+    }
+  };
+
+  const handleSmaran = async (e) => {
+    e.stopPropagation();
+    if (!currentUser) {
+      alert("स्मरण में संचित करने हेतु गूगल से प्रवेश आवश्यक है");
+      return;
+    }
+
+    const prevBookmarked = bookmarked;
+    setBookmarked(!prevBookmarked);
+
+    try {
+      await toggleSmaran(post.id, currentUser.uid);
+    } catch (err) {
+      setBookmarked(prevBookmarked);
+    }
+  };
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}${window.location.pathname}#/vichar/${post.id}`;
     if (navigator.share) {
       try {
         await navigator.share({
           title: "संवाद — विचार",
           text: post.text,
-          url: window.location.href
+          url
         });
       } catch {}
     } else {
-      navigator.clipboard?.writeText(window.location.href);
-      alert("कड़ी प्रतिलिपि कर ली गई है (Link copied)");
+      navigator.clipboard?.writeText(url);
+      setCopiedToast(true);
+      setTimeout(() => setCopiedToast(false), 2000);
     }
   };
 
+  const handleCardClick = () => {
+    if (post.id) {
+      navigate(`/vichar/${post.id}`);
+    }
+  };
+
+  const isAnonymous = post.isAnonymous;
+  const authorProfileLink = isAnonymous || !post.authorId ? null : `/parichay/${post.authorId}`;
+
   return (
-    <article className="post-card-container">
+    <article className="post-card-container" onClick={handleCardClick} role="button" tabIndex={0}>
       {/* Header */}
       <header className="post-card-header">
         <div className="post-author-block">
           {authorProfileLink ? (
-            <Link to={authorProfileLink}>
+            <Link to={authorProfileLink} onClick={(e) => e.stopPropagation()}>
               <Avatar
                 src={post.authorPhoto}
                 alt={post.authorName}
@@ -49,7 +149,11 @@ export function PostCard({ post }) {
           <div className="post-author-meta">
             <div className="author-name-line">
               {authorProfileLink ? (
-                <Link to={authorProfileLink} className="author-name-link">
+                <Link
+                  to={authorProfileLink}
+                  className="author-name-link"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {post.authorName || "सुधी साधक"}
                 </Link>
               ) : (
@@ -58,9 +162,7 @@ export function PostCard({ post }) {
                 </span>
               )}
 
-              {isAnonymous ? (
-                <span className="anon-badge">गुप्त विचार</span>
-              ) : null}
+              {isAnonymous && <span className="anon-badge">गुप्त विचार</span>}
             </div>
 
             <time className="post-time-label">
@@ -83,32 +185,70 @@ export function PostCard({ post }) {
 
       {/* Actions Row using Sanskrit Vocabulary */}
       <footer className="post-card-actions">
-        <button type="button" className="action-pill-btn" title="अनुमोदन (Like)">
-          <span className="action-glyph">🌸</span>
-          <span className="action-count">{post.likeCount || 0}</span>
+        {/* Anumodan (Like) */}
+        <button
+          type="button"
+          className={`action-pill-btn ${liked ? "action-liked" : ""}`}
+          onClick={handleAnumodan}
+          title="अनुमोदन (Like)"
+          aria-label="अनुमोदन"
+        >
+          <span className="action-glyph">{liked ? "🪷" : "🌸"}</span>
+          <span className="action-count">{likeCount}</span>
           <span className="action-text">{vocab.like.hi}</span>
         </button>
 
-        <button type="button" className="action-pill-btn" title="उत्तर (Reply)">
+        {/* Uttar (Reply) */}
+        <button
+          type="button"
+          className="action-pill-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/vichar/${post.id}`);
+          }}
+          title="उत्तर (Reply)"
+          aria-label="उत्तर"
+        >
           <span className="action-glyph">💬</span>
-          <span className="action-count">{post.replyCount || 0}</span>
+          <span className="action-count">{replyCount}</span>
           <span className="action-text">{vocab.reply.hi}</span>
         </button>
 
-        <button type="button" className="action-pill-btn" title="प्रसार (Repost)">
+        {/* Prasar (Repost) */}
+        <button
+          type="button"
+          className={`action-pill-btn ${reposted ? "action-reposted" : ""}`}
+          onClick={handlePrasar}
+          title="प्रसार (Repost)"
+          aria-label="प्रसार"
+        >
           <span className="action-glyph">🔄</span>
-          <span className="action-count">{post.repostCount || 0}</span>
+          <span className="action-count">{repostCount}</span>
           <span className="action-text">{vocab.repost.hi}</span>
         </button>
 
-        <button type="button" className="action-pill-btn" title="स्मरण (Bookmark)">
-          <span className="action-glyph">🔖</span>
+        {/* Smaran (Bookmark) */}
+        <button
+          type="button"
+          className={`action-pill-btn ${bookmarked ? "action-bookmarked" : ""}`}
+          onClick={handleSmaran}
+          title="स्मरण (Bookmark)"
+          aria-label="स्मरण"
+        >
+          <span className="action-glyph">{bookmarked ? "🔖" : "🏷️"}</span>
           <span className="action-text">{vocab.bookmark.hi}</span>
         </button>
 
-        <button type="button" className="action-pill-btn" onClick={handleShare} title="संक्रमण (Share)">
+        {/* Sankraman (Share) */}
+        <button
+          type="button"
+          className="action-pill-btn"
+          onClick={handleShare}
+          title="संक्रमण (Share)"
+          aria-label="साझा करें"
+        >
           <span className="action-glyph">↗</span>
-          <span className="action-text">{vocab.share.hi}</span>
+          <span className="action-text">{copiedToast ? "प्रतिलिपि!" : vocab.share.hi}</span>
         </button>
       </footer>
 

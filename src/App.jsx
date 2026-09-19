@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Followers from "./pages/Followers";
 import Following from "./pages/Following";
+import VicharDetail from "./pages/VicharDetail";
+import Smaran from "./pages/Smaran";
 import SettingsLayout from "./pages/Settings/SettingsLayout";
 import "./theme/tokens.css";
 import "./theme/global.css";
@@ -21,6 +23,12 @@ export default function App() {
             <Route element={<Layout />}>
               {/* Home / Pravah Feed */}
               <Route path="/" element={<Home />} />
+
+              {/* Individual Vichar Thread / Detail View */}
+              <Route path="/vichar/:id" element={<VicharDetail />} />
+
+              {/* Bookmarks / Smaran */}
+              <Route path="/smaran" element={<Smaran />} />
 
               {/* Profile / Parichay */}
               <Route path="/parichay" element={<Profile />} />

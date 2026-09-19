@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { PostComposer } from "../components/PostComposer";
@@ -7,6 +8,8 @@ import { PostCard } from "../components/PostCard";
 export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filterQuery = searchParams.get("q") || "";
 
   useEffect(() => {
     // Listen to posts collection in real-time
@@ -44,12 +47,39 @@ export default function Home() {
     });
   };
 
+  const displayedPosts = filterQuery
+    ? posts.filter((p) => {
+        const qLower = filterQuery.toLowerCase();
+        return (
+          p.text?.toLowerCase().includes(qLower) ||
+          p.bhav?.toLowerCase().includes(qLower) ||
+          p.authorName?.toLowerCase().includes(qLower)
+        );
+      })
+    : posts;
+
   return (
     <div className="home-pravah-page">
-      {/* Top Composer */}
-      <section className="home-composer-section">
-        <PostComposer onPostCreated={handlePostCreated} />
-      </section>
+      {/* Active Filter Banner if searching */}
+      {filterQuery && (
+        <div className="search-filter-banner">
+          <span>🔍 खोज परिणाम: <strong>"{filterQuery}"</strong> ({displayedPosts.length} विचार)</span>
+          <button
+            type="button"
+            className="clear-filter-btn"
+            onClick={() => setSearchParams({})}
+          >
+            फ़िल्टर हटाएँ ✕
+          </button>
+        </div>
+      )}
+
+      {/* Top Composer (Only show when not in filtered search mode) */}
+      {!filterQuery && (
+        <section className="home-composer-section">
+          <PostComposer onPostCreated={handlePostCreated} />
+        </section>
+      )}
 
       {/* Posts Stream */}
       <section className="home-feed-section">
@@ -58,15 +88,21 @@ export default function Home() {
             <div className="lotus-spinner">🪷</div>
             <p className="empty-title">प्रवाह लोड हो रहा है...</p>
           </div>
-        ) : posts.length === 0 ? (
+        ) : displayedPosts.length === 0 ? (
           <div className="feed-empty-state">
             <span className="empty-icon">🪷</span>
-            <h3 className="empty-title">प्रवाह में कोई विचार नहीं है</h3>
-            <p className="empty-desc">प्रथम विचार प्रस्तुत कर विचार-प्रवाह का शुभारंभ करें।</p>
+            <h3 className="empty-title">
+              {filterQuery ? "कोई संबंधित विचार नहीं मिला" : "प्रवाह में कोई विचार नहीं है"}
+            </h3>
+            <p className="empty-desc">
+              {filterQuery
+                ? "कृपया अन्य विषय अथवा शब्द से खोजें।"
+                : "प्रथम विचार प्रस्तुत कर विचार-प्रवाह का शुभारंभ करें।"}
+            </p>
           </div>
         ) : (
           <div className="feed-stream-list">
-            {posts.map((post) => (
+            {displayedPosts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
           </div>

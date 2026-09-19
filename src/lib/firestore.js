@@ -270,19 +270,28 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
  * @param {string} uid
  * @param {number} limitCount
  */
-export async function getUserVichars(uid, limitCount = 30) {
+export async function getUserVichars(uid, limitCount = 50) {
   if (!uid) return [];
   try {
-    const q = query(
-      collection(db, "posts"),
-      where("authorId", "==", uid),
-      orderBy("createdAt", "desc"),
-      limit(limitCount)
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const q1 = query(collection(db, "posts"), where("authorId", "==", uid));
+    const snap1 = await getDocs(q1);
+
+    const q2 = query(collection(db, "posts"), where("uid", "==", uid));
+    const snap2 = await getDocs(q2);
+
+    const map = new Map();
+    snap1.docs.forEach((d) => map.set(d.id, { id: d.id, ...d.data() }));
+    snap2.docs.forEach((d) => map.set(d.id, { id: d.id, ...d.data() }));
+
+    const posts = Array.from(map.values());
+    posts.sort((a, b) => {
+      const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
+      const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
+      return timeB - timeA;
+    });
+    return posts.slice(0, limitCount);
   } catch (err) {
-    console.error("Error getting user posts:", err);
+    console.warn("getUserVichars notice:", err.message);
     return [];
   }
 }

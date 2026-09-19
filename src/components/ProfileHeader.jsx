@@ -87,16 +87,16 @@ export function ProfileHeader({ profile, onEditClick }) {
         {/* Followers / Following Counts */}
         <div className="profile-social-counts">
           <Link to={`/parichay/${profile.uid}/anusarit`} className="social-stat-link">
-            <strong>{displayFollowing}</strong>
-            <span>अनुसरित (Following)</span>
+            <strong className="stat-number">{displayFollowing}</strong>
+            <span className="stat-label">अनुसरित (Following)</span>
           </Link>
           <Link to={`/parichay/${profile.uid}/anusari`} className="social-stat-link">
-            <strong>{displayFollowers}</strong>
-            <span>अनुसारी (Followers)</span>
+            <strong className="stat-number">{displayFollowers}</strong>
+            <span className="stat-label">अनुसारी (Followers)</span>
           </Link>
           <span className="social-stat-link stat-plain">
-            <strong>{profile.postsCount || 0}</strong>
-            <span>विचार (Vichar)</span>
+            <strong className="stat-number">{profile.postsCount || 0}</strong>
+            <span className="stat-label">विचार (Vichar)</span>
           </span>
         </div>
       </div>

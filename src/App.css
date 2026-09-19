@@ -45,9 +45,9 @@
 }
 
 .avatar-xs { width: 26px; height: 26px; font-size: 0.68rem; }
-.avatar-sm { width: 34px; height: 34px; font-size: 0.78rem; }
-.avatar-md { width: 44px; height: 44px; font-size: 0.92rem; }
-.avatar-lg { width: 68px; height: 68px; font-size: 1.35rem; }
+.avatar-sm { width: 36px; height: 36px; font-size: 0.78rem; }
+.avatar-md { width: 46px; height: 46px; font-size: 0.95rem; }
+.avatar-lg { width: 72px; height: 72px; font-size: 1.4rem; }
 .avatar-xl { width: 96px; height: 96px; font-size: 2.1rem; }
 
 /* Tactile 3D Buttons (Duolingo-style push & spring) */
@@ -470,7 +470,7 @@
   color: var(--text-muted);
 }
 
-/* Bottom Account / Badge (Properly aligned with zero distortion) */
+/* Bottom Account / Badge */
 .sidebar-bottom-account {
   margin-top: auto;
   padding-top: 14px;
@@ -496,6 +496,7 @@
   color: var(--text);
   overflow: hidden;
   flex: 1;
+  min-width: 0;
 }
 
 .user-badge-meta {
@@ -503,15 +504,15 @@
   flex-direction: column;
   overflow: hidden;
   line-height: 1.25;
+  min-width: 0;
 }
 
 .user-badge-name {
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 110px;
 }
 
 .user-badge-handle {
@@ -520,7 +521,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 110px;
 }
 
 .user-badge-actions {
@@ -633,6 +633,35 @@
   padding: 0;
 }
 
+/* Search Filter Banner */
+.search-filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(212, 162, 76, 0.1);
+  border-bottom: 1px solid var(--sona);
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.clear-filter-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.clear-filter-btn:hover {
+  background: var(--sona);
+  color: #0F0E0C;
+}
+
 /* --------------------------------------------------------------------------
    RIGHT COLUMN: Trending Topics, Suggested Sadhaks, & Subhashita
    -------------------------------------------------------------------------- */
@@ -688,6 +717,21 @@
 
 .search-input-field::placeholder {
   color: var(--text-muted);
+}
+
+.search-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+.search-clear-btn:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 /* Widget Card */
@@ -748,9 +792,9 @@
 }
 
 .trending-tag {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--sona);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 
 .trending-desc {
@@ -768,7 +812,7 @@
 .sadhaks-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .sadhak-item-row {
@@ -784,22 +828,32 @@
   text-decoration: none;
   color: var(--text);
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 }
 
 .sadhak-names {
   display: flex;
   flex-direction: column;
   line-height: 1.2;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .sadhak-display-name {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sadhak-handle {
   font-size: 0.72rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .follow-mini-btn {
@@ -813,6 +867,7 @@
   cursor: pointer;
   box-shadow: 0 2px 0 rgba(212, 162, 76, 0.3);
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  flex-shrink: 0;
 }
 
 .follow-mini-btn:hover {
@@ -1139,7 +1194,7 @@
 
 .post-card-body {
   margin: 10px 0 14px;
-  padding-left: 56px; /* Align text with author meta */
+  padding-left: 56px;
 }
 
 .post-content-text {
@@ -1150,7 +1205,7 @@
   word-break: break-word;
 }
 
-/* Post Card Action Bar (Real Tactile 3D Buttons) */
+/* Post Card Action Bar */
 .post-card-actions {
   display: flex;
   align-items: center;
@@ -1188,15 +1243,6 @@
   box-shadow: 0 0 0 transparent !important;
 }
 
-/* Anumodan (Like) Tactile States */
-.action-pill-btn:hover:has(.action-glyph:contains("🌸")),
-.action-pill-btn:hover:has(.action-glyph:contains("🪷")) {
-  color: #FF5E7E;
-  border-color: rgba(255, 94, 126, 0.4);
-  background: rgba(255, 94, 126, 0.08);
-  box-shadow: 0 2px 0 rgba(255, 94, 126, 0.3);
-}
-
 .action-pill-btn.action-liked {
   color: #FF5E7E;
   font-weight: 700;
@@ -1211,7 +1257,6 @@
   transition: transform 200ms ease;
 }
 
-/* Prasar (Repost) Tactile States */
 .action-pill-btn.action-reposted {
   color: #10B981;
   font-weight: 700;
@@ -1220,7 +1265,6 @@
   box-shadow: 0 2px 0 #059669;
 }
 
-/* Smaran (Bookmark) Tactile States */
 .action-pill-btn.action-bookmarked {
   color: var(--sona);
   font-weight: 700;
@@ -1716,7 +1760,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   PROFILE & EDIT PROFILE
+   PROFILE (PARICHAY) & PROFILE HEADER OVERHAUL
    -------------------------------------------------------------------------- */
 .profile-page-shell {
   display: flex;
@@ -1729,100 +1773,153 @@
   border-bottom: 1px solid var(--border);
 }
 
-.profile-banner-box {
+.profile-banner {
   width: 100%;
-  height: 180px;
-  background: linear-gradient(135deg, rgba(212, 162, 76, 0.25), rgba(123, 36, 28, 0.35));
+  height: 160px;
+  position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.25), rgba(212, 162, 76, 0.35));
+  border-bottom: 1px solid var(--border);
 }
 
-.profile-banner-image {
+.banner-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.profile-banner-fallback {
+.banner-fallback {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(255, 153, 51, 0.2), rgba(212, 162, 76, 0.3));
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.2), rgba(212, 162, 76, 0.35)),
+              radial-gradient(circle at 80% 20%, rgba(212, 162, 76, 0.25) 0%, transparent 60%);
+}
+
+.profile-main-meta {
+  padding: 0 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .profile-avatar-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 0 16px;
-  margin-top: -38px;
+  margin-top: -48px;
+  position: relative;
+  z-index: 5;
 }
 
-.profile-avatar-wrap {
-  border: 4px solid var(--bg);
-  border-radius: 50%;
+.profile-avatar-large {
+  border: 4px solid var(--bg) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
   background: var(--bg);
 }
 
-.profile-info-block {
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.profile-action-btn-zone {
+  margin-bottom: 4px;
 }
 
-.profile-names-line {
+.profile-identity {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .profile-display-name {
   font-family: var(--font-heading);
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: var(--text);
+  line-height: 1.2;
 }
 
-.profile-username-tag {
-  font-size: 0.88rem;
+.profile-verified-badge {
+  font-size: 0.72rem;
+  color: var(--sona);
+  background: rgba(212, 162, 76, 0.12);
+  border: 1px solid var(--sona);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+.profile-handle {
+  font-size: 0.9rem;
   color: var(--text-muted);
 }
 
 .profile-bio-text {
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.96rem;
+  line-height: 1.55;
   color: var(--text);
 }
 
-.profile-meta-row {
+/* Location & Website with clean spacing */
+.profile-sub-details {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 0.78rem;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
   color: var(--text-muted);
+}
+
+.profile-detail-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-link {
+  color: var(--sona);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.profile-link:hover {
+  text-decoration: underline;
+}
+
+/* Profile Social Counts (Spaced and elegant) */
+.profile-social-counts {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 6px;
   flex-wrap: wrap;
 }
 
-.profile-counts-row {
-  display: flex;
+.social-stat-link {
+  display: inline-flex;
   align-items: center;
-  gap: 18px;
-  margin-top: 4px;
-}
-
-.count-link-item {
-  font-size: 0.88rem;
-  color: var(--text-muted);
+  gap: 6px;
   text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  transition: color var(--transition);
 }
 
-.count-link-item strong {
-  color: var(--text);
-  margin-right: 4px;
-}
-
-.count-link-item:hover {
-  text-decoration: underline;
+.social-stat-link:hover {
   color: var(--sona);
+}
+
+.stat-number {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 0.88rem;
 }
 
 .profile-posts-stream {
@@ -1831,17 +1928,105 @@
 
 .section-title {
   font-family: var(--font-heading);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  padding: 0 16px 12px;
+  padding: 4px 20px 14px;
   color: var(--text);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
 }
 
 .empty-profile-posts {
-  padding: 40px 16px;
+  padding: 50px 20px;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+}
+
+/* Connections Page (Followers & Following) */
+.connections-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.connections-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.back-link {
+  font-size: 0.82rem;
+  color: var(--sona);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.connections-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.connections-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.connection-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+.connection-card:hover {
+  background: var(--bg-elevated);
+}
+
+.connection-user-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.connection-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.connection-name {
+  font-weight: 700;
+  font-size: 0.96rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.connection-handle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.connection-bio {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* Edit Profile Modal Form */
@@ -1970,12 +2155,12 @@
     max-width: 100%;
     border-left: none;
     border-right: none;
-    padding-bottom: 64px; /* clearance for bottom nav */
+    padding-bottom: 64px;
   }
 
   .post-card-body,
   .post-card-actions {
-    padding-left: 0; /* Align on mobile */
+    padding-left: 0;
   }
 
   .mobile-brand-row {

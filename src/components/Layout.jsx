@@ -15,6 +15,12 @@ const TRENDING_TOPICS = [
   { tag: "#वैशेषिक", desc: "पदार्थ, परमाणु एवं भौतिक चिन्तन", count: "420 विचार" }
 ];
 
+const CURATED_SADHAKS = [
+  { uid: "curated_vidya", displayName: "भारतीय ज्ञान परम्परा", username: "bharat_vidya", avatarUrl: null, fallbackText: "ज्ञा" },
+  { uid: "curated_sanskrit", displayName: "संस्कृत वाङ्मय", username: "sanskrit_sahitya", avatarUrl: null, fallbackText: "सं" },
+  { uid: "curated_vedanta", displayName: "वेदान्त अनुसन्धान", username: "vedanta_darshan", avatarUrl: null, fallbackText: "वे" }
+];
+
 export function Layout() {
   const { currentUser, userProfile, loginWithGoogle, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -23,20 +29,26 @@ export function Layout() {
 
   const [suggestedSadhaks, setSuggestedSadhaks] = useState([]);
   const [followingStates, setFollowingStates] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/";
 
   useEffect(() => {
     if (currentUser) {
       getSuggestedSadhaks(currentUser.uid).then((sadhaks) => {
-        setSuggestedSadhaks(sadhaks);
-        // Check following status
-        sadhaks.forEach((s) => {
-          isFollowing(currentUser.uid, s.uid).then((isF) => {
-            setFollowingStates((prev) => ({ ...prev, [s.uid]: isF }));
+        if (sadhaks && sadhaks.length > 0) {
+          setSuggestedSadhaks(sadhaks);
+          sadhaks.forEach((s) => {
+            isFollowing(currentUser.uid, s.uid).then((isF) => {
+              setFollowingStates((prev) => ({ ...prev, [s.uid]: isF }));
+            });
           });
-        });
+        } else {
+          setSuggestedSadhaks(CURATED_SADHAKS);
+        }
       });
+    } else {
+      setSuggestedSadhaks(CURATED_SADHAKS);
     }
   }, [currentUser]);
 
@@ -52,6 +64,18 @@ export function Layout() {
     } catch (e) {
       setFollowingStates((prev) => ({ ...prev, [targetUid]: current }));
     }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleTrendingClick = (tag) => {
+    setSearchQuery(tag);
+    navigate(`/?q=${encodeURIComponent(tag)}`);
   };
 
   return (
@@ -119,7 +143,7 @@ export function Layout() {
             </NavLink>
           </nav>
 
-          {/* PWA Install Button */}
+          {/* PWA Install Sidebar Button */}
           {canInstall && !isInstalled && (
             <button
               type="button"
@@ -222,16 +246,27 @@ export function Layout() {
           ======================================================== */}
       <aside className="right-widgets-col">
         <div className="right-widgets-sticky">
-          {/* Search Box */}
-          <div className="search-widget-card">
+          {/* Functional Search Box */}
+          <form className="search-widget-card" onSubmit={handleSearchSubmit}>
             <span className="search-icon">🔍</span>
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="विचार, विषय अथवा साधक खोजें..."
               className="search-input-field"
               aria-label="खोज"
             />
-          </div>
+            {searchQuery && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => { setSearchQuery(""); navigate("/"); }}
+              >
+                ✕
+              </button>
+            )}
+          </form>
 
           {/* Trending Topics / प्रवाहित विषय */}
           <section className="widget-card">
@@ -241,7 +276,13 @@ export function Layout() {
             </div>
             <div className="trending-list">
               {TRENDING_TOPICS.map((topic) => (
-                <div key={topic.tag} className="trending-item">
+                <div
+                  key={topic.tag}
+                  className="trending-item"
+                  onClick={() => handleTrendingClick(topic.tag)}
+                  role="button"
+                  tabIndex={0}
+                >
                   <div className="trending-meta">
                     <span className="trending-tag">{topic.tag}</span>
                     <span className="trending-desc">{topic.desc}</span>
@@ -252,35 +293,38 @@ export function Layout() {
             </div>
           </section>
 
-          {/* Suggested Sadhaks */}
-          {suggestedSadhaks.length > 0 && (
-            <section className="widget-card">
-              <div className="widget-header">
-                <h3 className="widget-title">सुझावित साधक</h3>
-                <span className="widget-lotus">👥</span>
-              </div>
-              <div className="sadhaks-list">
-                {suggestedSadhaks.map((s) => (
-                  <div key={s.uid} className="sadhak-item-row">
-                    <NavLink to={`/parichay/${s.uid}`} className="sadhak-avatar-link">
-                      <Avatar src={s.avatarUrl} alt={s.displayName} size="sm" fallbackText={s.displayName} />
-                      <div className="sadhak-names">
-                        <span className="sadhak-display-name">{s.displayName || "सुधी साधक"}</span>
-                        <span className="sadhak-handle">@{s.username || "sadharak"}</span>
-                      </div>
-                    </NavLink>
-                    <button
-                      type="button"
-                      className={`follow-mini-btn ${followingStates[s.uid] ? "following" : ""}`}
-                      onClick={() => handleFollowToggle(s.uid)}
-                    >
-                      {followingStates[s.uid] ? "अनुसरित" : "अनुसरण"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Suggested Sadhaks (With Curated Fallbacks) */}
+          <section className="widget-card">
+            <div className="widget-header">
+              <h3 className="widget-title">सुझावित साधक</h3>
+              <span className="widget-lotus">👥</span>
+            </div>
+            <div className="sadhaks-list">
+              {suggestedSadhaks.map((s) => (
+                <div key={s.uid} className="sadhak-item-row">
+                  <NavLink to={s.uid.startsWith("curated") ? "/" : `/parichay/${s.uid}`} className="sadhak-avatar-link">
+                    <Avatar
+                      src={s.avatarUrl}
+                      alt={s.displayName}
+                      size="sm"
+                      fallbackText={s.fallbackText || s.displayName}
+                    />
+                    <div className="sadhak-names">
+                      <span className="sadhak-display-name">{s.displayName || "सुधी साधक"}</span>
+                      <span className="sadhak-handle">@{s.username || "sadharak"}</span>
+                    </div>
+                  </NavLink>
+                  <button
+                    type="button"
+                    className={`follow-mini-btn ${followingStates[s.uid] ? "following" : ""}`}
+                    onClick={() => handleFollowToggle(s.uid)}
+                  >
+                    {followingStates[s.uid] ? "अनुसरित" : "अनुसरण"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
 
           {/* Daily Subhashita / अमृत वचन */}
           <section className="widget-card subhashita-card">

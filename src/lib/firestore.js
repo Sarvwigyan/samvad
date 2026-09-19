@@ -13,9 +13,16 @@ import {
   deleteDoc,
   serverTimestamp,
   increment,
-  runTransaction
+  runTransaction,
+  Timestamp
 } from "firebase/firestore";
 import { db } from "../firebase";
+import {
+  calculateExpireAt,
+  calculateEngagement,
+  shouldPreserve,
+  YEAR_2099_MS
+} from "./pruning";
 
 /**
  * Fetches user profile from users/{uid}
@@ -266,6 +273,9 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
     replyCount: 0,
     repostCount: 0,
     bookmarkCount: 0,
+    engagementScore: 0,
+    preserve: false,
+    expireAt: Timestamp.fromMillis(calculateExpireAt(Date.now(), false)),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     clientId: clientId || "web"
@@ -352,6 +362,32 @@ export async function isPostLiked(postId, uid) {
 }
 
 /**
+ * Updates a post's engagement score and triggers immortal preservation if criteria are met
+ * @param {string} postId
+ */
+export async function syncPostPreservation(postId) {
+  if (!postId) return;
+  try {
+    const postRef = doc(db, "posts", postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) return;
+
+    const postData = postSnap.data();
+    const engagement = calculateEngagement(postData);
+    const updates = { engagementScore: engagement };
+
+    if (!postData.preserve && shouldPreserve(postData)) {
+      updates.preserve = true;
+      updates.expireAt = Timestamp.fromMillis(YEAR_2099_MS);
+    }
+
+    await updateDoc(postRef, updates);
+  } catch (e) {
+    // Non-blocking sync
+  }
+}
+
+/**
  * Toggles Anumodan (Like) on a post
  * @param {string} postId
  * @param {string} uid
@@ -372,6 +408,7 @@ export async function toggleAnumodan(postId, uid) {
       await updateDoc(postRef, {
         likeCount: increment(-1)
       });
+      syncPostPreservation(postId);
     } catch (e) {}
     return { liked: false, likeCountDelta: -1 };
   } else {
@@ -382,6 +419,7 @@ export async function toggleAnumodan(postId, uid) {
       await updateDoc(postRef, {
         likeCount: increment(1)
       });
+      syncPostPreservation(postId);
     } catch (e) {}
     return { liked: true, likeCountDelta: 1 };
   }
@@ -421,6 +459,7 @@ export async function togglePrasar(postId, uid) {
       await updateDoc(postRef, {
         repostCount: increment(-1)
       });
+      syncPostPreservation(postId);
     } catch (e) {}
     return { reposted: false, repostCountDelta: -1 };
   } else {
@@ -429,6 +468,7 @@ export async function togglePrasar(postId, uid) {
       await updateDoc(postRef, {
         repostCount: increment(1)
       });
+      syncPostPreservation(postId);
     } catch (e) {}
     return { reposted: true, repostCountDelta: 1 };
   }
@@ -466,12 +506,14 @@ export async function toggleSmaran(postId, uid) {
     await deleteDoc(markRef);
     try {
       await updateDoc(postRef, { bookmarkCount: increment(-1) });
+      syncPostPreservation(postId);
     } catch (e) {}
     return { bookmarked: false };
   } else {
     await setDoc(markRef, { postId, createdAt: serverTimestamp() });
     try {
       await updateDoc(postRef, { bookmarkCount: increment(1) });
+      syncPostPreservation(postId);
     } catch (e) {}
     return { bookmarked: true };
   }
@@ -537,6 +579,7 @@ export async function createUttar(postId, { authorId, authorName, authorPhoto, t
     await updateDoc(doc(db, "posts", postId), {
       replyCount: increment(1)
     });
+    syncPostPreservation(postId);
   } catch (e) {}
 
   return { id: replyRef.id, ...replyData };

@@ -54,7 +54,8 @@ service cloud.firestore {
       allow update: if isAuthenticated();
       allow delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
-        resource.data.authorId == request.auth.uid
+        resource.data.authorId == request.auth.uid ||
+        resource.data.preserve == false
       );
 
       // Subcollection: Likes (Anumodan)
@@ -79,6 +80,11 @@ service cloud.firestore {
           resource.data.uid == request.auth.uid
         );
       }
+    }
+
+    // System Control Documents (Pruning locks, configurations)
+    match /system/{docId} {
+      allow read, write: if isAuthenticated();
     }
 
     // Messages (Phase 1 & 2 feed compatibility)

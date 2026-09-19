@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -15,6 +15,16 @@ import "./theme/global.css";
 import "./App.css";
 
 export default function App() {
+  useEffect(() => {
+    // Non-blocking auto-pruning evaluation after 30-second delay
+    const timer = setTimeout(() => {
+      import("./lib/pruning").then(({ pruneIfNeeded }) => {
+        pruneIfNeeded().catch(() => {});
+      });
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <ThemeProvider>
       <AuthProvider>

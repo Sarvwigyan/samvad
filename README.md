@@ -66,3 +66,16 @@ Visit: `http://localhost:5173/`
 
 - **Netlify**: GitHub repo से कनेक्टेड है (`samwad.netlify.app`), प्रत्येक `git push` पर स्वतः बिल्ड व डिप्लॉय हो जाता है।
 - **GitHub Pages**: `vite.config.js` में `base: './'` सेट किया गया है, जिससे `https://sarvwigyan.github.io/samvad/` पर भी बिना वाइट-स्क्रीन एरर के सम्पूर्ण एसेट्स लोड होते हैं।
+
+---
+
+## ⏳ 5. Firestore TTL Policy (Auto-Pruning Setup)
+
+Firestore में स्वचालित 90-दिवसीय विलोपन (TTL) सक्रिय करने हेतु:
+1. [Firebase Console](https://console.firebase.google.com/) → **Firestore Database** में जाएँ।
+2. **Time-to-live (TTL)** टैब चुनें।
+3. **Create Policy** पर क्लिक करें:
+   - **Collection group**: `posts`
+   - **Timestamp field**: `expireAt`
+4. **Create** करें। Google के सर्वर `expireAt` बीतने के 24 घंटे के भीतर पुराने अप्रज़र्व्ड विचारों को स्वतः शून्य लागत पर हटाते रहेंगे।
+5. *ध्यान दें*: जब कोई विचार मूल्यवान (Immortal) बन जाता है (10+ एंगेजमेंट, बुकमार्क आदि), संवाद कोड स्वतः उसके `expireAt` को वर्ष **2099** पर सेट कर देता है, जिससे वह कभी नष्ट नहीं होता।

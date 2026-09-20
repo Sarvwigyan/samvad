@@ -4,16 +4,17 @@ import { triggerHaptic } from "../lib/haptics";
 export const FEED_TAB_KEY = "samwad_feed_tab";
 export const TAB_PRAVAH = "pravah";
 export const TAB_NAYA = "naya";
+export const TAB_MANDAL = "mandal";
 
 /**
- * Tab switcher component for Pravah (For You) and Naya (Latest).
+ * Tab switcher component for Pravah (For You), Naya (Latest), and Mandal (Circles).
  * Follows tactile 3D button system and preserves choice in localStorage.
  *
  * @param {object} props
- * @param {string} props.activeTab - 'pravah' | 'naya'
+ * @param {string} props.activeTab - 'pravah' | 'naya' | 'mandal'
  * @param {Function} props.onTabChange - Callback on tab switch
  */
-export function FeedTabs({ activeTab, onTabChange }) {
+function FeedTabsComponent({ activeTab, onTabChange }) {
   const handleSelect = (tab) => {
     if (tab === activeTab) return;
     triggerHaptic(12);
@@ -46,6 +47,19 @@ export function FeedTabs({ activeTab, onTabChange }) {
         <span className="tab-label-main">नया</span>
         <span className="tab-label-sub">Naya (Latest)</span>
       </button>
+
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeTab === TAB_MANDAL}
+        className={`feed-tab-btn ${activeTab === TAB_MANDAL ? "active" : ""}`}
+        onClick={() => handleSelect(TAB_MANDAL)}
+      >
+        <span className="tab-label-main">मण्डल</span>
+        <span className="tab-label-sub">Circles</span>
+      </button>
     </div>
   );
 }
+
+export const FeedTabs = React.memo(FeedTabsComponent);

@@ -7,9 +7,11 @@ import { validatePostText, countWords, MAX_POST_WORDS } from "../lib/validation"
 import { classifyVichar, BHAV_CATEGORIES } from "../lib/nlp";
 import { compressPostImage } from "../lib/storage";
 import { searchUsersByMention } from "../lib/mentions";
+import { extractUrls, fetchOpenGraphData } from "../lib/linkPreview";
+import { getDrafts, saveDraft, deleteDraft } from "../lib/drafts";
 import { Button } from "./ui/Button";
 import { Avatar } from "./ui/Avatar";
-import { ImageIcon, CloseIcon, SmileIcon, ChartIcon, MicIcon, StopCircleIcon } from "./ui/Icons";
+import { ImageIcon, CloseIcon, SmileIcon, ChartIcon, MicIcon, StopCircleIcon, BookIcon, ExternalLinkIcon } from "./ui/Icons";
 import { EmojiPicker } from "./ui/EmojiPicker";
 
 export function PostComposer({ onPostCreated }) {
@@ -23,6 +25,21 @@ export function PostComposer({ onPostCreated }) {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   
+  // Link Preview Card State (X-Style)
+  const [linkCard, setLinkCard] = useState(null);
+  const [isLoadingLink, setIsLoadingLink] = useState(false);
+  const [isLinkDismissed, setIsLinkDismissed] = useState(false);
+
+  // Drafts State (कच्चा प्रारूप)
+  const [draftsList, setDraftsList] = useState([]);
+  const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+  const [activeDraftId, setActiveDraftId] = useState(null);
+  const [draftSavedToast, setDraftSavedToast] = useState("");
+
+  useEffect(() => {
+    setDraftsList(getDrafts());
+  }, []);
+
   // Poll State
   const [showPoll, setShowPoll] = useState(false);
   const [pollOptions, setPollOptions] = useState(["", ""]);
@@ -195,12 +212,20 @@ export function PostComposer({ onPostCreated }) {
         images,
         poll: pollData,
         audioData: audioDataUrl,
+        linkCard: linkCard || null,
         clientId: getClientId()
       });
 
       playTempleChime();
+      if (activeDraftId) {
+        deleteDraft(activeDraftId);
+        setActiveDraftId(null);
+        setDraftsList(getDrafts());
+      }
       setText("");
       setImages([]);
+      setLinkCard(null);
+      setIsLinkDismissed(false);
       setShowPoll(false);
       setPollOptions(["", ""]);
       setPollDuration(24);
@@ -263,6 +288,24 @@ export function PostComposer({ onPostCreated }) {
     e.target.style.height = "auto";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
 
+    // Detect URL for X-Style Rich Link Card
+    const detectedUrls = extractUrls(val);
+    if (detectedUrls.length > 0 && !isLinkDismissed) {
+      const firstUrl = detectedUrls[0];
+      if (!linkCard || linkCard.url !== firstUrl) {
+        setIsLoadingLink(true);
+        fetchOpenGraphData(firstUrl)
+          .then((card) => {
+            if (card) setLinkCard(card);
+            setIsLoadingLink(false);
+          })
+          .catch(() => setIsLoadingLink(false));
+      }
+    } else if (detectedUrls.length === 0 && linkCard) {
+      setLinkCard(null);
+      setIsLinkDismissed(false);
+    }
+
     // Detect @mention trigger at cursor
     const cursorPos = e.target.selectionStart;
     const textBeforeCursor = val.slice(0, cursorPos);
@@ -279,6 +322,64 @@ export function PostComposer({ onPostCreated }) {
     } else {
       setMentionQuery(null);
       setMentionSuggestions([]);
+    }
+  };
+
+  const handleSaveDraft = () => {
+    if (!text.trim() && images.length === 0 && !audioDataUrl && !showPoll) {
+      setError("रिक्त प्रारूप सहेजा नहीं जा सकता");
+      return;
+    }
+    const pollData = showPoll ? {
+      question: text.trim() || "मतदान (Poll)",
+      options: pollOptions.filter(Boolean),
+      durationHours: pollDuration
+    } : null;
+
+    const saved = saveDraft({
+      id: activeDraftId,
+      text,
+      images,
+      audioDataUrl,
+      poll: pollData,
+      isAnonymous,
+      bhav: activeBhav.short,
+      linkCard
+    });
+
+    if (saved) {
+      setActiveDraftId(saved.id);
+      setDraftsList(getDrafts());
+      setDraftSavedToast("कच्चा प्रारूप सहेज लिया गया (Draft saved)");
+      setTimeout(() => setDraftSavedToast(""), 3000);
+    }
+  };
+
+  const handleLoadDraft = (draft) => {
+    setText(draft.text || "");
+    setImages(draft.images || []);
+    setAudioDataUrl(draft.audioDataUrl || null);
+    if (draft.poll) {
+      setShowPoll(true);
+      setPollOptions(draft.poll.options && draft.poll.options.length >= 2 ? draft.poll.options : ["", ""]);
+      setPollDuration(draft.poll.durationHours || 24);
+    } else {
+      setShowPoll(false);
+    }
+    setIsAnonymous(Boolean(draft.isAnonymous));
+    setLinkCard(draft.linkCard || null);
+    setActiveDraftId(draft.id);
+    setIsDraftsModalOpen(false);
+    setDraftSavedToast("प्रारूप लोड किया गया");
+    setTimeout(() => setDraftSavedToast(""), 2500);
+  };
+
+  const handleDeleteDraft = (draftId, e) => {
+    e.stopPropagation();
+    deleteDraft(draftId);
+    setDraftsList(getDrafts());
+    if (activeDraftId === draftId) {
+      setActiveDraftId(null);
     }
   };
 
@@ -534,6 +635,42 @@ export function PostComposer({ onPostCreated }) {
         </div>
       )}
 
+      {/* Link Card Loading Indicator */}
+      {isLoadingLink && (
+        <div className="composer-link-loading-row">
+          <span className="btn-spinner" aria-hidden="true" />
+          <span>लिंक कार्ड पूर्वावलोकन लोड हो रहा है...</span>
+        </div>
+      )}
+
+      {/* X-Style Rich Link Card Preview in Composer */}
+      {linkCard && (
+        <div className="composer-rich-link-card">
+          {linkCard.image && (
+            <div className="composer-link-img-wrap">
+              <img src={linkCard.image} alt="" className="composer-link-img" />
+            </div>
+          )}
+          <div className="composer-link-meta">
+            <span className="composer-link-domain">{linkCard.domain}</span>
+            <h4 className="composer-link-title">{linkCard.title || linkCard.displayUrl}</h4>
+            {linkCard.description && <p className="composer-link-desc">{linkCard.description}</p>}
+          </div>
+          <button
+            type="button"
+            className="composer-link-dismiss-btn"
+            onClick={() => {
+              setLinkCard(null);
+              setIsLinkDismissed(true);
+            }}
+            title="लिंक पूर्वावलोकन हटाएँ"
+            aria-label="हटाएँ"
+          >
+            <CloseIcon size={14} />
+          </button>
+        </div>
+      )}
+
       {isCompressing && (
         <div className="composer-compressing-banner">
           <span className="btn-spinner" aria-hidden="true" />
@@ -541,6 +678,7 @@ export function PostComposer({ onPostCreated }) {
         </div>
       )}
 
+      {draftSavedToast && <p className="composer-draft-toast">✨ {draftSavedToast}</p>}
       {error && <p className="composer-error-msg">⚠️ {error}</p>}
 
       {/* Actions & Meter */}
@@ -608,6 +746,30 @@ export function PostComposer({ onPostCreated }) {
               {isRecording ? <StopCircleIcon size={19} /> : <MicIcon size={19} />}
             </button>
           )}
+
+          {/* Drafts Trigger Button */}
+          <button
+            type="button"
+            className={`composer-action-icon-btn ${draftsList.length > 0 ? "active" : ""}`}
+            onClick={() => setIsDraftsModalOpen(true)}
+            title={`कच्चे प्रारूप (Drafts) — ${draftsList.length} उपलब्ध`}
+            aria-label="कच्चे प्रारूप"
+          >
+            <BookIcon size={18} />
+            {draftsList.length > 0 && <span className="media-badge-pill">{draftsList.length}</span>}
+          </button>
+
+          {/* Quick Save Draft button */}
+          {(text.trim().length > 0 || images.length > 0) && (
+            <button
+              type="button"
+              className="composer-draft-save-btn"
+              onClick={handleSaveDraft}
+              title="वर्तमान विचार को प्रारूप के रूप में सहेजें"
+            >
+              प्रारूप सहेजें
+            </button>
+          )}
         </div>
 
         <div className="composer-footer-right">
@@ -632,6 +794,53 @@ export function PostComposer({ onPostCreated }) {
           </Button>
         </div>
       </div>
+
+      {/* Drafts Management Modal Dialog */}
+      {isDraftsModalOpen && (
+        <div className="drafts-modal-backdrop" onClick={() => setIsDraftsModalOpen(false)}>
+          <div className="drafts-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="drafts-modal-header">
+              <h3>कच्चे प्रारूप (Drafts)</h3>
+              <button type="button" onClick={() => setIsDraftsModalOpen(false)} className="drafts-close-btn">
+                <CloseIcon size={18} />
+              </button>
+            </div>
+
+            <div className="drafts-list-container">
+              {draftsList.length === 0 ? (
+                <div className="drafts-empty-state">
+                  <span className="drafts-empty-icon">📝</span>
+                  <p>कोई सहेजा हुआ प्रारूप नहीं है।</p>
+                </div>
+              ) : (
+                draftsList.map((draft) => (
+                  <div key={draft.id} className="draft-item-card" onClick={() => handleLoadDraft(draft)}>
+                    <div className="draft-item-info">
+                      <p className="draft-text-preview">{draft.text || "(बिना पाठ प्रारूप)"}</p>
+                      <div className="draft-badges-row">
+                        <span className="draft-time">{new Date(draft.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {draft.images && draft.images.length > 0 && <span className="draft-tag">🖼️ {draft.images.length} चित्र</span>}
+                        {draft.audioDataUrl && <span className="draft-tag">🎙️ ऑडियो</span>}
+                        {draft.poll && <span className="draft-tag">📊 मतदान</span>}
+                        {draft.linkCard && <span className="draft-tag">🔗 लिंक</span>}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="draft-delete-btn"
+                      onClick={(e) => handleDeleteDraft(draft.id, e)}
+                      title="प्रारूप हटाएँ"
+                      aria-label="हटाएँ"
+                    >
+                      <CloseIcon size={16} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

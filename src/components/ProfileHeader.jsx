@@ -5,6 +5,7 @@ import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { FollowButton } from "./FollowButton";
 import { MapPinIcon, LinkIcon, MailIcon } from "./ui/Icons";
+import { getBadgeInfo } from "../lib/sso";
 
 export function ProfileHeader({ profile, onEditClick }) {
   const { currentUser, loginWithGoogle } = useAuth();
@@ -74,12 +75,28 @@ export function ProfileHeader({ profile, onEditClick }) {
           <div className="profile-name-row">
             <h2 className="profile-display-name">{profile.displayName || "सुधी साधक"}</h2>
             {profile.verified && (
-              <span className="profile-verified-badge" title="प्रमाणित प्रयोक्ता">
-                ✓ प्रमाणित
+              <span className="profile-verified-badge" title="प्रमाणित साधक (Verified)">
+                ☸ प्रमाणित
               </span>
             )}
           </div>
           <span className="profile-handle">@{profile.username || "sadharak"}</span>
+
+          {/* Ecosystem Badges */}
+          {profile.badges && Array.isArray(profile.badges) && profile.badges.length > 0 && (
+            <div className="profile-ecosystem-badges-row">
+              {profile.badges.map((bKey) => {
+                const b = getBadgeInfo(bKey);
+                if (!b) return null;
+                return (
+                  <span key={bKey} className="ecosystem-badge-chip" title={b.description}>
+                    <span className="badge-icon">{b.icon}</span>
+                    <span className="badge-label">{b.label}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Bio */}

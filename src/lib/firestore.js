@@ -109,7 +109,16 @@ export async function upsertUserProfile(uid, profileData) {
       followersCount: 0,
       followingCount: 0,
       postsCount: 0,
-      verified: false,
+      verified: Boolean(profileData.verified),
+      badges: profileData.badges || ["ecosystem_pioneer"],
+      reputation: profileData.reputation || 108,
+      roles: profileData.roles || ["user"],
+      ecosystem: {
+        samvad: true,
+        sarvstore: true,
+        sarvwigyan: true,
+        primaryApp: "samvad"
+      },
       isAdmin: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -323,7 +332,7 @@ export async function getFollowing(uid) {
  * Creates a post / vichar
  * @param {object} param0
  */
-export async function createVichar({ authorId, authorName, authorPhoto, text, bhav, isAnonymous, clientId, images = [], poll = null, audioData = null, replyToId = null, threadId = null }) {
+export async function createVichar({ authorId, authorName, authorPhoto, text, bhav, isAnonymous, clientId, images = [], poll = null, audioData = null, replyToId = null, threadId = null, linkCard = null }) {
   if (!authorId) throw new Error("सामग्री व पहचान अनिवार्य है");
   
   // Enforce 2100 words limit
@@ -362,6 +371,7 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
     images: cleanImages,
     poll: pollData,
     audioData: audioData || null,
+    linkCard: linkCard || null,
     replyToId: replyToId || null,
     threadId: threadId || null,
     bhav: bhav || "विचार",

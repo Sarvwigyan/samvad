@@ -339,6 +339,9 @@ export default function VicharDetail() {
                   {displayAuthorName}
                 </span>
               )}
+              {((currentUser && post.authorId === currentUser.uid && userProfile?.verified) || post.verified) && (
+                <span className="author-verified-badge" title="प्रमाणित साधक (Verified)">☸</span>
+              )}
               <span className="author-handle">
                 {post.isAnonymous ? "गुप्त साधक" : timeAgo(post.createdAt)}
               </span>
@@ -444,19 +447,27 @@ export default function VicharDetail() {
           </div>
         )}
 
-        {/* Link Preview Card */}
+        {/* X-Style Rich Link Preview Card */}
         {(() => {
-          const urls = extractUrls(post.text);
-          if (!urls || urls.length === 0) return null;
-          const card = getLinkCardData(urls[0]);
+          const card = post.linkCard || (() => {
+            const urls = extractUrls(post.text);
+            return urls && urls.length > 0 ? getLinkCardData(urls[0]) : null;
+          })();
+          if (!card || !card.url) return null;
+
           return (
             <div
-              className="post-link-card"
+              className={`post-link-card ${card.image ? "has-rich-image" : ""}`}
               onClick={() => window.open(card.url, "_blank", "noopener,noreferrer")}
               role="link"
               tabIndex={0}
               title={`खोलें: ${card.url}`}
             >
+              {card.image && (
+                <div className="post-link-card-img-wrap">
+                  <img src={card.image} alt="" className="post-link-card-img" loading="lazy" onError={(e) => { e.target.parentElement.style.display = 'none'; }} />
+                </div>
+              )}
               <div className="link-card-content">
                 <div className="link-card-header-line">
                   {card.favicon ? (
@@ -467,10 +478,12 @@ export default function VicharDetail() {
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   ) : null}
-                  <span className="link-card-domain">{card.domain}</span>
+                  <span className="link-card-domain">{card.domain || card.publisher}</span>
                   <ExternalLinkIcon size={12} className="link-card-external-icon" />
                 </div>
-                <span className="link-card-url-text">{card.displayUrl}</span>
+                {card.title && <h4 className="post-link-card-title">{card.title}</h4>}
+                {card.description && <p className="post-link-card-desc">{card.description}</p>}
+                {!card.title && <span className="link-card-url-text">{card.displayUrl || card.url}</span>}
               </div>
             </div>
           );

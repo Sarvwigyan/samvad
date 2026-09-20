@@ -6,9 +6,11 @@ import { useAuth } from "../context/AuthContext";
 import { PostComposer } from "../components/PostComposer";
 import { PostCard } from "../components/PostCard";
 import { PostCardSkeleton } from "../components/ui/PostCardSkeleton";
-import { FeedTabs, FEED_TAB_KEY, TAB_PRAVAH, TAB_NAYA } from "../components/FeedTabs";
+import { FeedTabs, FEED_TAB_KEY, TAB_PRAVAH, TAB_NAYA, TAB_MANDAL } from "../components/FeedTabs";
 import { useRankedFeed } from "../hooks/useRankedFeed";
-import { SearchIcon, StreamIcon } from "../components/ui/Icons";
+import { SearchIcon, StreamIcon, UsersIcon, PlusIcon } from "../components/ui/Icons";
+import { getUserCircles } from "../lib/circles";
+import { CirclesModal } from "../components/CirclesModal";
 
 const INITIAL_BATCH_SIZE = 15;
 const BATCH_INCREMENT = 10;
@@ -27,10 +29,23 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = useRef(null);
 
+  // Sadhak Circles (मण्डल) States
+  const [circles, setCircles] = useState([]);
+  const [selectedCircleId, setSelectedCircleId] = useState("all");
+  const [isCirclesModalOpen, setIsCirclesModalOpen] = useState(false);
+
+  useEffect(() => {
+    getUserCircles(currentUser?.uid).then(setCircles);
+  }, [currentUser?.uid]);
+
+  const refreshCircles = () => {
+    getUserCircles(currentUser?.uid).then(setCircles);
+  };
+
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const saved = localStorage.getItem(FEED_TAB_KEY);
-      if (saved === TAB_PRAVAH || saved === TAB_NAYA) return saved;
+      if (saved === TAB_PRAVAH || saved === TAB_NAYA || saved === TAB_MANDAL) return saved;
       return currentUser ? TAB_PRAVAH : TAB_NAYA;
     } catch (e) {
       return TAB_NAYA;
@@ -128,7 +143,21 @@ export default function Home() {
     setPosts((prev) => prev.filter((p) => p.id !== deletedPostId));
   };
 
-  const candidatePosts = activeTab === TAB_PRAVAH ? rankedPosts : posts;
+  const mandalPosts = useMemo(() => {
+    if (activeTab !== TAB_MANDAL) return [];
+    if (selectedCircleId === "all") {
+      const allMemberUids = new Set();
+      circles.forEach((c) => (c.memberUids || []).forEach((u) => allMemberUids.add(u)));
+      if (allMemberUids.size === 0) return posts;
+      return posts.filter((p) => allMemberUids.has(p.authorId));
+    }
+    const target = circles.find((c) => c.id === selectedCircleId);
+    if (!target || !target.memberUids || target.memberUids.length === 0) return [];
+    const members = new Set(target.memberUids);
+    return posts.filter((p) => members.has(p.authorId));
+  }, [activeTab, selectedCircleId, circles, posts]);
+
+  const candidatePosts = activeTab === TAB_PRAVAH ? rankedPosts : activeTab === TAB_MANDAL ? mandalPosts : posts;
 
   const displayedPosts = filterQuery
     ? candidatePosts.filter((p) => {
@@ -191,10 +220,53 @@ export default function Home() {
         </section>
       )}
 
-      {/* Feed Tabs: प्रवाह (Pravah / For You) vs नया (Naya / Latest) */}
+      {/* Feed Tabs: प्रवाह (Pravah / For You) vs नया (Naya / Latest) vs मण्डल (Circles) */}
       {!filterQuery && (
         <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
       )}
+
+      {/* Circles Sub-Ribbon */}
+      {!filterQuery && activeTab === TAB_MANDAL && (
+        <div className="home-circles-bar">
+          <div className="home-circles-scroll">
+            <button
+              type="button"
+              className={`circle-tab-pill ${selectedCircleId === "all" ? "active" : ""}`}
+              onClick={() => setSelectedCircleId("all")}
+            >
+              <span>🌐 सभी मण्डल</span>
+            </button>
+            {circles.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`circle-tab-pill ${selectedCircleId === c.id ? "active" : ""}`}
+                onClick={() => setSelectedCircleId(c.id)}
+              >
+                <span>{c.icon || "⭕"} {c.name}</span>
+                <span className="circle-pill-count">({(c.memberUids || []).length})</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="manage-circles-btn"
+            onClick={() => setIsCirclesModalOpen(true)}
+            title="मण्डल प्रबंधित करें"
+          >
+            + प्रबंधित करें
+          </button>
+        </div>
+      )}
+
+      {/* Circles Modal */}
+      <CirclesModal
+        isOpen={isCirclesModalOpen}
+        onClose={() => setIsCirclesModalOpen(false)}
+        circles={circles}
+        onCirclesUpdated={refreshCircles}
+        currentUserId={currentUser?.uid}
+      />
 
       {/* Posts Stream */}
       <section className="home-feed-section">

@@ -90,9 +90,11 @@ export function EmojiPicker({ onSelect, onClose, align = "bottom" }) {
       }
     };
     document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick, { passive: true });
     document.addEventListener("keydown", handleEscape);
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [onClose]);
@@ -131,7 +133,6 @@ export function EmojiPicker({ onSelect, onClose, align = "bottom" }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="emoji-search-input"
-            autoFocus
           />
           {searchQuery && (
             <button
@@ -180,6 +181,7 @@ export function EmojiPicker({ onSelect, onClose, align = "bottom" }) {
               className="emoji-btn-item"
               onClick={() => {
                 onSelect(emoji);
+                onClose?.();
               }}
               title={emoji}
               aria-label={emoji}

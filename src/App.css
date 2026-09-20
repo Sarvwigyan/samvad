@@ -1705,6 +1705,7 @@
 
 .post-content-text {
   user-select: text;
+  cursor: pointer;
 }
 
 .post-card-container:hover {
@@ -4451,7 +4452,7 @@
 .dm-bubble-poll-card {
   margin: 4px 0 2px;
   width: 100%;
-  min-width: 260px;
+  min-width: min(260px, calc(100vw - 90px));
   max-width: 380px;
   box-sizing: border-box;
 }
@@ -4488,6 +4489,11 @@
   transition: all 0.15s ease;
   color: inherit;
   display: block;
+}
+
+.dm-poll-option-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 [data-theme="dark"] .dm-poll-option-btn {
@@ -5133,7 +5139,7 @@
    ========================================================================== */
 .universal-emoji-picker {
   position: absolute;
-  width: 320px;
+  width: min(320px, calc(100vw - 24px));
   max-width: min(320px, calc(100vw - 28px));
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -5178,7 +5184,7 @@
   align-items: center;
   gap: 6px;
   background: var(--bg-surface);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   padding: 4px 8px;
 }
@@ -5208,7 +5214,7 @@
 .emoji-clear-btn:hover,
 .emoji-close-btn:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
 }
 
 .emoji-categories-tabs {
@@ -5280,7 +5286,7 @@
 }
 
 .emoji-btn-item:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.14));
   transform: scale(1.18);
 }
 
@@ -5433,7 +5439,7 @@
   padding: 2px 6px;
   font-size: 0.78rem;
   background: var(--bg-hover);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
   border-radius: 9999px;
   color: var(--text);
   cursor: pointer;
@@ -5496,7 +5502,7 @@
 }
 
 .dm-msg-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
 }
 
 .dm-msg-dropdown-item.item-danger {
@@ -6599,4 +6605,25 @@
 .pwa-install-sidebar-btn,
 .mobile-pwa-btn {
   display: none !important;
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE FIXES (Progressive Breakpoints)
+   ============================================================ */
+@media (max-width: 480px) {
+  .dm-room-header { padding: 8px 12px; }
+  .dm-room-display-name { font-size: 0.95rem; }
+  .dm-bubble { max-width: 85%; }
+  .dm-input-field { font-size: 14px; }
+  .dm-reaction-bar-popup { max-width: calc(100vw - 24px); flex-wrap: wrap; }
+  .dm-bubble-text { word-break: break-word; overflow-wrap: break-word; }
+  .dm-recording-tray { flex-wrap: wrap; gap: 6px; }
+  .dm-picker-fixed-wrap { max-width: calc(100vw - 8px); }
+}
+
+@media (max-width: 375px) {
+  .dm-bubble-poll-card { min-width: auto; max-width: 100%; }
+  .dm-recording-label { display: none; }
+  .emoji-buttons-grid { grid-template-columns: repeat(6, 1fr); }
+  .dm-list-panel { width: 100vw; }
 }

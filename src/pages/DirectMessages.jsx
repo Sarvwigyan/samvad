@@ -356,20 +356,37 @@ export default function DirectMessages() {
     }
   }, [messages]);
 
-  // Close picker on scroll / conversation change / Escape
+  // Close picker on scroll / conversation change / Escape / outside click
   useEffect(() => {
     const closeAll = () => {
       setFullPicker((p) => (p.msgId ? { msgId: null, top: 0, left: 0, side: "top" } : p));
       setActiveReactionMenuMsgId(null);
       setActiveMsgMenuId(null);
+      setIsInputEmojiOpen(false);
     };
     const handleKey = (e) => { if (e.key === "Escape") closeAll(); };
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest(".dm-reaction-bar-popup") &&
+          !e.target.closest(".dm-msg-dropdown") &&
+          !e.target.closest(".dm-bubble-action-btn") &&
+          !e.target.closest(".dm-input-emoji-wrap") &&
+          !e.target.closest(".universal-emoji-picker") &&
+          !e.target.closest(".dm-picker-fixed-wrap") &&
+          !e.target.closest(".dm-picker-backdrop")) {
+        setActiveReactionMenuMsgId(null);
+        setActiveMsgMenuId(null);
+      }
+    };
     const viewport = messagesViewportRef.current;
     if (viewport) viewport.addEventListener("scroll", closeAll, { passive: true });
     window.addEventListener("keydown", handleKey);
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick, { passive: true });
     return () => {
       if (viewport) viewport.removeEventListener("scroll", closeAll);
       window.removeEventListener("keydown", handleKey);
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
     };
   }, [activeConvId]);
 
@@ -787,13 +804,11 @@ export default function DirectMessages() {
                                     let left;
                                     if (isMineMsg) {
                                       left = rect.right - pickerWidth;
-                                      if (left < 8) left = 8;
                                     } else {
                                       left = rect.left;
-                                      if (left + pickerWidth > viewportW - 8) {
-                                        left = viewportW - pickerWidth - 8;
-                                      }
                                     }
+                                    // Clamp to viewport bounds
+                                    left = Math.max(4, Math.min(left, viewportW - pickerWidth - 4));
                                     setFullPicker({ msgId: msg.id, top, left, side });
                                   }}
                                   title="अन्य इमोजी..."
@@ -971,6 +986,7 @@ export default function DirectMessages() {
                   <button
                     type="button"
                     className={`dm-input-tool-btn ${isInputEmojiOpen ? "active" : ""}`}
+                    onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => setIsInputEmojiOpen(!isInputEmojiOpen)}
                     title="इमोजी जोड़ें (Emoji)"
                     aria-label="इमोजी जोड़ें"

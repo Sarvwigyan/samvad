@@ -65,8 +65,11 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
   useEffect(() => {
     setLikeCount(post.likeCount || 0);
     setRepostCount(post.repostCount || 0);
+  }, [post.likeCount, post.repostCount]);
+
+  useEffect(() => {
     setLocalPoll(post.poll);
-  }, [post.likeCount, post.repostCount, post.poll]);
+  }, [post.id]);
 
   // Clean up toast timer on unmount
   useEffect(() => {
@@ -270,7 +273,23 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
     }
   };
 
+  const handleTouchStart = (e) => {
+    if (e.touches.length > 0) {
+      pointerDownPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      isDragOrSelectRef.current = false;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.changedTouches.length > 0) {
+      const dx = Math.abs(e.changedTouches[0].clientX - pointerDownPosRef.current.x);
+      const dy = Math.abs(e.changedTouches[0].clientY - pointerDownPosRef.current.y);
+      if (dx > 10 || dy > 10) isDragOrSelectRef.current = true;
+    }
+  };
+
   const handleCardClick = () => {
+    if (isMenuOpen) { setIsMenuOpen(false); return; }
     const sel = typeof window !== "undefined" ? window.getSelection?.() : null;
     if (sel && sel.toString().trim().length > 0) return;
     if (isDragOrSelectRef.current) return;
@@ -298,6 +317,8 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
       onClick={handleCardClick}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       onCopy={(e) => e.stopPropagation()}
       ref={cardRef}
     >

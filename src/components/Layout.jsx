@@ -439,155 +439,158 @@ export function Layout() {
 
       {/* ========================================================
           RIGHT COLUMN: Trending Topics, Suggested Sadhaks, & Subhashita
+          (Hidden on Direct Messages for Full-Screen WhatsApp layout)
           ======================================================== */}
-      <aside className="right-widgets-col">
-        <div className="right-widgets-sticky">
-          {/* Functional Search Box & Tab Close/Collapse Button */}
-          <div className="widgets-top-ctrl-row">
-            <form className="search-widget-card" onSubmit={handleSearchSubmit}>
-              <span className="search-icon"><SearchIcon size={18} /></span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="विचार, विषय अथवा साधक खोजें..."
-                className="search-input-field"
-                aria-label="खोज"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="search-clear-btn"
-                  onClick={() => { setSearchQuery(""); navigate("/"); }}
-                >
-                  ✕
-                </button>
-              )}
-            </form>
-            <button
-              type="button"
-              className="widgets-panel-toggle-btn"
-              onClick={() => setIsWidgetsCollapsed(true)}
-              title="पैनल छुपाएँ (Collapse)"
-              aria-label="विजेट्स पैनल छुपाएँ"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Trending Topics / प्रवाहित विषय */}
-          <section className="widget-card trending-widget-card">
-            <div className="widget-header">
-              <h3 className="widget-title">प्रवाहित विषय (Trending)</h3>
-              <span className="widget-lotus"><TrendingIcon size={18} /></span>
-            </div>
-            <div className="trending-list">
-              {liveTrending.length > 0 ? (
-                liveTrending.map((topic) => (
-                  <div
-                    key={topic.tag}
-                    className="trending-item"
-                    onClick={() => handleTrendingClick(topic.tag)}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <div className="trending-meta">
-                      <span className="trending-tag">{topic.tag}</span>
-                      <span className="trending-desc">सक्रिय विचार-प्रवाह</span>
-                    </div>
-                    <span className="trending-count">{topic.countLabel}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="trending-empty-hint">
-                  <span className="hint-glyph"><TrendingIcon size={18} /></span>
-                  <p className="hint-text">
-                    विचारों में <strong>#हैशटैग</strong> का प्रयोग करें। वास्तविक समय में यहाँ लोकप्रिय विषय स्वतः प्रवाहित होंगे।
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Suggested Sadhaks (With Curated Fallbacks) */}
-          <section className="widget-card">
-            <div className="widget-header">
-              <h3 className="widget-title">सुझावित साधक</h3>
-              <span className="widget-lotus"><UsersIcon size={18} /></span>
-            </div>
-            <div className="sadhaks-list">
-              {suggestedSadhaks.map((s) => (
-                <div key={s.uid} className="sadhak-item-row">
-                  <NavLink to={s.uid.startsWith("curated") ? "/" : `/parichay/${s.uid}`} className="sadhak-avatar-link">
-                    <Avatar
-                      src={s.avatarUrl}
-                      alt={s.displayName}
-                      size="sm"
-                      fallbackText={s.fallbackText || s.displayName}
-                    />
-                    <div className="sadhak-names">
-                      <span className="sadhak-display-name">{s.displayName || "सुधी साधक"}</span>
-                      <span className="sadhak-handle">@{s.username || "sadharak"}</span>
-                    </div>
-                  </NavLink>
+      {!isSandesh && (
+        <aside className="right-widgets-col">
+          <div className="right-widgets-sticky">
+            {/* Functional Search Box & Tab Close/Collapse Button */}
+            <div className="widgets-top-ctrl-row">
+              <form className="search-widget-card" onSubmit={handleSearchSubmit}>
+                <span className="search-icon"><SearchIcon size={18} /></span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="विचार, विषय अथवा साधक खोजें..."
+                  className="search-input-field"
+                  aria-label="खोज"
+                />
+                {searchQuery && (
                   <button
                     type="button"
-                    className={`follow-mini-btn ${followingStates[s.uid] ? "following" : ""}`}
-                    onClick={() => handleFollowToggle(s.uid)}
+                    className="search-clear-btn"
+                    onClick={() => { setSearchQuery(""); navigate("/"); }}
                   >
-                    {followingStates[s.uid] ? "अनुसरित" : "अनुसरण"}
+                    ✕
                   </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Daily Subhashita / अमृत वचन (Dynamic Shastra Engine) */}
-          <section className="widget-card subhashita-card">
-            <div className="widget-header">
-              <div className="subhashita-title-wrap">
-                <h3 className="widget-title">दैनिक सुभाषित</h3>
-                {currentShloka?.theme && (
-                  <span className="subhashita-theme-badge">{currentShloka.theme}</span>
                 )}
-              </div>
+              </form>
               <button
                 type="button"
-                className={`subhashita-refresh-btn ${isShlokaLoading ? "spinning" : ""}`}
-                onClick={handleNextShloka}
-                title="नया श्लोक प्राप्त करें (Next Shloka)"
-                aria-label="नया श्लोक"
+                className="widgets-panel-toggle-btn"
+                onClick={() => setIsWidgetsCollapsed(true)}
+                title="पैनल छुपाएँ (Collapse)"
+                aria-label="विजेट्स पैनल छुपाएँ"
               >
-                <span className="subhashita-refresh-icon">↺</span>
+                ✕
               </button>
             </div>
-            <blockquote className="subhashita-quote">
-              {currentShloka?.shloka ? currentShloka.shloka.split("\n").map((line, i) => (
-                <React.Fragment key={i}>
-                  {line}
-                  {i < currentShloka.shloka.split("\n").length - 1 && <br />}
-                </React.Fragment>
-              )) : "अयं निजः परो वेति गणना लघुचेतसाम्।"}
-            </blockquote>
-            {currentShloka?.meaning && (
-              <p className="subhashita-meaning">
-                {currentShloka.meaning}
-              </p>
-            )}
-            <cite className="subhashita-ref">— {currentShloka?.source || "प्राचीन संहिता"}</cite>
-          </section>
 
-          {/* Sovereign Footer */}
-          <footer className="right-col-footer">
-            <div className="footer-links-row">
-              <span>गोपनीयता</span> • <span>नियम</span> • <span>संवाद v0.4 (Phase 4)</span>
-            </div>
-            <p className="footer-copyright">
-              © {new Date().getFullYear()} संवाद • भारतीय संस्कृति एवं सार्वभौमिक ज्ञान परम्परा
-            </p>
-          </footer>
-        </div>
-      </aside>
+            {/* Trending Topics / प्रवाहित विषय */}
+            <section className="widget-card trending-widget-card">
+              <div className="widget-header">
+                <h3 className="widget-title">प्रवाहित विषय (Trending)</h3>
+                <span className="widget-lotus"><TrendingIcon size={18} /></span>
+              </div>
+              <div className="trending-list">
+                {liveTrending.length > 0 ? (
+                  liveTrending.map((topic) => (
+                    <div
+                      key={topic.tag}
+                      className="trending-item"
+                      onClick={() => handleTrendingClick(topic.tag)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="trending-meta">
+                        <span className="trending-tag">{topic.tag}</span>
+                        <span className="trending-desc">सक्रिय विचार-प्रवाह</span>
+                      </div>
+                      <span className="trending-count">{topic.countLabel}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="trending-empty-hint">
+                    <span className="hint-glyph"><TrendingIcon size={18} /></span>
+                    <p className="hint-text">
+                      विचारों में <strong>#हैशटैग</strong> का प्रयोग करें। वास्तविक समय में यहाँ लोकप्रिय विषय स्वतः प्रवाहित होंगे।
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Suggested Sadhaks (With Curated Fallbacks) */}
+            <section className="widget-card">
+              <div className="widget-header">
+                <h3 className="widget-title">सुझावित साधक</h3>
+                <span className="widget-lotus"><UsersIcon size={18} /></span>
+              </div>
+              <div className="sadhaks-list">
+                {suggestedSadhaks.map((s) => (
+                  <div key={s.uid} className="sadhak-item-row">
+                    <NavLink to={s.uid.startsWith("curated") ? "/" : `/parichay/${s.uid}`} className="sadhak-avatar-link">
+                      <Avatar
+                        src={s.avatarUrl}
+                        alt={s.displayName}
+                        size="sm"
+                        fallbackText={s.fallbackText || s.displayName}
+                      />
+                      <div className="sadhak-names">
+                        <span className="sadhak-display-name">{s.displayName || "सुधी साधक"}</span>
+                        <span className="sadhak-handle">@{s.username || "sadharak"}</span>
+                      </div>
+                    </NavLink>
+                    <button
+                      type="button"
+                      className={`follow-mini-btn ${followingStates[s.uid] ? "following" : ""}`}
+                      onClick={() => handleFollowToggle(s.uid)}
+                    >
+                      {followingStates[s.uid] ? "अनुसरित" : "अनुसरण"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Daily Subhashita / अमृत वचन (Dynamic Shastra Engine) */}
+            <section className="widget-card subhashita-card">
+              <div className="widget-header">
+                <div className="subhashita-title-wrap">
+                  <h3 className="widget-title">दैनिक सुभाषित</h3>
+                  {currentShloka?.theme && (
+                    <span className="subhashita-theme-badge">{currentShloka.theme}</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className={`subhashita-refresh-btn ${isShlokaLoading ? "spinning" : ""}`}
+                  onClick={handleNextShloka}
+                  title="नया श्लोक प्राप्त करें (Next Shloka)"
+                  aria-label="नया श्लोक"
+                >
+                  <span className="subhashita-refresh-icon">↺</span>
+                </button>
+              </div>
+              <blockquote className="subhashita-quote">
+                {currentShloka?.shloka ? currentShloka.shloka.split("\n").map((line, i) => (
+                  <React.Fragment key={i}>
+                    {line}
+                    {i < currentShloka.shloka.split("\n").length - 1 && <br />}
+                  </React.Fragment>
+                )) : "अयं निजः परो वेति गणना लघुचेतसाम्।"}
+              </blockquote>
+              {currentShloka?.meaning && (
+                <p className="subhashita-meaning">
+                  {currentShloka.meaning}
+                </p>
+              )}
+              <cite className="subhashita-ref">— {currentShloka?.source || "प्राचीन संहिता"}</cite>
+            </section>
+
+            {/* Sovereign Footer */}
+            <footer className="right-col-footer">
+              <div className="footer-links-row">
+                <span>गोपनीयता</span> • <span>नियम</span> • <span>संवाद v0.4 (Phase 4)</span>
+              </div>
+              <p className="footer-copyright">
+                © {new Date().getFullYear()} संवाद • भारतीय संस्कृति एवं सार्वभौमिक ज्ञान परम्परा
+              </p>
+            </footer>
+          </div>
+        </aside>
+      )}
 
       {/* Floating Button to re-open collapsed widgets panel */}
       {isWidgetsCollapsed && !isSandesh && (

@@ -4014,24 +4014,36 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-main);
+  background: #efeae2;
   position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .dm-chat-panel {
+  background: #0b141a;
 }
 
 .dm-active-room {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .dm-room-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-header);
-  backdrop-filter: blur(10px);
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f0f2f5;
+  flex-shrink: 0;
+  min-height: 60px;
+}
+
+[data-theme="dark"] .dm-room-header {
+  background: #202c33;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .dm-back-btn {
@@ -4047,7 +4059,7 @@
 .dm-room-user-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
 }
 
@@ -4058,14 +4070,19 @@
 
 .dm-room-display-name {
   margin: 0;
-  font-size: 0.98rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.25;
 }
 
 .dm-room-handle {
   font-size: 0.76rem;
-  color: var(--text-secondary);
+  color: #667781;
+}
+
+[data-theme="dark"] .dm-room-handle {
+  color: #8696a0;
 }
 
 .dm-view-profile-btn {
@@ -4076,8 +4093,12 @@
   height: 36px;
   border-radius: 50%;
   border: 1px solid var(--border);
-  color: var(--text-secondary);
+  color: #54656f;
   transition: all 0.18s ease;
+}
+
+[data-theme="dark"] .dm-view-profile-btn {
+  color: #8696a0;
 }
 
 .dm-view-profile-btn:hover {
@@ -4089,10 +4110,19 @@
 .dm-messages-viewport {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden !important;
   overscroll-behavior: contain;
-  padding: 44px 20px 24px 20px;
+  padding: 16px 5% 16px 5%;
   display: flex;
   flex-direction: column;
+  background-color: #efeae2;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+[data-theme="dark"] .dm-messages-viewport {
+  background-color: #0b141a;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0);
 }
 
 .dm-chat-welcome {
@@ -4111,72 +4141,90 @@
 .dm-bubbles-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
+  width: 100%;
 }
 
 .dm-bubble-row {
   display: flex;
-  gap: 8px;
-  max-width: 78%;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 2px;
+  box-sizing: border-box;
 }
 
 .dm-bubble-row.is-mine {
-  align-self: flex-end;
-  flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 
 .dm-bubble-row.is-partner {
-  align-self: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .dm-bubble-avatar {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .dm-bubble-container {
   display: flex;
   flex-direction: column;
+  max-width: 65%;
+  min-width: 80px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.is-mine .dm-bubble-container {
+  align-items: flex-end;
+}
+
+.is-partner .dm-bubble-container {
+  align-items: flex-start;
 }
 
 .dm-bubble {
-  padding: 10px 16px;
-  border-radius: 18px;
-  font-size: 0.93rem;
-  line-height: 1.45;
+  position: relative;
+  padding: 6px 9px 6px 11px;
+  border-radius: 8px;
+  font-size: 14.2px;
+  line-height: 19px;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .bubble-mine {
-  background: var(--sona);
-  color: #0F0E0C;
-  font-weight: 500;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background: #d9fdd3;
+  color: #111b21;
+  border-top-right-radius: 2px;
   border: none;
 }
 
 [data-theme="dark"] .bubble-mine {
-  background: var(--sona);
-  color: #0F0E0C;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: #005c4b;
+  color: #e9edef;
+  border-top-right-radius: 2px;
   border: none;
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.35);
 }
 
 .bubble-partner {
-  background: var(--bg-surface);
-  color: var(--text);
-  border: 1px solid var(--border-light);
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  color: #111b21;
+  border-top-left-radius: 2px;
+  border: none;
 }
 
 [data-theme="dark"] .bubble-partner {
-  background: var(--bg-surface);
-  color: var(--text);
-  border: 1px solid var(--border-light);
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: #202c33;
+  color: #e9edef;
+  border-top-left-radius: 2px;
+  border: none;
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.35);
 }
 
 .dm-bubble-text {
@@ -4184,18 +4232,42 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
-  line-height: 1.5;
+  line-height: 19px;
+  font-size: 14.2px;
+  color: inherit;
 }
 
-.dm-bubble-time {
-  font-size: 0.68rem;
-  color: var(--text-secondary);
+.dm-bubble-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
   margin-top: 3px;
-  padding: 0 4px;
+  margin-left: 14px;
+  font-size: 11px;
+  color: #667781;
+  line-height: 1;
+  user-select: none;
 }
 
-.is-mine .dm-bubble-time {
-  text-align: right;
+[data-theme="dark"] .dm-bubble-footer {
+  color: #8696a0;
+}
+
+.is-mine .dm-bubble-footer {
+  color: rgba(17, 27, 33, 0.65);
+}
+
+[data-theme="dark"] .is-mine .dm-bubble-footer {
+  color: rgba(233, 237, 239, 0.65);
+}
+
+.dm-meta-ticks {
+  color: #53bdeb;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: -2px;
+  margin-left: 2px;
 }
 
 /* Voice Messages in DMs */
@@ -4361,46 +4433,59 @@
 }
 
 /* Interactive Polls in DM Messages */
+/* Interactive Polls in DM Messages — Just like WhatsApp */
 .dm-bubble-poll-card {
-  margin: 6px 0;
-  min-width: 220px;
-  max-width: 320px;
+  margin: 4px 0 2px;
+  width: 100%;
+  min-width: 260px;
+  max-width: 380px;
+  box-sizing: border-box;
 }
 
 .dm-poll-card-question {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 15px;
   margin: 0 0 10px;
   line-height: 1.35;
+  color: inherit;
+  word-break: break-word;
 }
 
 .dm-poll-options-stack {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dm-poll-option-btn {
   position: relative;
   width: 100%;
-  padding: 8px 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
   overflow: hidden;
-  font-size: 0.88rem;
+  font-size: 14px;
   transition: all 0.15s ease;
-  color: var(--text);
+  color: inherit;
+  display: block;
+}
+
+[data-theme="dark"] .dm-poll-option-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .dm-poll-option-btn:not(.has-voted):hover {
-  background: var(--bg-hover);
+  background: rgba(0, 0, 0, 0.08);
 }
-
-.dm-poll-option-btn.selected {
-  font-weight: 700;
+[data-theme="dark"] .dm-poll-option-btn:not(.has-voted):hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .dm-poll-bar-fill {
@@ -4408,45 +4493,66 @@
   top: 0;
   left: 0;
   bottom: 0;
-  background: rgba(212, 162, 76, 0.4);
+  background: rgba(37, 211, 102, 0.28);
   transition: width 0.4s ease-out;
   pointer-events: none;
+  border-radius: 6px;
 }
 
 .is-mine .dm-poll-option-btn {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #0F0E0C;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #111b21;
 }
-.is-mine .dm-poll-option-btn:not(.has-voted):hover {
-  background: rgba(0, 0, 0, 0.15);
+[data-theme="dark"] .is-mine .dm-poll-option-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e9edef;
 }
 .is-mine .dm-poll-bar-fill {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(37, 211, 102, 0.35);
+}
+[data-theme="dark"] .is-mine .dm-poll-bar-fill {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .dm-poll-opt-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dm-poll-opt-name {
   font-weight: 500;
+  font-size: 14px;
+  color: inherit;
+  flex: 1;
+  word-break: break-word;
 }
 
 .dm-poll-opt-pct {
-  font-size: 0.78rem;
+  font-size: 13px;
   font-weight: 700;
+  color: inherit;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .dm-poll-card-footer {
   margin-top: 8px;
-  font-size: 0.72rem;
-  opacity: 0.8;
+  font-size: 11.5px;
+  color: #667781;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+[data-theme="dark"] .dm-poll-card-footer {
+  color: #8696a0;
 }
 
 /* Poll Creator Drawer in Input Tray */
@@ -4546,39 +4652,73 @@
 }
 
 .dm-input-tray {
-  padding: 12px 18px;
-  border-top: 1px solid var(--border);
-  background: var(--bg-surface);
+  padding: 8px 16px;
+  background: #f0f2f5;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .dm-input-tray {
+  background: #202c33;
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 .dm-send-form {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
 }
 
 .dm-input-field {
   flex: 1;
-  padding: 10px 18px;
-  border-radius: 9999px;
-  border: 1.5px solid var(--border);
-  background: var(--bg-main);
-  color: var(--text-primary);
-  font-size: 0.92rem;
+  min-height: 42px;
+  padding: 9px 18px;
+  border-radius: 24px;
+  border: none;
+  background: #ffffff;
+  color: #111b21;
+  font-size: 15px;
   outline: none;
-  transition: border-color 0.18s ease;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .dm-input-field {
+  background: #2a3942;
+  color: #e9edef;
 }
 
 .dm-input-field:focus {
-  border-color: var(--sona);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .dm-send-btn {
   border-radius: 50% !important;
-  width: 42px !important;
-  height: 42px !important;
-  min-height: 42px !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  background: #25D366 !important;
+  color: #ffffff !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
   padding: 0 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18) !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.12s ease !important;
+}
+
+.dm-send-btn:hover {
+  transform: scale(1.05);
+}
+
+.dm-send-btn:active {
+  transform: scale(0.95);
 }
 
 /* X-Style Clean DM Selection State */
@@ -4635,8 +4775,8 @@
   }
 
   .samvad-master-shell.in-sandesh .layout-shell-3col {
-    max-width: 1400px;
-    width: 100%;
+    max-width: 100% !important;
+    width: 100% !important;
     height: calc(100vh - 38px) !important;
     max-height: calc(100vh - 38px) !important;
     min-height: 0 !important;
@@ -4682,7 +4822,7 @@
 
   .samvad-master-shell.in-sandesh .dm-list-panel {
     width: 360px !important;
-    min-width: 320px !important;
+    min-width: 300px !important;
     height: 100% !important;
     max-height: 100% !important;
     flex-shrink: 0 !important;
@@ -4712,6 +4852,11 @@
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    background: #efeae2 !important;
+  }
+
+  [data-theme="dark"] .samvad-master-shell.in-sandesh .dm-chat-panel {
+    background: #0b141a !important;
   }
 
   .samvad-master-shell.in-sandesh .dm-active-room {
@@ -4725,22 +4870,43 @@
 
   .samvad-master-shell.in-sandesh .dm-room-header {
     flex-shrink: 0 !important;
-    min-height: 58px !important;
+    min-height: 60px !important;
     padding: 10px 18px !important;
-    background: var(--bg-elevated) !important;
-    border-bottom: 1px solid var(--border) !important;
+    background: #f0f2f5 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  }
+
+  [data-theme="dark"] .samvad-master-shell.in-sandesh .dm-room-header {
+    background: #202c33 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
   }
 
   .samvad-master-shell.in-sandesh .dm-messages-viewport {
     flex: 1 1 0% !important;
     min-height: 0 !important;
     overflow-y: auto !important;
-    padding: 20px 20px !important;
+    overflow-x: hidden !important;
+    padding: 16px 5% !important;
+    background-color: #efeae2 !important;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 0) !important;
+    background-size: 24px 24px !important;
+  }
+
+  [data-theme="dark"] .samvad-master-shell.in-sandesh .dm-messages-viewport {
+    background-color: #0b141a !important;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0) !important;
   }
 
   .samvad-master-shell.in-sandesh .dm-input-tray {
     flex-shrink: 0 !important;
-    padding: 12px 18px !important;
+    padding: 8px 16px !important;
+    background: #f0f2f5 !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  }
+
+  [data-theme="dark"] .samvad-master-shell.in-sandesh .dm-input-tray {
+    background: #202c33 !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
   }
 }
 
@@ -5107,18 +5273,6 @@
 /* ==========================================================================
    WhatsApp / Arattai Style Direct Messages Reactions & Actions
    ========================================================================== */
-.dm-bubble-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  max-width: 78%;
-}
-
-.dm-bubble {
-  position: relative;
-  word-break: break-word;
-}
-
 /* Hover/Touch actions on message */
 .dm-bubble-actions {
   position: absolute;

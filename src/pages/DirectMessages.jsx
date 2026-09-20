@@ -41,6 +41,13 @@ function resolveOptionText(opt) {
   return String(opt.text || opt.title || "");
 }
 
+function formatDmTime(ts) {
+  if (!ts) return "";
+  const d = ts?.toDate ? ts.toDate() : ts instanceof Date ? ts : typeof ts === "number" ? new Date(ts) : null;
+  if (!d || isNaN(d.getTime())) return timeAgo(ts);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 export default function DirectMessages() {
   const { id: routeConvId } = useParams();
   const [searchParams] = useSearchParams();
@@ -650,8 +657,17 @@ export default function DirectMessages() {
                                     </div>
                                   </div>
                                 )}
-                              </>
-                            )}
+                              {/* WhatsApp style footer with time & double tick */}
+                              <div className="dm-bubble-footer">
+                                <span className="dm-bubble-time-text">
+                                  {formatDmTime(msg.createdAt)}
+                                </span>
+                                {isMine && !isDeleted && (
+                                  <span className="dm-meta-ticks" title="पहुँचा">✓✓</span>
+                                )}
+                              </div>
+                            </>
+                          )}
 
                             {/* Floating Action Buttons (Hover/Touch) */}
                             {!isDeleted && (
@@ -768,8 +784,6 @@ export default function DirectMessages() {
                               })}
                             </div>
                           )}
-
-                          <time className="dm-bubble-time">{timeAgo(msg.createdAt)}</time>
                         </div>
                       </div>
                     );

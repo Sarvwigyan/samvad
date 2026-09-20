@@ -46,6 +46,11 @@ service cloud.firestore {
         allow read, update, delete: if isOwner(userId);
         allow create: if isAuthenticated();
       }
+
+      // Subcollection: Sadhak Circles / Lists (साधक मण्डल)
+      match /circles/{circleId} {
+        allow read, write, delete: if isOwner(userId);
+      }
     }
 
     // Posts (Vichar)
@@ -90,9 +95,10 @@ service cloud.firestore {
       }
     }
 
-    // System Control Documents (Auto-pruning lock)
+    // System Control Documents (Trending topics read by everyone, written by authenticated users)
     match /system/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Backward Compatibility for Messages

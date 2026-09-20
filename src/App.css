@@ -5386,27 +5386,31 @@
   padding: 2px 6px;
 }
 
-/* Full Emoji Picker wrap inside bubble */
-.dm-reaction-full-picker-wrap {
-  position: absolute;
-  top: auto;
-  bottom: calc(100% + 10px);
-  z-index: 1200;
+/* ============================================================
+   FIXED-POSITION FULL EMOJI PICKER (DM Reactions)
+   Rendered OUTSIDE the scroll container so it never clips.
+   ============================================================ */
+
+.dm-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1198;
+  background: transparent;
+}
+
+.dm-picker-fixed-wrap {
+  position: fixed;
+  z-index: 1199;
+  animation: pickerFadeIn 0.14s ease-out;
   pointer-events: auto;
 }
 
-.dm-reaction-full-picker-wrap.placement-bottom {
-  top: calc(100% + 10px);
-  bottom: auto;
-  margin-top: 0;
-}
-
-.is-mine .dm-reaction-full-picker-wrap {
-  right: 0;
-}
-
-.is-partner .dm-reaction-full-picker-wrap {
-  left: 0;
+.dm-picker-fixed-wrap .universal-emoji-picker {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
 }
 
 /* Reaction Badges Below Bubble */

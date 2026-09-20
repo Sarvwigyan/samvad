@@ -93,8 +93,8 @@ export default function DirectMessages() {
   const [isInputEmojiOpen, setIsInputEmojiOpen] = useState(false);
   const [activeReactionMenuMsgId, setActiveReactionMenuMsgId] = useState(null);
   const [activeMsgMenuId, setActiveMsgMenuId] = useState(null);
-  const [activeFullPickerMsgId, setActiveFullPickerMsgId] = useState(null);
-  const [pickerPlacement, setPickerPlacement] = useState("top");
+  // Single source of truth for full picker with fixed positioning
+  const [fullPicker, setFullPicker] = useState({ msgId: null, top: 0, left: 0, side: "top" });
   const [recentEmojis, setRecentEmojis] = useState(() => getStoredRecentEmojis());
   const [convSearch, setConvSearch] = useState("");
 
@@ -251,7 +251,7 @@ export default function DirectMessages() {
     if (!activeConvId || !currentUser) return;
     triggerHaptic(8);
     setActiveReactionMenuMsgId(null);
-    setActiveFullPickerMsgId(null);
+    setFullPicker({ msgId: null, top: 0, left: 0, side: "top" });
     recordEmojiUsage(emoji);
     setRecentEmojis(getStoredRecentEmojis());
     await toggleMessageReaction(activeConvId, msgId, emoji, {
@@ -355,6 +355,23 @@ export default function DirectMessages() {
       messagesViewportRef.current.scrollTop = messagesViewportRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Close picker on scroll / conversation change / Escape
+  useEffect(() => {
+    const closeAll = () => {
+      setFullPicker((p) => (p.msgId ? { msgId: null, top: 0, left: 0, side: "top" } : p));
+      setActiveReactionMenuMsgId(null);
+      setActiveMsgMenuId(null);
+    };
+    const handleKey = (e) => { if (e.key === "Escape") closeAll(); };
+    const viewport = messagesViewportRef.current;
+    if (viewport) viewport.addEventListener("scroll", closeAll, { passive: true });
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      if (viewport) viewport.removeEventListener("scroll", closeAll);
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [activeConvId]);
 
   // Keep window at top when opening DMs so headers are never cut off
   useEffect(() => {
@@ -707,13 +724,7 @@ export default function DirectMessages() {
                                 <button
                                   type="button"
                                   className="dm-bubble-action-btn"
-                                  onClick={(e) => {
-                                    const rect = e.currentTarget.closest(".dm-bubble-row")?.getBoundingClientRect();
-                                    if (rect && rect.top < 320) {
-                                      setPickerPlacement("bottom");
-                                    } else {
-                                      setPickerPlacement("top");
-                                    }
+                                  onClick={() => {
                                     setActiveReactionMenuMsgId(activeReactionMenuMsgId === msg.id ? null : msg.id);
                                     setActiveMsgMenuId(null);
                                   }}
@@ -738,8 +749,8 @@ export default function DirectMessages() {
                             )}
 
                             {/* Quick Reaction Bar (WhatsApp / Arattai Style) */}
-                            {activeReactionMenuMsgId === msg.id && activeFullPickerMsgId !== msg.id && (
-                              <div className={`dm-reaction-bar-popup ${pickerPlacement === "bottom" ? "placement-bottom" : ""}`}>
+                            {activeReactionMenuMsgId === msg.id && fullPicker.msgId !== msg.id && (
+                              <div className="dm-reaction-bar-popup">
                                 {recentEmojis.map((em) => (
                                   <button
                                     key={em}
@@ -754,14 +765,36 @@ export default function DirectMessages() {
                                   type="button"
                                   className="dm-quick-react-btn plus-btn"
                                   onClick={(e) => {
-                                    const rect = e.currentTarget.closest(".dm-bubble-row")?.getBoundingClientRect();
-                                    if (rect && rect.top < 320) {
-                                      setPickerPlacement("bottom");
-                                    } else {
-                                      setPickerPlacement("top");
-                                    }
+                                    e.stopPropagation();
                                     setActiveReactionMenuMsgId(null);
-                                    setActiveFullPickerMsgId(activeFullPickerMsgId === msg.id ? null : msg.id);
+                                    const bubbleEl = e.currentTarget.closest(".dm-bubble");
+                                    if (!bubbleEl) return;
+                                    const rect = bubbleEl.getBoundingClientRect();
+                                    const pickerWidth = 320;
+                                    const pickerHeight = 340;
+                                    const viewportH = window.innerHeight;
+                                    const viewportW = window.innerWidth;
+                                    let side = "top";
+                                    let top = rect.top - pickerHeight - 8;
+                                    if (top < 8) {
+                                      side = "bottom";
+                                      top = rect.bottom + 8;
+                                    }
+                                    if (top + pickerHeight > viewportH - 8) {
+                                      top = Math.max(8, viewportH - pickerHeight - 8);
+                                    }
+                                    const isMineMsg = msg.senderUid === currentUser.uid;
+                                    let left;
+                                    if (isMineMsg) {
+                                      left = rect.right - pickerWidth;
+                                      if (left < 8) left = 8;
+                                    } else {
+                                      left = rect.left;
+                                      if (left + pickerWidth > viewportW - 8) {
+                                        left = viewportW - pickerWidth - 8;
+                                      }
+                                    }
+                                    setFullPicker({ msgId: msg.id, top, left, side });
                                   }}
                                   title="अन्य इमोजी..."
                                 >
@@ -770,19 +803,7 @@ export default function DirectMessages() {
                               </div>
                             )}
 
-                            {/* Full Emoji Picker for Reaction */}
-                            {activeFullPickerMsgId === msg.id && (
-                              <div className={`dm-reaction-full-picker-wrap ${pickerPlacement === "bottom" ? "placement-bottom" : ""}`}>
-                                <EmojiPicker
-                                  onSelect={(em) => handleReact(msg.id, em)}
-                                  onClose={() => {
-                                    setActiveFullPickerMsgId(null);
-                                    setActiveReactionMenuMsgId(null);
-                                  }}
-                                  align={pickerPlacement === "bottom" ? "bottom" : "top"}
-                                />
-                              </div>
-                            )}
+                            {/* Full Emoji Picker moved to top level — see fixed picker below */}
 
                             {/* Message 3-Dot Options Dropdown */}
                             {activeMsgMenuId === msg.id && (
@@ -1027,6 +1048,40 @@ export default function DirectMessages() {
                 )}
               </form>
             </footer>
+
+            {/* ============ FIXED-POSITION FULL EMOJI PICKER ============ */}
+            {fullPicker.msgId && (
+              <>
+                {/* Invisible backdrop to close on outside click */}
+                <div
+                  className="dm-picker-backdrop"
+                  onClick={() => {
+                    setFullPicker({ msgId: null, top: 0, left: 0, side: "top" });
+                    setActiveReactionMenuMsgId(null);
+                  }}
+                />
+                <div
+                  className="dm-picker-fixed-wrap"
+                  style={{
+                    top: `${fullPicker.top}px`,
+                    left: `${fullPicker.left}px`
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <EmojiPicker
+                    onSelect={(em) => {
+                      handleReact(fullPicker.msgId, em);
+                      setFullPicker({ msgId: null, top: 0, left: 0, side: "top" });
+                    }}
+                    onClose={() => {
+                      setFullPicker({ msgId: null, top: 0, left: 0, side: "top" });
+                      setActiveReactionMenuMsgId(null);
+                    }}
+                    align={fullPicker.side === "top" ? "top" : "bottom"}
+                  />
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="dm-no-active-selection">

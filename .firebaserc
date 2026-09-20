@@ -1,5 +1,14 @@
 {
   "projects": {
-    "default": "samvad-temple"
+    "default": "sarvwigyan-505103"
+  },
+  "targets": {
+    "sarvwigyan-505103": {
+      "hosting": {
+        "samvad-target": [
+          "samvad-temple"
+        ]
+      }
+    }
   }
 }

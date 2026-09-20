@@ -163,9 +163,9 @@ export default function Home() {
     ? candidatePosts.filter((p) => {
         const qLower = filterQuery.toLowerCase();
         return (
-          p.text?.toLowerCase().includes(qLower) ||
-          p.bhav?.toLowerCase().includes(qLower) ||
-          p.authorName?.toLowerCase().includes(qLower)
+          (p.text || "").toLowerCase().includes(qLower) ||
+          (p.bhav || "").toLowerCase().includes(qLower) ||
+          (p.authorName || "").toLowerCase().includes(qLower)
         );
       })
     : candidatePosts;

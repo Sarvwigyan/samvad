@@ -354,7 +354,7 @@ export default function VicharDetail() {
         </header>
 
         <div className="main-vichar-text">
-          {post.text?.split(/(#[a-zA-Z0-9_\u0900-\u097F]+|@[a-zA-Z0-9_]{3,20})/gu).map((part, i) => {
+          {(post.text || "").split(/(#[a-zA-Z0-9_\u0900-\u097F]+|@[a-zA-Z0-9_]{3,20})/gu).map((part, i) => {
             if (part.startsWith("#")) {
               return (
                 <span

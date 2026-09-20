@@ -101,22 +101,21 @@
 
 /* Primary Tactile Button (Rich Saffron / Gold with Duolingo 3D depth) */
 .btn-primary {
-  background: linear-gradient(135deg, #FF9933 0%, #D4A24C 100%);
+  background: var(--sona);
   color: #0F0E0C;
   border: none;
-  box-shadow: 0 4px 0 0 var(--sona-dark), 0 6px 16px rgba(212, 162, 76, 0.28);
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(212, 162, 76, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
-  box-shadow: 0 5px 0 0 var(--sona-dark), 0 8px 20px rgba(212, 162, 76, 0.38);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(212, 162, 76, 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translateY(4px);
-  box-shadow: 0 0 0 0 transparent, 0 1px 4px rgba(212, 162, 76, 0.2);
-  transition: all 40ms ease-out;
+  transform: scale(0.97);
+  box-shadow: none;
 }
 
 /* Sovereign Chakra Navy Tactile Button (High Contrast WCAG AA 12.6:1) */
@@ -124,57 +123,52 @@
   background: var(--chakra-navy);
   color: #FFFFFF;
   border: none;
-  box-shadow: 0 4px 0 0 var(--chakra-navy-dark), 0 6px 16px rgba(6, 3, 141, 0.32);
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(6, 3, 141, 0.2);
 }
 
 .btn-navy:hover:not(:disabled) {
   background: var(--chakra-navy-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 5px 0 0 var(--chakra-navy-dark), 0 8px 20px rgba(6, 3, 141, 0.42);
+  box-shadow: 0 4px 12px rgba(6, 3, 141, 0.3);
 }
 
 .btn-navy:active:not(:disabled) {
-  transform: translateY(4px);
-  box-shadow: 0 0 0 0 transparent;
-  transition: all 40ms ease-out;
+  transform: scale(0.97);
+  box-shadow: none;
 }
 
 /* Outline Tactile Button */
 .btn-outline {
   background: var(--bg-elevated);
-  border: 1.5px solid var(--sona);
+  border: 1px solid var(--sona);
   color: var(--sona);
-  box-shadow: 0 3px 0 rgba(212, 162, 76, 0.35);
+  border-radius: 9999px;
+  box-shadow: none;
 }
 
 .btn-outline:hover:not(:disabled) {
   background: rgba(212, 162, 76, 0.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 0 rgba(212, 162, 76, 0.45);
 }
 
 .btn-outline:active:not(:disabled) {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 rgba(212, 162, 76, 0.3);
+  transform: scale(0.97);
 }
 
 /* Ghost Tactile Button */
 .btn-ghost {
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   color: var(--text);
-  box-shadow: 0 2px 0 var(--border);
+  border-radius: 9999px;
+  box-shadow: none;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--bg-elevated);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 0 var(--border);
+  background: var(--bg-hover);
 }
 
 .btn-ghost:active:not(:disabled) {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 transparent;
+  transform: scale(0.97);
 }
 
 .btn-danger-tone {
@@ -1985,19 +1979,15 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   padding: 6px 14px;
   border-radius: 9999px;
-  box-shadow: 0 3px 0 0 rgba(212, 155, 53, 0.28);
-  transition: transform 80ms ease-out,
-              box-shadow 80ms ease-out,
-              background 160ms ease,
-              color 160ms ease;
+  transition: all 160ms ease;
   user-select: none;
   min-height: 34px;
   white-space: nowrap !important;
@@ -2006,31 +1996,27 @@
 }
 
 .action-pill-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 0 0 rgba(212, 155, 53, 0.38);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--sona);
+}
+[data-theme="light"] .action-pill-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .action-pill-btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 0 0 0 transparent !important;
-  transition: all 40ms ease-out;
+  transform: scale(0.95);
 }
 
 .action-pill-btn.action-liked {
   color: #FF5E7E;
   font-weight: 700;
-  border-color: #FF5E7E;
-  background: rgba(255, 94, 126, 0.12);
-  box-shadow: 0 3px 0 0 #E04868;
 }
-
-.action-pill-btn.action-liked:active {
-  transform: translateY(3px);
-  box-shadow: 0 0 0 0 transparent !important;
+.action-pill-btn.action-liked:hover {
+  background: rgba(255, 94, 126, 0.1);
 }
 
 .action-pill-btn.action-liked .action-glyph {
-  transform: scale(1.25);
+  transform: scale(1.15);
   display: inline-block;
   transition: transform 200ms ease;
 }
@@ -2038,27 +2024,17 @@
 .action-pill-btn.action-reposted {
   color: #10B981;
   font-weight: 700;
-  border-color: #10B981;
-  background: rgba(16, 185, 129, 0.12);
-  box-shadow: 0 3px 0 0 #059669;
 }
-
-.action-pill-btn.action-reposted:active {
-  transform: translateY(3px);
-  box-shadow: 0 0 0 0 transparent !important;
+.action-pill-btn.action-reposted:hover {
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .action-pill-btn.action-bookmarked {
   color: var(--sona);
   font-weight: 700;
-  border-color: var(--sona);
-  background: rgba(212, 162, 76, 0.12);
-  box-shadow: 0 3px 0 0 var(--sona-dark);
 }
-
-.action-pill-btn.action-bookmarked:active {
-  transform: translateY(3px);
-  box-shadow: 0 0 0 0 transparent !important;
+.action-pill-btn.action-bookmarked:hover {
+  background: rgba(212, 162, 76, 0.1);
 }
 
 .action-glyph {
@@ -4171,36 +4147,36 @@
 }
 
 .bubble-mine {
-  background: linear-gradient(135deg, #D4A24C 0%, #C08D30 100%);
-  color: #FFFFFF;
+  background: var(--sona);
+  color: #0F0E0C;
   font-weight: 500;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 10px rgba(212, 162, 76, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: none;
 }
 
 [data-theme="dark"] .bubble-mine {
-  background: linear-gradient(135deg, #C49338 0%, #A87620 100%);
-  color: #FFF9EE;
+  background: var(--sona);
+  color: #0F0E0C;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 155, 53, 0.35);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: none;
 }
 
 .bubble-partner {
-  background: #F4EFE6;
-  color: #1D130C;
-  border: 1px solid rgba(212, 155, 53, 0.2);
+  background: var(--bg-surface);
+  color: var(--text);
+  border: 1px solid var(--border-light);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="dark"] .bubble-partner {
-  background: #1C1712;
-  color: #FAF4EB;
-  border: 1px solid rgba(212, 155, 53, 0.22);
+  background: var(--bg-surface);
+  color: var(--text);
+  border: 1px solid var(--border-light);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .dm-bubble-text {
@@ -4392,7 +4368,7 @@
 }
 
 .dm-poll-card-question {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.95rem;
   margin: 0 0 10px;
   line-height: 1.35;
@@ -4401,14 +4377,14 @@
 .dm-poll-options-stack {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .dm-poll-option-btn {
   position: relative;
   width: 100%;
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -4416,20 +4392,14 @@
   overflow: hidden;
   font-size: 0.88rem;
   transition: all 0.15s ease;
-  color: inherit;
-}
-
-[data-theme="dark"] .dm-poll-option-btn {
-  background: var(--bg-surface);
+  color: var(--text);
 }
 
 .dm-poll-option-btn:not(.has-voted):hover {
-  border-color: var(--sona);
-  background: rgba(212, 155, 53, 0.15);
+  background: var(--bg-hover);
 }
 
 .dm-poll-option-btn.selected {
-  border-color: var(--sona);
   font-weight: 700;
 }
 
@@ -4438,13 +4408,21 @@
   top: 0;
   left: 0;
   bottom: 0;
-  background: rgba(212, 155, 53, 0.32);
+  background: rgba(212, 162, 76, 0.4);
   transition: width 0.4s ease-out;
   pointer-events: none;
 }
 
+.is-mine .dm-poll-option-btn {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #0F0E0C;
+}
+.is-mine .dm-poll-option-btn:not(.has-voted):hover {
+  background: rgba(0, 0, 0, 0.15);
+}
 .is-mine .dm-poll-bar-fill {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .dm-poll-opt-content {

@@ -404,7 +404,7 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
       {/* Body with Clickable Hashtags, Mentions & Links */}
       <div className="post-card-body">
         <p className="post-content-text">
-          {post.text?.split(/(#[a-zA-Z0-9_\u0900-\u097F]+|@[a-zA-Z0-9_]{1,30})/gu).map((part, i) => {
+          {(post.text || "").split(/(#[a-zA-Z0-9_\u0900-\u097F]+|@[a-zA-Z0-9_]{1,30})/gu).map((part, i) => {
             if (part.startsWith("#")) {
               return (
                 <span

@@ -48,6 +48,34 @@ function formatDmTime(ts) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+const DEFAULT_RECENT_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏", "🪷"];
+
+function getStoredRecentEmojis() {
+  try {
+    const raw = localStorage.getItem("samwad_emoji_history");
+    if (!raw) return DEFAULT_RECENT_EMOJIS;
+    const history = JSON.parse(raw);
+    const sorted = Object.entries(history)
+      .sort((a, b) => b[1] - a[1])
+      .map(([emoji]) => emoji);
+    const combined = [...new Set([...sorted, ...DEFAULT_RECENT_EMOJIS])];
+    return combined.slice(0, 7);
+  } catch {
+    return DEFAULT_RECENT_EMOJIS;
+  }
+}
+
+function recordEmojiUsage(emoji) {
+  try {
+    const raw = localStorage.getItem("samwad_emoji_history");
+    const history = raw ? JSON.parse(raw) : {};
+    history[emoji] = (history[emoji] || 0) + 1;
+    localStorage.setItem("samwad_emoji_history", JSON.stringify(history));
+  } catch {
+    // ignore storage quotas or errors
+  }
+}
+
 export default function DirectMessages() {
   const { id: routeConvId } = useParams();
   const [searchParams] = useSearchParams();
@@ -67,6 +95,7 @@ export default function DirectMessages() {
   const [activeMsgMenuId, setActiveMsgMenuId] = useState(null);
   const [activeFullPickerMsgId, setActiveFullPickerMsgId] = useState(null);
   const [pickerPlacement, setPickerPlacement] = useState("top");
+  const [recentEmojis, setRecentEmojis] = useState(() => getStoredRecentEmojis());
   const [convSearch, setConvSearch] = useState("");
 
   // Audio / Voice note states
@@ -223,6 +252,8 @@ export default function DirectMessages() {
     triggerHaptic(8);
     setActiveReactionMenuMsgId(null);
     setActiveFullPickerMsgId(null);
+    recordEmojiUsage(emoji);
+    setRecentEmojis(getStoredRecentEmojis());
     await toggleMessageReaction(activeConvId, msgId, emoji, {
       uid: currentUser.uid,
       displayName: userProfile?.displayName || currentUser.displayName
@@ -709,7 +740,7 @@ export default function DirectMessages() {
                             {/* Quick Reaction Bar (WhatsApp / Arattai Style) */}
                             {activeReactionMenuMsgId === msg.id && activeFullPickerMsgId !== msg.id && (
                               <div className={`dm-reaction-bar-popup ${pickerPlacement === "bottom" ? "placement-bottom" : ""}`}>
-                                {["👍", "❤️", "😂", "😮", "😢", "🙏", "🪷"].map((em) => (
+                                {recentEmojis.map((em) => (
                                   <button
                                     key={em}
                                     type="button"

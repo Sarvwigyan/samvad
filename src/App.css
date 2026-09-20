@@ -1701,7 +1701,6 @@
 
 .post-card-body {
   user-select: text;
-  cursor: text;
 }
 
 .post-content-text {
@@ -5391,13 +5390,13 @@
 .dm-reaction-full-picker-wrap {
   position: absolute;
   top: auto;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 10px);
   z-index: 1200;
   pointer-events: auto;
 }
 
 .dm-reaction-full-picker-wrap.placement-bottom {
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   bottom: auto;
   margin-top: 0;
 }

@@ -164,18 +164,17 @@ export default function VicharDetail() {
       loginWithGoogle();
       return;
     }
-    const prevLiked = liked;
-    const prevCount = likeCount;
-    setLiked(!prevLiked);
-    setLikeCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
+    const willLike = !liked;
+    setLiked(willLike);
+    setLikeCount((prev) => (willLike ? prev + 1 : Math.max(0, prev - 1)));
 
-    if (!prevLiked) playTempleChime();
+    if (willLike) playTempleChime();
 
     try {
       await toggleAnumodan(post.id, currentUser.uid);
     } catch (e) {
-      setLiked(prevLiked);
-      setLikeCount(prevCount);
+      setLiked(!willLike);
+      setLikeCount((prev) => (willLike ? Math.max(0, prev - 1) : prev + 1));
     }
   };
 
@@ -184,16 +183,15 @@ export default function VicharDetail() {
       loginWithGoogle();
       return;
     }
-    const prevReposted = reposted;
-    const prevCount = repostCount;
-    setReposted(!prevReposted);
-    setRepostCount(prevReposted ? Math.max(0, prevCount - 1) : prevCount + 1);
+    const willRepost = !reposted;
+    setReposted(willRepost);
+    setRepostCount((prev) => (willRepost ? prev + 1 : Math.max(0, prev - 1)));
 
     try {
       await togglePrasar(post.id, currentUser.uid);
     } catch (e) {
-      setReposted(prevReposted);
-      setRepostCount(prevCount);
+      setReposted(!willRepost);
+      setRepostCount((prev) => (willRepost ? Math.max(0, prev - 1) : prev + 1));
     }
   };
 

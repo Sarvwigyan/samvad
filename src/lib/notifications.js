@@ -68,7 +68,8 @@ export function listenNotifications(uid, callback) {
     limit(50)
   );
 
-  return onSnapshot(
+  let currentUnsub = null;
+  const primaryUnsub = onSnapshot(
     q,
     (snap) => {
       const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -81,7 +82,7 @@ export function listenNotifications(uid, callback) {
         collection(db, "users", uid, "notifications"),
         limit(50)
       );
-      return onSnapshot(fallbackQuery, (fbSnap) => {
+      const fallbackUnsub = onSnapshot(fallbackQuery, (fbSnap) => {
         const items = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
         items.sort((a, b) => {
           const tA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
@@ -90,8 +91,13 @@ export function listenNotifications(uid, callback) {
         });
         callback(items);
       });
+      currentUnsub = fallbackUnsub;
     }
   );
+  return () => {
+    primaryUnsub();
+    if (currentUnsub) currentUnsub();
+  };
 }
 
 /**

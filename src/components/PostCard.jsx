@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Avatar } from "./ui/Avatar";
 import { timeAgo } from "../lib/timeAgo";
@@ -35,7 +34,11 @@ import {
   EyeIcon
 } from "./ui/Icons";
 
-export function PostCard({ post, debug = false, onPostDeleted }) {
+function PostCardComponent({ post, debug = false, onPostDeleted }) {
+  if (!post?.id) return null;
+
+  const getMillis = (ts) => (ts?.toMillis ? ts.toMillis() : ts instanceof Date ? ts.getTime() : typeof ts === 'number' ? ts : Date.now());
+
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const cardRef = useRef(null);
@@ -48,6 +51,7 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
   const [replyCount] = useState(post.replyCount || 0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+  const toastTimerRef = useRef(null);
   const [activeLightboxImg, setActiveLightboxImg] = useState(null);
   
   // Analytics and Polls
@@ -55,20 +59,40 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
   const [localPoll, setLocalPoll] = useState(post.poll);
   const [pollVotedIndex, setPollVotedIndex] = useState(null);
 
+  // Sync state when props update
+  useEffect(() => {
+    setLikeCount(post.likeCount || 0);
+    setRepostCount(post.repostCount || 0);
+    setLocalPoll(post.poll);
+  }, [post.likeCount, post.repostCount, post.poll]);
+
+  // Clean up toast timer on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastMsg(""), 2000);
+  };
+
   useEffect(() => {
     if (!currentUser || !post.id) return;
     let isMounted = true;
 
-    isPostLiked(post.id, currentUser.uid).then((val) => isMounted && setLiked(val));
-    isPostReposted(post.id, currentUser.uid).then((val) => isMounted && setReposted(val));
-    isPostBookmarked(post.id, currentUser.uid).then((val) => isMounted && setBookmarked(val));
+    isPostLiked(post.id, currentUser.uid).then((val) => isMounted && setLiked(val)).catch(() => {});
+    isPostReposted(post.id, currentUser.uid).then((val) => isMounted && setReposted(val)).catch(() => {});
+    isPostBookmarked(post.id, currentUser.uid).then((val) => isMounted && setBookmarked(val)).catch(() => {});
     
     if (post.poll) {
       getUserPollVote(post.id, currentUser.uid).then((idx) => {
         if (isMounted && idx !== null && idx !== undefined) {
           setPollVotedIndex(idx);
         }
-      });
+      }).catch(() => {});
     }
 
     return () => { isMounted = false; };
@@ -97,7 +121,8 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     
     // Optimistic UI
     setPollVotedIndex(idx);
-    const newPoll = { ...localPoll };
+    const prevPoll = localPoll;
+    const newPoll = JSON.parse(JSON.stringify(localPoll));
     if (!newPoll[`opt${idx}`]) return;
     newPoll[`opt${idx}`].votes += 1;
     newPoll.totalVotes += 1;
@@ -107,6 +132,8 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     try {
       await castPollVote(post.id, currentUser.uid, idx);
     } catch (err) {
+      setPollVotedIndex(null);
+      setLocalPoll(prevPoll);
       alert(err.message);
     }
   };
@@ -198,8 +225,7 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
       try {
         await navigator.clipboard?.writeText(url);
       } catch {}
-      setToastMsg("लिंक कॉपी किया गया");
-      setTimeout(() => setToastMsg(""), 2000);
+      showToast("लिंक कॉपी किया गया");
     }
   };
 
@@ -211,8 +237,7 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
       try {
         navigator.clipboard.writeText(post.text);
       } catch {}
-      setToastMsg("विचार कॉपी किया गया");
-      setTimeout(() => setToastMsg(""), 2000);
+      showToast("विचार कॉपी किया गया");
     }
   };
 
@@ -223,7 +248,7 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     if (window.confirm("क्या आप इस विचार को हटाना चाहते हैं?")) {
       try {
         await deleteVichar(post.id);
-        setToastMsg("विचार हटा दिया गया");
+        showToast("विचार हटा दिया गया");
         if (onPostDeleted) onPostDeleted(post.id);
       } catch (err) {
         console.error("Delete post error:", err);
@@ -252,7 +277,7 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     : post.authorPhoto;
 
   return (
-    <article className="post-card-container" onClick={handleCardClick} role="button" tabIndex={0} ref={cardRef}>
+    <article className="post-card-container" onClick={handleCardClick} ref={cardRef}>
       {/* Toast Notification */}
       {toastMsg && <div className="post-action-toast">{toastMsg}</div>}
 
@@ -426,22 +451,29 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
                 if (!opt) return null;
                 const percentage = localPoll.totalVotes > 0 ? Math.round((opt.votes / localPoll.totalVotes) * 100) : 0;
                 const isSelected = pollVotedIndex === i;
-                const showResults = pollVotedIndex !== null || localPoll.expiresAt.toMillis() < Date.now();
+                const showResults = pollVotedIndex !== null || getMillis(localPoll.expiresAt) < Date.now();
                 return (
-                  <div key={i} className={`poll-option-row ${isSelected ? "selected" : ""}`} onClick={(e) => handleVote(e, i)}>
+                  <button
+                    key={i}
+                    type="button"
+                    className={`poll-option-row ${isSelected ? "selected" : ""}`}
+                    onClick={(e) => handleVote(e, i)}
+                    disabled={pollVotedIndex !== null || getMillis(localPoll.expiresAt) < Date.now()}
+                    aria-label={`${opt.text} ${showResults ? `${percentage}%` : ""}`}
+                  >
                     <div className="poll-progress-bg" style={{ width: showResults ? `${percentage}%` : '0%' }}></div>
                     <div className="poll-option-content">
                       <span className="poll-option-text">{opt.text} {isSelected && "✓"}</span>
                       {showResults && <span className="poll-option-percent">{percentage}%</span>}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
             <div className="poll-footer">
               <span>{localPoll.totalVotes} मतदान</span>
               <span>•</span>
-              <span>{localPoll.expiresAt.toMillis() < Date.now() ? "समाप्त" : "सक्रिय"}</span>
+              <span>{getMillis(localPoll.expiresAt) < Date.now() ? "समाप्त" : "सक्रिय"}</span>
             </div>
           </div>
         )}
@@ -634,3 +666,5 @@ export function PostCard({ post, debug = false, onPostDeleted }) {
     </article>
   );
 }
+
+export const PostCard = React.memo(PostCardComponent);

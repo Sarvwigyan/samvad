@@ -39,6 +39,44 @@ const CURATED_SADHAKS = [
   { uid: "curated_vedanta", displayName: "वेदान्त अनुसन्धान", username: "vedanta_darshan", avatarUrl: null, fallbackText: "वे" }
 ];
 
+class OutletErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("Page error in Outlet:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: "40px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🪷</div>
+          <p style={{ color: "var(--text-muted)", marginBottom: "12px", fontSize: "0.9rem" }}>इस पृष्ठ को लोड करने में बाधा आई।</p>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            style={{
+              padding: "8px 18px",
+              borderRadius: "9999px",
+              border: "1px solid var(--sona)",
+              background: "transparent",
+              color: "var(--sona)",
+              cursor: "pointer",
+              fontWeight: 600
+            }}
+          >
+            पुनः प्रयास करें
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function Layout() {
   const { currentUser, userProfile, loginWithGoogle, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -375,7 +413,9 @@ export function Layout() {
 
         {/* Page Content Rendered Here */}
         <div className="center-stream-content">
-          <Outlet />
+          <OutletErrorBoundary key={location.pathname}>
+            <Outlet />
+          </OutletErrorBoundary>
         </div>
       </main>
 

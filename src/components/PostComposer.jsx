@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createVichar } from "../lib/firestore";
 import { playTempleChime } from "../lib/chime";
@@ -33,6 +33,16 @@ export function PostComposer({ onPostCreated }) {
   const [audioDataUrl, setAudioDataUrl] = useState(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const streamRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      // Clean up microphone stream on unmount
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
   
   const [mentionQuery, setMentionQuery] = useState(null);
   const [mentionSuggestions, setMentionSuggestions] = useState([]);
@@ -61,6 +71,7 @@ export function PostComposer({ onPostCreated }) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       // Extreme compression for Firestore < 1MB limit
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/mp4';
       const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 16000 });
@@ -154,7 +165,7 @@ export function PostComposer({ onPostCreated }) {
     }
 
     if (showPoll && !hasValidPoll) {
-      setError("मतदान के लिए कम से প্রচ 2 विकल्प अनिवार्य हैं");
+      setError("मतदान के लिए कम से कम 2 विकल्प अनिवार्य हैं");
       return;
     }
 
@@ -411,7 +422,7 @@ export function PostComposer({ onPostCreated }) {
             className={`composer-textarea ${isOverLimit ? "has-error" : ""}`}
             placeholder="कल्याणकारी विचारों को प्रवाह में व्यक्त करें... #हैशटैग अथवा @साधक का प्रयोग करें (Ctrl + Enter)"
             rows={2}
-            maxLength={600}
+            maxLength={25000}
             disabled={isSending}
             aria-label="विचार लिखें"
           />
@@ -423,12 +434,13 @@ export function PostComposer({ onPostCreated }) {
                 <span>साधक उल्लेख (@Mention)</span>
               </div>
               <div className="mention-suggestion-list">
-                {mentionSuggestions.map((u) => (
+                {mentionSuggestions.map((u, idx) => (
                   <button
                     key={u.uid}
                     type="button"
-                    className="mention-suggestion-item"
+                    className={`mention-suggestion-item ${selectedMentionIdx === idx ? "active" : ""}`}
                     onClick={() => handleSelectMention(u)}
+                    aria-selected={selectedMentionIdx === idx}
                   >
                     <Avatar
                       src={u.avatarUrl}

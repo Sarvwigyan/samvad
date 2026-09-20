@@ -502,6 +502,9 @@ export async function castPollVote(postId, uid, optionIndex) {
     
     const postData = postDoc.data();
     if (!postData.poll) throw new Error("इस विचार में मतदान नहीं है");
+    if (optionIndex < 0 || optionIndex >= postData.poll.length) {
+      throw new Error("अमान्य विकल्प सूचकांक");
+    }
     if (postData.poll.expiresAt.toMillis() < Date.now()) {
       throw new Error("मतदान की समय सीमा समाप्त हो चुकी है");
     }
@@ -527,10 +530,10 @@ export async function castPollVote(postId, uid, optionIndex) {
 export async function getUserVichars(uid, limitCount = 50) {
   if (!uid) return [];
   try {
-    const q1 = query(collection(db, "posts"), where("authorId", "==", uid), limit(limitCount));
+    const q1 = query(collection(db, "posts"), where("authorId", "==", uid), orderBy("createdAt", "desc"), limit(limitCount));
     const snap1 = await getDocs(q1);
 
-    const q2 = query(collection(db, "posts"), where("uid", "==", uid), limit(limitCount));
+    const q2 = query(collection(db, "posts"), where("uid", "==", uid), orderBy("createdAt", "desc"), limit(limitCount));
     const snap2 = await getDocs(q2);
 
     const map = new Map();
@@ -927,7 +930,16 @@ export async function getSuggestedSadhaks(currentUid, limitCount = 4) {
 export async function deleteVichar(postId) {
   if (!postId) return;
   const postRef = doc(db, "posts", postId);
+  const postSnap = await getDoc(postRef);
+  const authorId = postSnap.exists() ? postSnap.data().authorId : null;
+  
   await deleteDoc(postRef);
+  
+  if (authorId) {
+    try {
+      await updateDoc(doc(db, "users", authorId), { postsCount: increment(-1) });
+    } catch(e) {}
+  }
 }
 
 

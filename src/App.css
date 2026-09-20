@@ -4171,16 +4171,16 @@
 }
 
 .bubble-mine {
-  background: linear-gradient(135deg, #B58428 0%, #946312 100%);
+  background: linear-gradient(135deg, #D4A24C 0%, #C08D30 100%);
   color: #FFFFFF;
   font-weight: 500;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 10px rgba(148, 99, 18, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 10px rgba(212, 162, 76, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 [data-theme="dark"] .bubble-mine {
-  background: linear-gradient(135deg, #9E7019 0%, #6E4608 100%);
+  background: linear-gradient(135deg, #C49338 0%, #A87620 100%);
   color: #FFF9EE;
   border-bottom-right-radius: 4px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
@@ -4420,7 +4420,7 @@
 }
 
 [data-theme="dark"] .dm-poll-option-btn {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface);
 }
 
 .dm-poll-option-btn:not(.has-voted):hover {
@@ -4796,8 +4796,10 @@
 /* Responsive view for DMs on Mobile (< 768px) */
 @media (max-width: 768px) {
   .dm-master-shell {
-    height: calc(100dvh - 148px);
-    max-height: calc(100dvh - 148px);
+    height: calc(100vh - 98px);
+    height: calc(100dvh - 98px);
+    max-height: calc(100vh - 98px);
+    max-height: calc(100dvh - 98px);
     overflow: hidden;
   }
 
@@ -4903,10 +4905,10 @@
   left: 0;
   width: 100%;
   max-width: 380px;
-  background: var(--bg-card, #1c1917);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-float);
   z-index: 100;
   overflow: hidden;
   margin-top: 6px;
@@ -4917,8 +4919,8 @@
   padding: 8px 14px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-muted, #a8a29e);
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-light);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -4936,8 +4938,8 @@
   padding: 10px 14px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  color: var(--text, #fafaf9);
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
   cursor: pointer;
   text-align: left;
   transition: background 0.15s ease;
@@ -4965,7 +4967,7 @@
 
 .mention-item-handle {
   font-size: 0.78rem;
-  color: var(--sona, #d4a24c);
+  color: var(--sona);
 }
 
 /* ==========================================================================
@@ -4975,10 +4977,10 @@
   position: absolute;
   width: 320px;
   max-width: min(320px, calc(100vw - 28px));
-  background: var(--bg-card, #1c1917);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-float);
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -5009,7 +5011,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-bottom: 1px solid var(--border);
 }
 
 .emoji-search-box {
@@ -5017,7 +5019,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 4px 8px;
@@ -5028,7 +5030,7 @@
   background: transparent;
   border: none;
   outline: none;
-  color: var(--text, #fafaf9);
+  color: var(--text);
   font-size: 0.82rem;
 }
 
@@ -5036,7 +5038,7 @@
 .emoji-close-btn {
   background: transparent;
   border: none;
-  color: var(--text-muted, #a8a29e);
+  color: var(--text-muted);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -5047,7 +5049,7 @@
 
 .emoji-clear-btn:hover,
 .emoji-close-btn:hover {
-  color: var(--text, #fff);
+  color: var(--text);
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -5056,8 +5058,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.12);
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
 }
 
 .emoji-cat-tab {
@@ -5088,7 +5090,7 @@
 .emoji-grid-title {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-muted, #a8a29e);
+  color: var(--text-muted);
   text-transform: uppercase;
   margin-bottom: 6px;
   letter-spacing: 0.04em;
@@ -5146,8 +5148,9 @@
   display: none;
   align-items: center;
   gap: 4px;
-  background: var(--bg-card, #292524);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-liquid);
   border-radius: 9999px;
   padding: 2px 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
@@ -5170,7 +5173,7 @@
 .dm-bubble-action-btn {
   background: transparent;
   border: none;
-  color: var(--text-muted, #a8a29e);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 9999px;
@@ -5181,7 +5184,7 @@
 }
 
 .dm-bubble-action-btn:hover {
-  color: var(--sona, #d4a24c);
+  color: var(--sona);
   transform: scale(1.15);
 }
 
@@ -5192,8 +5195,9 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: var(--bg-card, #1c1917);
-  border: 1px solid var(--sona, #d4a24c);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
   border-radius: 9999px;
   padding: 3px 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
@@ -5232,7 +5236,7 @@
 
 .dm-quick-react-btn.plus-btn {
   font-size: 0.85rem;
-  color: var(--text-muted, #a8a29e);
+  color: var(--text-muted);
   padding: 2px 6px;
 }
 
@@ -5276,24 +5280,24 @@
   gap: 3px;
   padding: 2px 6px;
   font-size: 0.78rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-hover);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
-  color: var(--text, #fafaf9);
+  color: var(--text);
   cursor: pointer;
   transition: all 0.14s ease;
 }
 
 .dm-reaction-pill-badge:hover {
   background: rgba(212, 162, 76, 0.2);
-  border-color: var(--sona, #d4a24c);
+  border-color: var(--sona);
   transform: scale(1.08);
 }
 
 .dm-reaction-pill-badge.active-mine {
   background: rgba(212, 162, 76, 0.25);
-  border-color: var(--sona, #d4a24c);
-  color: var(--sona, #d4a24c);
+  border-color: var(--sona);
+  color: var(--sona);
 }
 
 .pill-count {
@@ -5306,10 +5310,10 @@
   position: absolute;
   top: 100%;
   margin-top: 4px;
-  background: var(--bg-card, #1c1917);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-float);
   z-index: 40;
   overflow: hidden;
   min-width: 190px;
@@ -5331,7 +5335,7 @@
   padding: 8px 12px;
   background: transparent;
   border: none;
-  color: var(--text, #fafaf9);
+  color: var(--text);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -5354,12 +5358,12 @@
 /* Deleted Message Bubble */
 .bubble-deleted {
   opacity: 0.65;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+  background: var(--bg-hover) !important;
+  border: 1px dashed var(--border) !important;
 }
 
 .text-deleted {
-  color: var(--text-muted, #a8a29e) !important;
+  color: var(--text-muted) !important;
   font-style: italic;
   font-size: 0.84rem !important;
 }
@@ -5368,7 +5372,7 @@
 .dm-input-tool-btn {
   background: transparent;
   border: none;
-  color: var(--text-muted, #a8a29e);
+  color: var(--text-muted);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -5380,7 +5384,7 @@
 
 .dm-input-tool-btn:hover,
 .dm-input-tool-btn.active {
-  color: var(--sona, #d4a24c);
+  color: var(--sona);
   background: rgba(212, 162, 76, 0.14);
 }
 /* Poll UI */
@@ -5509,3 +5513,97 @@
   color: var(--text-muted) !important;
 }
 
+/* Poll option text & percent (missing selectors from PostCard.jsx) */
+.poll-option-text {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.poll-option-percent {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--sona);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* Audio container in posts (PostCard.jsx) */
+.post-audio-container {
+  margin-top: 12px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.post-audio-container audio {
+  width: 100%;
+  height: 36px;
+  outline: none;
+  border-radius: var(--radius-sm);
+}
+
+/* Composer action icon button active state */
+.composer-action-icon-btn.active {
+  color: var(--sona);
+  background: rgba(212, 155, 53, 0.12);
+  border-color: var(--sona);
+}
+
+/* Composer textarea error indicator */
+.composer-textarea.has-error {
+  border-left: 3px solid var(--color-error, #DC2626);
+}
+
+/* Fix: view-count-btn should not hover-lift since it's non-interactive */
+.view-count-btn:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Tablet breakpoint: collapse sidebar between 769-1120px */
+@media (min-width: 769px) and (max-width: 1120px) {
+  .left-sidebar-col {
+    width: 72px;
+  }
+  .brand-identity-text,
+  .nav-item-text,
+  .pwa-text,
+  .user-badge-meta,
+  .user-badge-actions .logout-quick-btn {
+    display: none !important;
+  }
+  .brand-crest-box {
+    justify-content: center;
+    padding: 8px;
+  }
+  .nav-menu-item {
+    justify-content: center;
+    padding: 10px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+  }
+  .nav-item-icon {
+    margin: 0;
+  }
+  .user-profile-badge-card {
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+  }
+  .pwa-install-sidebar-btn {
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+  }
+  .pwa-install-sidebar-btn .pwa-icon {
+    margin: 0;
+  }
+  .center-stream-col {
+    max-width: none;
+  }
+}

@@ -94,7 +94,14 @@ export default function Profile() {
     loadData();
 
     return () => { isMounted = false; };
-  }, [targetUid, isOwnProfile, myLiveProfile, currentUser]);
+  }, [targetUid, isOwnProfile, currentUser?.uid]);
+
+  // Sync profile edits without triggering full post refetch
+  useEffect(() => {
+    if (isOwnProfile && myLiveProfile) {
+      setProfile((prev) => (prev ? { ...prev, ...myLiveProfile } : myLiveProfile));
+    }
+  }, [isOwnProfile, myLiveProfile]);
 
   if (loading) {
     return (
@@ -147,7 +154,7 @@ export default function Profile() {
         ) : (
           <div className="profile-post-list">
             {posts.map((p) => (
-              <PostCard key={p.id} post={p} />
+              <PostCard key={p.id} post={p} onPostDeleted={(id) => setPosts(prev => prev.filter(p => p.id !== id))} />
             ))}
           </div>
         )}

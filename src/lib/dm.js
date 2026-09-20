@@ -247,7 +247,8 @@ export function listenMessages(convId, callback) {
     limit(100)
   );
 
-  return onSnapshot(
+  let currentUnsub = null;
+  const primaryUnsub = onSnapshot(
     q,
     (snap) => {
       const msgs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -259,7 +260,7 @@ export function listenMessages(convId, callback) {
         collection(db, "conversations", convId, "messages"),
         limit(100)
       );
-      return onSnapshot(fbQuery, (fbSnap) => {
+      const fallbackUnsub = onSnapshot(fbQuery, (fbSnap) => {
         const msgs = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
         msgs.sort((a, b) => {
           const tA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
@@ -268,8 +269,13 @@ export function listenMessages(convId, callback) {
         });
         callback(msgs);
       });
+      currentUnsub = fallbackUnsub;
     }
   );
+  return () => {
+    primaryUnsub();
+    if (currentUnsub) currentUnsub();
+  };
 }
 
 /**

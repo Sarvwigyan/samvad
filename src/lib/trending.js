@@ -19,7 +19,7 @@ export function extractHashtags(text = "") {
 
   const unique = new Set();
   for (const m of matches) {
-    unique.add(m.trim());
+    unique.add(m.trim().toLowerCase());
   }
   return Array.from(unique);
 }

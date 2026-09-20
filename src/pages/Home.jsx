@@ -85,7 +85,9 @@ export default function Home() {
   };
 
   useEffect(() => {
+    let isCurrent = true;
     fetchPosts(false);
+    return () => { isCurrent = false; };
   }, [activeTab, filterQuery]); // Refetch on tab or search change
 
   // Optional: Listen for very new posts to prepend them (lightweight listener)
@@ -99,14 +101,16 @@ export default function Home() {
           if (!prev.length) return prev;
           if (prev.some(p => p.id === newest.id)) return prev;
           // Avoid pushing really old posts if the database is mostly empty
-          const firstPostTime = prev[0]?.createdAt?.toMillis?.() || 0;
-          const newestTime = newest.createdAt?.toMillis?.() || 0;
+          const firstPostTime = prev[0]?.createdAt?.toMillis?.() || (prev[0]?.createdAt ? new Date(prev[0].createdAt).getTime() : 0);
+          const newestTime = newest.createdAt?.toMillis?.() || Date.now();
           if (newestTime >= firstPostTime) {
             return [newest, ...prev];
           }
           return prev;
         });
       }
+    }, (err) => {
+      console.warn("Newest post listener notice:", err.message);
     });
     return () => unsubscribe();
   }, []);

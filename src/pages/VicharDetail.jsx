@@ -56,6 +56,7 @@ export default function VicharDetail() {
   const [replyMentionSuggestions, setReplyMentionSuggestions] = useState([]);
   const [isReplyEmojiOpen, setIsReplyEmojiOpen] = useState(false);
   const replyTextareaRef = useRef(null);
+  const mentionSearchIdRef = useRef(0);
 
   const handleReplyChange = (e) => {
     const val = e.target.value;
@@ -68,10 +69,15 @@ export default function VicharDetail() {
     if (match) {
       const q = match[1];
       setReplyMentionQuery(q);
+      const searchId = ++mentionSearchIdRef.current;
       searchUsersByMention(q, 5).then((results) => {
-        setReplyMentionSuggestions(results);
+        if (mentionSearchIdRef.current === searchId) {
+          setReplyMentionSuggestions(results || []);
+        }
       }).catch(() => {
-        setReplyMentionSuggestions([]);
+        if (mentionSearchIdRef.current === searchId) {
+          setReplyMentionSuggestions([]);
+        }
       });
     } else {
       setReplyMentionQuery(null);
@@ -134,9 +140,9 @@ export default function VicharDetail() {
         setLoading(false);
 
         if (currentUser) {
-          isPostLiked(id, currentUser.uid).then((val) => isMounted && setLiked(val));
-          isPostReposted(id, currentUser.uid).then((val) => isMounted && setReposted(val));
-          isPostBookmarked(id, currentUser.uid).then((val) => isMounted && setBookmarked(val));
+          isPostLiked(id, currentUser.uid).then((val) => isMounted && setLiked(val)).catch(() => {});
+          isPostReposted(id, currentUser.uid).then((val) => isMounted && setReposted(val)).catch(() => {});
+          isPostBookmarked(id, currentUser.uid).then((val) => isMounted && setBookmarked(val)).catch(() => {});
         }
       } else if (isMounted) {
         setLoading(false);
@@ -384,6 +390,35 @@ export default function VicharDetail() {
             return part;
           })}
         </div>
+
+        {post.poll && (
+          <div className="post-poll-container" style={{ margin: '16px 0', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '15px' }}>{post.poll.question || "मतदान"}</h4>
+            {Array.from({ length: post.poll.length || 0 }).map((_, idx) => {
+              const opt = post.poll[`opt${idx}`];
+              if (!opt) return null;
+              const pct = post.poll.totalVotes > 0 ? Math.round((opt.votes / post.poll.totalVotes) * 100) : 0;
+              return (
+                <div key={idx} style={{ marginBottom: '8px', position: 'relative', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${pct}%`, background: 'var(--accent-color)', opacity: 0.2 }} />
+                  <div style={{ position: 'relative', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                    <span>{opt.text}</span>
+                    <span>{pct}%</span>
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+              {post.poll.totalVotes || 0} मत (Votes)
+            </div>
+          </div>
+        )}
+
+        {post.audioData && (
+          <div style={{ marginTop: '12px' }}>
+            <audio src={post.audioData} controls style={{ width: '100%', height: '36px' }} />
+          </div>
+        )}
 
         {/* Attached Images Grid (X-style 1-4 images) */}
         {post.images && post.images.length > 0 && (

@@ -18,7 +18,7 @@ export default function Following() {
         setFollowing(list);
         setLoading(false);
       }
-    });
+    }).catch((err) => { console.error(err); if (isMounted) setLoading(false); });
     return () => { isMounted = false; };
   }, [uid]);
 

@@ -8,7 +8,7 @@ import { calculateEngagement } from "./pruning";
  */
 export function normalizeScores(values) {
   if (!values || values.length === 0) return [];
-  const max = Math.max(...values);
+  const max = values.reduce((a, b) => Math.max(a, b), 0);
   if (max <= 0) return values.map(() => 0);
   return values.map((v) => Math.max(0, Math.min(1, v / max)));
 }

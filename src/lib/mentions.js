@@ -53,7 +53,7 @@ export async function lookupMentionedUsers(usernames = []) {
  */
 export async function searchUsersByMention(queryText = "", limitCount = 5) {
   try {
-    const q = query(collection(db, "users"), limit(25));
+    const q = query(collection(db, "users"), limit(100));
     const snap = await getDocs(q);
     const users = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
     const cleanQuery = (queryText || "").toLowerCase().trim();

@@ -8,14 +8,14 @@
   -webkit-focus-ring-color: transparent !important;
 }
 
-/* Eliminate default ugly blue browser selection forever — warm gold luminescence */
+/* Luminous gold text selection */
 ::selection {
-  background: rgba(212, 155, 53, 0.35) !important;
+  background: rgba(229, 169, 60, 0.28) !important;
   color: inherit !important;
 }
 
 ::-moz-selection {
-  background: rgba(212, 155, 53, 0.35) !important;
+  background: rgba(229, 169, 60, 0.28) !important;
   color: inherit !important;
 }
 
@@ -32,14 +32,15 @@ html, body {
   width: 100%;
   min-height: 100%;
   overflow-x: clip;
-  background: var(--bg-gradient);
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   transition: background var(--transition), color var(--transition);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 169, 60, 0.2) transparent;
 }
 
 /* Subtle sacred aura geometry */
@@ -48,8 +49,7 @@ body::before {
   position: fixed;
   inset: 0;
   background-image: 
-    radial-gradient(circle at 50% 10%, rgba(212, 162, 76, 0.05) 0%, transparent 60%),
-    repeating-linear-gradient(45deg, rgba(212, 162, 76, 0.012) 0px, rgba(212, 162, 76, 0.012) 1px, transparent 1px, transparent 28px);
+    radial-gradient(circle at 50% 0%, rgba(229, 169, 60, 0.04) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }
@@ -84,13 +84,13 @@ button, input, textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 155, 53, 0.25);
+  background: rgba(229, 169, 60, 0.2);
   border-radius: 9999px;
   backdrop-filter: blur(10px);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 155, 53, 0.45);
+  background: rgba(229, 169, 60, 0.4);
 }
 
 /* Smoke-smooth transitions */
@@ -106,7 +106,7 @@ button, input, textarea {
   gap: 12px;
   color: var(--sona);
   font-size: 0.85rem;
-  opacity: 0.65;
+  opacity: 0.75;
   margin: 16px 0;
 }
 

@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let unsubscribeProfile = null;

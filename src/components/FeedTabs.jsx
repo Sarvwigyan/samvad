@@ -14,7 +14,7 @@ export const TAB_MANDAL = "mandal";
  * @param {string} props.activeTab - 'pravah' | 'naya' | 'mandal'
  * @param {Function} props.onTabChange - Callback on tab switch
  */
-function FeedTabsComponent({ activeTab, onTabChange }) {
+export function FeedTabs({ activeTab, onTabChange }) {
   const handleSelect = (tab) => {
     if (tab === activeTab) return;
     triggerHaptic(12);
@@ -61,5 +61,3 @@ function FeedTabsComponent({ activeTab, onTabChange }) {
     </div>
   );
 }
-
-export const FeedTabs = React.memo(FeedTabsComponent);

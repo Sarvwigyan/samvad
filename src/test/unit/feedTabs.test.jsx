@@ -28,7 +28,7 @@ describe("Phase 4C: FeedTabs UI Component (FeedTabs.jsx)", () => {
     expect(el.props.className).toBe("feed-tabs-container");
 
     const buttons = el.props.children;
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
 
     // Pravah button
     const pravahBtn = buttons[0];

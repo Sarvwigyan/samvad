@@ -42,10 +42,10 @@ const CURATED_SADHAKS = [
 class OutletErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
   }
   componentDidCatch(error, info) {
     console.error("Page error in Outlet:", error, info);
@@ -55,17 +55,35 @@ class OutletErrorBoundary extends React.Component {
       return (
         <div style={{ padding: "40px 20px", textAlign: "center" }}>
           <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🪷</div>
-          <p style={{ color: "var(--text-muted)", marginBottom: "12px", fontSize: "0.9rem" }}>इस पृष्ठ को लोड करने में बाधा आई।</p>
+          <p style={{ color: "var(--text-muted)", marginBottom: "12px", fontSize: "0.95rem", fontWeight: 600 }}>
+            इस पृष्ठ को लोड करने में बाधा आई।
+          </p>
+          {this.state.error?.message && (
+            <div style={{
+              margin: "0 auto 16px",
+              maxWidth: "420px",
+              padding: "8px 12px",
+              background: "rgba(239, 68, 68, 0.1)",
+              border: "1px solid rgba(239, 68, 68, 0.25)",
+              borderRadius: "8px",
+              color: "#EF4444",
+              fontSize: "0.8rem",
+              wordBreak: "break-word"
+            }}>
+              {this.state.error.message}
+            </div>
+          )}
           <button
-            onClick={() => this.setState({ hasError: false })}
+            onClick={() => this.setState({ hasError: false, error: null })}
             style={{
-              padding: "8px 18px",
+              padding: "8px 22px",
               borderRadius: "9999px",
               border: "1px solid var(--sona)",
-              background: "transparent",
+              background: "rgba(229, 169, 60, 0.1)",
               color: "var(--sona)",
               cursor: "pointer",
-              fontWeight: 600
+              fontWeight: 600,
+              fontSize: "0.9rem"
             }}
           >
             पुनः प्रयास करें

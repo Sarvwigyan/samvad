@@ -42,6 +42,8 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
   const { currentUser, userProfile, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const cardRef = useRef(null);
+  const pointerDownPosRef = useRef({ x: 0, y: 0 });
+  const isDragOrSelectRef = useRef(false);
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
@@ -257,7 +259,23 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
     }
   };
 
+  const handleMouseDown = (e) => {
+    pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
+    isDragOrSelectRef.current = false;
+  };
+
+  const handleMouseUp = (e) => {
+    const dx = Math.abs(e.clientX - pointerDownPosRef.current.x);
+    const dy = Math.abs(e.clientY - pointerDownPosRef.current.y);
+    if (dx > 5 || dy > 5) {
+      isDragOrSelectRef.current = true;
+    }
+  };
+
   const handleCardClick = () => {
+    const sel = typeof window !== "undefined" ? window.getSelection?.() : null;
+    if (sel && sel.toString().trim().length > 0) return;
+    if (isDragOrSelectRef.current) return;
     if (post.id) {
       navigate(`/vichar/${post.id}`);
     }
@@ -277,7 +295,14 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
     : post.authorPhoto;
 
   return (
-    <article className="post-card-container" onClick={handleCardClick} ref={cardRef}>
+    <article
+      className="post-card-container"
+      onClick={handleCardClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onCopy={(e) => e.stopPropagation()}
+      ref={cardRef}
+    >
       {/* Toast Notification */}
       {toastMsg && <div className="post-action-toast">{toastMsg}</div>}
 
@@ -566,7 +591,7 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
         {/* Anumodan (Like) */}
         <button
           type="button"
-          className={`action-pill-btn ${liked ? "action-liked" : ""}`}
+          className={`action-pill-btn ${liked ? "is-liked action-liked" : ""}`}
           onClick={handleAnumodan}
           title="अनुमोदन (Like)"
           aria-label="अनुमोदन"
@@ -599,7 +624,7 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
         {/* Prasar (Repost) */}
         <button
           type="button"
-          className={`action-pill-btn ${reposted ? "action-reposted" : ""}`}
+          className={`action-pill-btn ${reposted ? "is-reposted action-reposted" : ""}`}
           onClick={handlePrasar}
           title="प्रसार (Repost)"
           aria-label="प्रसार"
@@ -614,7 +639,7 @@ function PostCardComponent({ post, debug = false, onPostDeleted }) {
         {/* Smaran (Bookmark) */}
         <button
           type="button"
-          className={`action-pill-btn ${bookmarked ? "action-bookmarked" : ""}`}
+          className={`action-pill-btn ${bookmarked ? "is-bookmarked action-bookmarked" : ""}`}
           onClick={handleSmaran}
           title="स्मरण (Bookmark)"
           aria-label="स्मरण"

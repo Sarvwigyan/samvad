@@ -101,10 +101,10 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
-    // Backward Compatibility for Messages
-    match /messages/{messageId} {
-      allow read: if true;
-      allow create: if true;
+    // Pruning Archive Collection
+    match /archive/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
       allow update, delete: if false;
     }
 

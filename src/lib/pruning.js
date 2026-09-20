@@ -10,10 +10,10 @@ import {
   writeBatch,
   runTransaction,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  addDoc
 } from "firebase/firestore";
-import { ref, uploadString } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { db } from "../firebase";
 
 /**
  * Pruning and TTL Configuration
@@ -95,22 +95,25 @@ export function shouldPreserve(post = {}) {
 }
 
 /**
- * Archive batch of posts to Firebase Storage prior to deletion
+ * Archive batch of posts to Firestore archive collection prior to deletion
  * @param {Array<object>} posts
  */
 async function archivePostsBeforeDelete(posts) {
-  if (!ARCHIVE_ENABLED || !storage || posts.length === 0) return;
+  if (!ARCHIVE_ENABLED || !posts.length) return;
   try {
-    const dateStr = new Date().toISOString().split("T")[0];
-    const timestamp = Date.now();
-    const storageRef = ref(storage, `archive/${dateStr}_${timestamp}.json`);
-    const payload = JSON.stringify(posts, null, 2);
-    await uploadString(storageRef, payload, "raw", {
-      contentType: "application/json"
-    });
-    debug(`Archived ${posts.length} posts to archive/${dateStr}_${timestamp}.json`);
+    const batches = [];
+    for (let i = 0; i < posts.length; i += 100) {
+      batches.push(posts.slice(i, i + 100));
+    }
+    for (const batch of batches) {
+      await addDoc(collection(db, "archive"), {
+        posts: batch,
+        archivedAt: serverTimestamp(),
+        count: batch.length
+      });
+    }
+    debug(`Archived ${posts.length} posts to Firestore archive collection`);
   } catch (err) {
-    // Archival failure should not block storage cleanup
     debug("Archive warning:", err.message);
   }
 }

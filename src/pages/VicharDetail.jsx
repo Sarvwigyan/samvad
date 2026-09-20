@@ -10,7 +10,8 @@ import {
   isPostReposted,
   togglePrasar,
   isPostBookmarked,
-  toggleSmaran
+  toggleSmaran,
+  incrementViews
 } from "../lib/firestore";
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
@@ -20,12 +21,14 @@ import { extractUrls, getLinkCardData } from "../lib/linkPreview";
 import { searchUsersByMention } from "../lib/mentions";
 import {
   HeartIcon,
+  ReplyIcon,
   RepostIcon,
   BookmarkIcon,
   ShareIcon,
   ExternalLinkIcon,
   CloseIcon,
-  SmileIcon
+  SmileIcon,
+  EyeIcon
 } from "../components/ui/Icons";
 import { EmojiPicker } from "../components/ui/EmojiPicker";
 
@@ -134,6 +137,7 @@ export default function VicharDetail() {
     ]).then(([postData, replyList]) => {
       if (isMounted && postData) {
         setPost(postData);
+        incrementViews(id).catch(() => {});
         setLikeCount(postData.likeCount || 0);
         setRepostCount(postData.repostCount || 0);
         setReplies(replyList || []);
@@ -504,13 +508,16 @@ export default function VicharDetail() {
           <div className="metric-item">
             <strong>{repostCount}</strong> <span>प्रसार</span>
           </div>
+          <div className="metric-item">
+            <strong>{post.viewCount || 0}</strong> <span>दृष्टि (Views)</span>
+          </div>
         </div>
 
         {/* Action Buttons */}
         <div className="detail-actions-bar">
           <button
             type="button"
-            className={`detail-action-btn ${liked ? "active-anumodan" : ""}`}
+            className={`detail-action-btn ${liked ? "is-liked active-anumodan" : ""}`}
             onClick={handleAnumodan}
             title="अनुमोदन (Like)"
           >
@@ -522,7 +529,19 @@ export default function VicharDetail() {
 
           <button
             type="button"
-            className={`detail-action-btn ${reposted ? "active-prasar" : ""}`}
+            className="detail-action-btn"
+            onClick={() => replyTextareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            title="उत्तर (Reply)"
+          >
+            <span className="action-icon">
+              <ReplyIcon size={18} />
+            </span>
+            <span>उत्तर</span>
+          </button>
+
+          <button
+            type="button"
+            className={`detail-action-btn ${reposted ? "is-reposted active-prasar" : ""}`}
             onClick={handlePrasar}
             title="प्रसार (Repost)"
           >
@@ -534,7 +553,7 @@ export default function VicharDetail() {
 
           <button
             type="button"
-            className={`detail-action-btn ${bookmarked ? "active-smaran" : ""}`}
+            className={`detail-action-btn ${bookmarked ? "is-bookmarked active-smaran" : ""}`}
             onClick={handleSmaran}
             title="स्मरण (Bookmark)"
           >
@@ -555,6 +574,13 @@ export default function VicharDetail() {
             </span>
             <span>{copiedToast ? "प्रतिलिपि!" : "साझा"}</span>
           </button>
+
+          <div className="detail-action-btn view-count-btn" style={{ cursor: "default" }} title="दृष्टि (Views)">
+            <span className="action-icon">
+              <EyeIcon size={18} />
+            </span>
+            <span>{post.viewCount || 0}</span>
+          </div>
         </div>
       </article>
 

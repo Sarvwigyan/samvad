@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { collection, query, orderBy, limit, getDocs, startAfter, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
@@ -12,8 +12,8 @@ import { SearchIcon, StreamIcon, UsersIcon, PlusIcon } from "../components/ui/Ic
 import { getUserCircles } from "../lib/circles";
 import { CirclesModal } from "../components/CirclesModal";
 
-const INITIAL_BATCH_SIZE = 15;
-const BATCH_INCREMENT = 10;
+const INITIAL_BATCH_SIZE = 30;
+const BATCH_INCREMENT = 20;
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -52,7 +52,7 @@ export default function Home() {
     }
   });
 
-  const { rankedPosts } = useRankedFeed(posts, currentUser, activeTab === TAB_PRAVAH);
+  const { rankedPosts, resetRanking } = useRankedFeed(posts, currentUser, activeTab === TAB_PRAVAH);
 
   const fetchPosts = async (isNextBatch = false) => {
     if (loadingMore) return;
@@ -101,6 +101,7 @@ export default function Home() {
 
   useEffect(() => {
     let isCurrent = true;
+    resetRanking();
     fetchPosts(false);
     return () => { isCurrent = false; };
   }, [activeTab, filterQuery]); // Refetch on tab or search change
@@ -171,7 +172,7 @@ export default function Home() {
     : candidatePosts;
 
   // Advanced IntersectionObserver for progressive infinite lazy loading (Server-side)
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (
       !sentinelRef.current ||
       typeof window === "undefined" ||
@@ -188,7 +189,7 @@ export default function Home() {
           fetchPosts(true);
         }
       },
-      { rootMargin: "400px" } // Pre-loads next batch 400px before reaching the bottom
+      { rootMargin: "400px", threshold: 0.01 } // Pre-loads next batch 400px before reaching the bottom
     );
 
     observer.observe(sentinelRef.current);

@@ -66,6 +66,7 @@ export default function DirectMessages() {
   const [activeReactionMenuMsgId, setActiveReactionMenuMsgId] = useState(null);
   const [activeMsgMenuId, setActiveMsgMenuId] = useState(null);
   const [activeFullPickerMsgId, setActiveFullPickerMsgId] = useState(null);
+  const [pickerPlacement, setPickerPlacement] = useState("top");
   const [convSearch, setConvSearch] = useState("");
 
   // Audio / Voice note states
@@ -544,10 +545,9 @@ export default function DirectMessages() {
                 </div>
               ) : (
                 <div className="dm-bubbles-list">
-                  {visibleMessages.map((msg, index) => {
+                  {visibleMessages.map((msg) => {
                     const isMine = msg.senderUid === currentUser.uid;
                     const isDeleted = msg.deletedForEveryone;
-                    const isNearTop = index < 2;
 
                     // Group reactions
                     const reactionMap = {};
@@ -676,7 +676,13 @@ export default function DirectMessages() {
                                 <button
                                   type="button"
                                   className="dm-bubble-action-btn"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    const rect = e.currentTarget.closest(".dm-bubble-row")?.getBoundingClientRect();
+                                    if (rect && rect.top < 320) {
+                                      setPickerPlacement("bottom");
+                                    } else {
+                                      setPickerPlacement("top");
+                                    }
                                     setActiveReactionMenuMsgId(activeReactionMenuMsgId === msg.id ? null : msg.id);
                                     setActiveMsgMenuId(null);
                                   }}
@@ -701,8 +707,8 @@ export default function DirectMessages() {
                             )}
 
                             {/* Quick Reaction Bar (WhatsApp / Arattai Style) */}
-                            {activeReactionMenuMsgId === msg.id && (
-                              <div className={`dm-reaction-bar-popup ${isNearTop ? "placement-bottom" : ""}`}>
+                            {activeReactionMenuMsgId === msg.id && activeFullPickerMsgId !== msg.id && (
+                              <div className={`dm-reaction-bar-popup ${pickerPlacement === "bottom" ? "placement-bottom" : ""}`}>
                                 {["👍", "❤️", "😂", "😮", "😢", "🙏", "🪷"].map((em) => (
                                   <button
                                     key={em}
@@ -716,7 +722,16 @@ export default function DirectMessages() {
                                 <button
                                   type="button"
                                   className="dm-quick-react-btn plus-btn"
-                                  onClick={() => setActiveFullPickerMsgId(activeFullPickerMsgId === msg.id ? null : msg.id)}
+                                  onClick={(e) => {
+                                    const rect = e.currentTarget.closest(".dm-bubble-row")?.getBoundingClientRect();
+                                    if (rect && rect.top < 320) {
+                                      setPickerPlacement("bottom");
+                                    } else {
+                                      setPickerPlacement("top");
+                                    }
+                                    setActiveReactionMenuMsgId(null);
+                                    setActiveFullPickerMsgId(activeFullPickerMsgId === msg.id ? null : msg.id);
+                                  }}
                                   title="अन्य इमोजी..."
                                 >
                                   ➕
@@ -726,14 +741,14 @@ export default function DirectMessages() {
 
                             {/* Full Emoji Picker for Reaction */}
                             {activeFullPickerMsgId === msg.id && (
-                              <div className={`dm-reaction-full-picker-wrap ${isNearTop ? "placement-bottom" : ""}`}>
+                              <div className={`dm-reaction-full-picker-wrap ${pickerPlacement === "bottom" ? "placement-bottom" : ""}`}>
                                 <EmojiPicker
                                   onSelect={(em) => handleReact(msg.id, em)}
                                   onClose={() => {
                                     setActiveFullPickerMsgId(null);
                                     setActiveReactionMenuMsgId(null);
                                   }}
-                                  align={isNearTop ? "bottom" : "top"}
+                                  align={pickerPlacement === "bottom" ? "bottom" : "top"}
                                 />
                               </div>
                             )}

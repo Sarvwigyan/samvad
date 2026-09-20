@@ -6,7 +6,6 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
-import { usePWAInstall } from "../lib/usePWAInstall";
 import { getSuggestedSadhaks, followUser, unfollowUser, isFollowing } from "../lib/firestore";
 import { computeTrendingTopics } from "../lib/trending";
 import { EcosystemBar } from "./EcosystemBar";
@@ -18,7 +17,6 @@ import {
   BookmarkIcon,
   ProfileIcon,
   SettingsIcon,
-  DownloadIcon,
   GlobeIcon,
   BookIcon,
   LibraryIcon,
@@ -98,7 +96,6 @@ class OutletErrorBoundary extends React.Component {
 export function Layout() {
   const { currentUser, userProfile, loginWithGoogle, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { canInstall, isInstalled, promptInstall } = usePWAInstall();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobileChatActive = location.pathname.startsWith("/sandesh/") && location.pathname.length > 9;
@@ -314,22 +311,6 @@ export function Layout() {
             </NavLink>
           </nav>
 
-          {/* PWA Install Sidebar Button */}
-          {canInstall && !isInstalled && (
-            <button
-              type="button"
-              className="pwa-install-sidebar-btn"
-              onClick={promptInstall}
-              title="संवाद ऐप अपने उपकरण पर स्थापित करें"
-            >
-              <span className="pwa-icon"><DownloadIcon size={20} /></span>
-              <div className="pwa-text">
-                <strong>ऐप डाउनलोड / स्थापित करें</strong>
-                <small>Install Standalone App</small>
-              </div>
-            </button>
-          )}
-
           {/* User Account / Profile Badge at Bottom */}
           <div className="sidebar-bottom-account">
             {currentUser ? (
@@ -420,11 +401,6 @@ export function Layout() {
               <button type="button" className="theme-quick-btn" onClick={toggleTheme} title="थीम बदलें">
                 {theme === "dark" ? <SunIcon size={18} /> : <MoonIcon size={18} />}
               </button>
-              {canInstall && !isInstalled && (
-                <button type="button" className="mobile-pwa-btn" onClick={promptInstall} title="ऐप इंस्टॉल करें">
-                  <DownloadIcon size={18} />
-                </button>
-              )}
             </div>
           </div>
         </header>

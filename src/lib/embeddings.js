@@ -1,4 +1,5 @@
 import { computeUserInterestVector, cosineSimilarity } from "./ranking";
+import { getCloudEmbedding, getCloudEmbeddingBatch } from "./cloudEmbeddings";
 
 /**
  * In-memory vector cache to prevent repeated computations
@@ -71,6 +72,8 @@ export function generateDeterministicEmbedding(text = "") {
 
 /**
  * Retrieves or computes embedding for given text with in-memory caching.
+ * Prioritizes multilingual cloud embeddings (e.g. Cloudflare Workers AI @cf/baai/bge-m3),
+ * with seamless fallback to client-side deterministic embedding on network failure or absence.
  * @param {string} text
  * @returns {Promise<Array<number>>}
  */
@@ -82,7 +85,14 @@ export async function getPostEmbedding(text = "") {
     return vectorCache.get(key);
   }
 
-  // If USE model is loaded, we can use it, else use high-speed deterministic embedding
+  // 1. Try Cloud AI embeddings first
+  const cloudVec = await getCloudEmbedding(key);
+  if (Array.isArray(cloudVec) && cloudVec.length > 0) {
+    vectorCache.set(key, cloudVec);
+    return cloudVec;
+  }
+
+  // 2. If USE model is loaded, we can use it, else use high-speed deterministic embedding
   let embedding;
   if (useModel && typeof useModel.embed === "function") {
     try {
@@ -124,6 +134,7 @@ export async function loadUniversalSentenceEncoder() {
 
 /**
  * Builds User Interest Vector from liked or bookmarked posts
+ * Employs batch cloud retrieval when available to minimize latency.
  * @param {Array<object>} userInteractions - Posts user liked/bookmarked
  * @returns {Promise<Array<number>|null>}
  */
@@ -132,15 +143,39 @@ export async function buildUserInterestVector(userInteractions = []) {
     return null;
   }
 
-  const embeddingPromises = userInteractions.map(async (post) => {
-    if (Array.isArray(post.embedding) && post.embedding.length === EMBEDDING_DIM) {
-      return post.embedding;
-    }
-    return getPostEmbedding(post.text || "");
-  });
+  const neededTexts = [];
+  const existingVectors = [];
 
-  const vectors = await Promise.all(embeddingPromises);
-  const uiv = computeUserInterestVector(vectors);
+  for (const post of userInteractions) {
+    if (Array.isArray(post?.embedding) && post.embedding.length > 0) {
+      existingVectors.push(post.embedding);
+    } else if (post?.text) {
+      neededTexts.push(post.text.trim());
+    }
+  }
+
+  let fetchedVectors = [];
+  if (neededTexts.length > 0) {
+    // Try batch cloud embeddings
+    const batchRes = await getCloudEmbeddingBatch(neededTexts);
+    if (Array.isArray(batchRes) && batchRes.length === neededTexts.length && batchRes.every(v => Array.isArray(v) && v.length > 0)) {
+      neededTexts.forEach((txt, i) => {
+        vectorCache.set(txt, batchRes[i]);
+      });
+      fetchedVectors = batchRes;
+    } else {
+      fetchedVectors = await Promise.all(neededTexts.map((t) => getPostEmbedding(t)));
+    }
+  }
+
+  const allVectors = [...existingVectors, ...fetchedVectors].filter((v) => Array.isArray(v) && v.length > 0);
+  if (allVectors.length === 0) return null;
+
+  // Group by dimension to ensure vectors of differing dimensions (e.g. 1024 cloud vs 512 local) do not cross-pollute
+  const targetDim = allVectors[0].length;
+  const uniformVectors = allVectors.filter((v) => v.length === targetDim);
+
+  const uiv = computeUserInterestVector(uniformVectors);
   return uiv;
 }
 

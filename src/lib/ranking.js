@@ -98,7 +98,7 @@ export function computeUserInterestVector(vectors) {
 
 /**
  * Ranks candidate posts by relevance according to the formula:
- * With UIV:    finalScore = 0.5 * engagement + 0.3 * semantic + 0.2 * recency
+ * With UIV:    finalScore = 0.40 * engagement + 0.45 * semantic + 0.15 * recency
  * Cold-Start: finalScore = 0.7 * engagement + 0.3 * recency
  *
  * @param {Array<object>} posts
@@ -136,8 +136,8 @@ export function rankPosts(posts = [], options = {}) {
 
     let finalScore = 0;
     if (hasUiv) {
-      // Full AI Ranking: 50% Engagement, 30% Semantic Relevance, 20% Recency
-      finalScore = (0.5 * engagementNorm) + (0.3 * semanticNorm) + (0.2 * recencyNorm);
+      // Full AI Ranking: 40% Engagement, 45% Semantic Relevance, 15% Recency
+      finalScore = (0.40 * engagementNorm) + (0.45 * semanticNorm) + (0.15 * recencyNorm);
     } else {
       // Cold-start fallback: 70% Engagement, 30% Recency
       finalScore = (0.7 * engagementNorm) + (0.3 * recencyNorm);

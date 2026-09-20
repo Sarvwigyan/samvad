@@ -1,81 +1,116 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { rankPosts } from "../lib/ranking";
 import { getSessionUIV } from "../lib/embeddings";
 import { getUserBookmarks } from "../lib/firestore";
 
-const RANK_CACHE_TTL = 60000; // 60 seconds cache
-
 /**
  * Custom hook that ranks candidate posts by relevance to current user.
- * Employs in-memory 60s caching to prevent unnecessary re-computations.
+ * Implements two-phase stable ranking to ensure already displayed posts
+ * are not reshuffled when new pages are fetched via infinite scroll.
  *
  * @param {Array<object>} rawPosts - Candidate posts from Firestore
  * @param {object|null} currentUser - Active authenticated user
- * @returns {{ rankedPosts: Array<object>, isRanking: boolean, refreshRanking: Function }}
+ * @param {boolean} enabled - Whether ranking is active
+ * @returns {{ rankedPosts: Array<object>, isRanking: boolean, refreshRanking: Function, resetRanking: Function }}
  */
 export function useRankedFeed(rawPosts = [], currentUser = null, enabled = true) {
   const [rankedPosts, setRankedPosts] = useState([]);
   const [isRanking, setIsRanking] = useState(false);
   const isMountedRef = useRef(true);
+  const rankedIdsRef = useRef(new Set());
+  const cachedUivRef = useRef(null);
 
-  const cacheRef = useRef({
-    timestamp: 0,
-    postsKey: "",
-    result: []
-  });
+  const resetRanking = useCallback(() => {
+    rankedIdsRef.current.clear();
+    cachedUivRef.current = null;
+    setRankedPosts([]);
+  }, []);
 
   const refreshRanking = async (force = false) => {
     if (!rawPosts || rawPosts.length === 0) {
-      if (isMountedRef.current) setRankedPosts([]);
+      if (isMountedRef.current) {
+        setRankedPosts([]);
+        rankedIdsRef.current.clear();
+      }
       return;
     }
 
     if (!enabled) {
-      if (isMountedRef.current) setRankedPosts(rawPosts);
+      if (isMountedRef.current) {
+        setRankedPosts(rawPosts);
+      }
       return;
     }
 
-    const now = Date.now();
-    const postsKey = rawPosts.map((p) => `${p.id}_${p.likeCount || 0}_${p.replyCount || 0}`).join(",");
+    // Determine unranked new posts
+    const isFirstLoadOrReset = force || rankedIdsRef.current.size === 0;
+    const newPosts = isFirstLoadOrReset
+      ? rawPosts
+      : rawPosts.filter((p) => p?.id && !rankedIdsRef.current.has(p.id));
 
-    // Use cached result if within 60 seconds and raw posts haven't mutated
-    if (!force && cacheRef.current.postsKey === postsKey && (now - cacheRef.current.timestamp) < RANK_CACHE_TTL) {
-      if (isMountedRef.current) setRankedPosts(cacheRef.current.result);
+    if (!isFirstLoadOrReset && newPosts.length === 0) {
       return;
     }
 
     if (isMountedRef.current) setIsRanking(true);
 
     try {
-      let uiv = null;
+      const now = Date.now();
+      let uiv = cachedUivRef.current;
 
-      // If user is authenticated, fetch their bookmarked/liked posts to construct or fetch UIV
-      if (currentUser?.uid) {
+      // Fetch or refresh UIV if needed
+      if (!uiv && currentUser?.uid) {
         try {
           const userBookmarks = await getUserBookmarks(currentUser.uid);
           uiv = await getSessionUIV(currentUser.uid, userBookmarks);
+          cachedUivRef.current = uiv;
         } catch (e) {
           uiv = null;
         }
       }
 
-      // Rank candidate posts (capped at 200)
-      const candidates = rawPosts.slice(0, 200);
-      const ranked = rankPosts(candidates, {
-        userInterestVector: uiv,
-        now
-      });
+      if (isFirstLoadOrReset) {
+        // Rank all candidate posts (capped at 200)
+        const candidates = rawPosts.slice(0, 200);
+        const ranked = rankPosts(candidates, {
+          userInterestVector: uiv,
+          now
+        });
 
-      cacheRef.current = {
-        timestamp: now,
-        postsKey,
-        result: ranked
-      };
+        rankedIdsRef.current = new Set(ranked.map((p) => p.id));
+        if (isMountedRef.current) setRankedPosts(ranked);
+      } else {
+        // Rank only new incoming posts with same UIV and append to existing rankedPosts
+        const rankedNew = rankPosts(newPosts, {
+          userInterestVector: uiv,
+          now
+        });
 
-      if (isMountedRef.current) setRankedPosts(ranked);
+        rankedNew.forEach((p) => {
+          if (p.id) rankedIdsRef.current.add(p.id);
+        });
+
+        if (isMountedRef.current) {
+          setRankedPosts((prev) => {
+            const prevIds = new Set(prev.map((p) => p.id));
+            const distinctNew = rankedNew.filter((p) => !prevIds.has(p.id));
+            return [...prev, ...distinctNew];
+          });
+        }
+      }
     } catch (err) {
       // Fallback gracefully to raw unranked candidates if ranking fails
-      if (isMountedRef.current) setRankedPosts(rawPosts);
+      if (isMountedRef.current) {
+        if (isFirstLoadOrReset) {
+          setRankedPosts(rawPosts);
+          rankedIdsRef.current = new Set(rawPosts.map((p) => p.id));
+        } else {
+          setRankedPosts((prev) => [...prev, ...newPosts]);
+          newPosts.forEach((p) => {
+            if (p.id) rankedIdsRef.current.add(p.id);
+          });
+        }
+      }
     } finally {
       if (isMountedRef.current) setIsRanking(false);
     }
@@ -94,6 +129,7 @@ export function useRankedFeed(rawPosts = [], currentUser = null, enabled = true)
   return {
     rankedPosts,
     isRanking,
-    refreshRanking: () => refreshRanking(true)
+    refreshRanking: () => refreshRanking(true),
+    resetRanking
   };
 }

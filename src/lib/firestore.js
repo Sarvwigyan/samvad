@@ -27,6 +27,7 @@ import {
 } from "./pruning";
 import { createNotification } from "./notifications";
 import { extractMentions, lookupMentionedUsers } from "./mentions";
+import { getCloudEmbedding } from "./cloudEmbeddings";
 
 /**
  * Fetches user profile from users/{uid}
@@ -390,6 +391,15 @@ export async function createVichar({ authorId, authorName, authorPhoto, text, bh
   };
 
   const docRef = await addDoc(collection(db, "posts"), postData);
+
+  // Asynchronously compute and store cloud embedding (non-blocking)
+  if (trimmed) {
+    getCloudEmbedding(trimmed).then((vec) => {
+      if (vec && Array.isArray(vec) && vec.length > 0) {
+        updateDoc(docRef, { embedding: vec }).catch(() => {});
+      }
+    }).catch(() => {});
+  }
 
   // Increment user postsCount
   try {

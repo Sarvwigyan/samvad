@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getStorage } from "firebase/storage";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 // Read Firebase Web configuration from Vite environment variables, with fallback to project defaults
@@ -26,9 +25,6 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: "select_account"
 });
-
-// Initialize Firebase Cloud Storage
-export const storage = getStorage(app);
 
 // Setup Firebase App Check (reCAPTCHA v3) if key provided
 const recaptchaSiteKey = import.meta.env.VITE_FB_RECAPTCHA_SITE_KEY;

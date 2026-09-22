@@ -27,7 +27,7 @@ export const ECOSYSTEM_APPS = {
     name: "सर्वविज्ञान",
     motto: "अखिल भारतीय ज्ञान-विज्ञान परम्परा",
     glyph: "⚡",
-    url: "https://sarvwigyan.web.app"
+    url: "https://sarwigyan.web.app"
   }
 };
 

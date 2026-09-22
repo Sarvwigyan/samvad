@@ -108,21 +108,7 @@ export function Layout() {
   const [isEcoDrawerOpen, setIsEcoDrawerOpen] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
-  // Dynamic Shastra State
-  const [currentShloka, setCurrentShloka] = useState(getDailyShloka);
-  const [isShlokaLoading, setIsShlokaLoading] = useState(false);
   const [isWidgetsCollapsed, setIsWidgetsCollapsed] = useState(false);
-
-  const handleNextShloka = async () => {
-    setIsShlokaLoading(true);
-    triggerHaptic(10);
-    try {
-      const next = await fetchDynamicShloka(currentShloka?.id);
-      setCurrentShloka(next);
-    } finally {
-      setIsShlokaLoading(false);
-    }
-  };
 
   const myProfilePath = currentUser ? `/parichay/${currentUser.uid}` : "/parichay";
 
@@ -520,41 +506,6 @@ export function Layout() {
               </div>
             </section>
 
-            {/* Daily Subhashita / अमृत वचन (Dynamic Shastra Engine) */}
-            <section className="widget-card subhashita-card">
-              <div className="widget-header">
-                <div className="subhashita-title-wrap">
-                  <h3 className="widget-title">दैनिक सुभाषित</h3>
-                  {currentShloka?.theme && (
-                    <span className="subhashita-theme-badge">{currentShloka.theme}</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className={`subhashita-refresh-btn ${isShlokaLoading ? "spinning" : ""}`}
-                  onClick={handleNextShloka}
-                  title="नया श्लोक प्राप्त करें (Next Shloka)"
-                  aria-label="नया श्लोक"
-                >
-                  <span className="subhashita-refresh-icon">↺</span>
-                </button>
-              </div>
-              <blockquote className="subhashita-quote">
-                {currentShloka?.shloka ? currentShloka.shloka.split("\n").map((line, i) => (
-                  <React.Fragment key={i}>
-                    {line}
-                    {i < currentShloka.shloka.split("\n").length - 1 && <br />}
-                  </React.Fragment>
-                )) : "अयं निजः परो वेति गणना लघुचेतसाम्।"}
-              </blockquote>
-              {currentShloka?.meaning && (
-                <p className="subhashita-meaning">
-                  {currentShloka.meaning}
-                </p>
-              )}
-              <cite className="subhashita-ref">— {currentShloka?.source || "प्राचीन संहिता"}</cite>
-            </section>
-
             {/* Sovereign Footer */}
             <footer className="right-col-footer">
               <div className="footer-links-row">
@@ -661,7 +612,7 @@ export function Layout() {
 
             <div className="modal-body eco-portals-list">
               <a
-                href="https://sarvwigyan.github.io/"
+                href="https://sarwigyan.web.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="eco-portal-item"
@@ -670,7 +621,7 @@ export function Layout() {
                 <div className="eco-portal-icon"><GlobeIcon size={24} /></div>
                 <div className="eco-portal-info">
                   <h4 className="eco-portal-name">सर्वविज्ञान Hub</h4>
-                  <p className="eco-portal-desc">खुला विज्ञान, शिक्षा एवं शोध केंद्र (sarvwigyan.github.io)</p>
+                  <p className="eco-portal-desc">खुला विज्ञान, शिक्षा एवं शोध केंद्र (sarwigyan.web.app)</p>
                 </div>
                 <span className="eco-portal-arrow">↗</span>
               </a>

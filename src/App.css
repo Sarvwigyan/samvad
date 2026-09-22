@@ -102,15 +102,15 @@
 /* Primary Tactile Button (Rich Saffron / Gold with Duolingo 3D depth) */
 .btn-primary {
   background: var(--sona);
-  color: #0F0E0C;
+  color: var(--bg);
   border: none;
   border-radius: 9999px;
-  box-shadow: 0 2px 8px rgba(212, 162, 76, 0.2);
+  box-shadow: 0 2px 8px var(--sona-glow);
 }
 
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.1);
-  box-shadow: 0 4px 12px rgba(212, 162, 76, 0.3);
+  box-shadow: 0 4px 12px var(--sona-glow);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -121,10 +121,10 @@
 /* Sovereign Chakra Navy Tactile Button (High Contrast WCAG AA 12.6:1) */
 .btn-navy {
   background: var(--chakra-navy);
-  color: #FFFFFF;
+  color: var(--bg);
   border: none;
   border-radius: 9999px;
-  box-shadow: 0 2px 8px rgba(6, 3, 141, 0.2);
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
 }
 
 .btn-navy:hover:not(:disabled) {
@@ -824,17 +824,6 @@
   height: 32px;
   font-size: 0.9rem;
   cursor: pointer;
-}
-
-.shloka-header-banner {
-  text-align: center;
-  padding: 6px 12px;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  color: var(--sona);
-  background: linear-gradient(90deg, transparent, rgba(212, 162, 76, 0.08), transparent);
-  border-bottom: 1px solid rgba(212, 162, 76, 0.1);
-  font-weight: 500;
 }
 
 .center-stream-content {

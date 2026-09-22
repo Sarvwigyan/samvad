@@ -26,7 +26,7 @@ function EcosystemBarComponent() {
     <div className="ecosystem-top-ribbon" role="region" aria-label="सर्वविज्ञान पारिस्थितिकी तंत्र">
       <div className="ecosystem-ribbon-content">
         <div className="ecosystem-brand-group">
-          <span className="ecosystem-motto">✦ सत्यं वद • धर्मं चर • ज्ञानमेव जयते ✦</span>
+
           {currentUser && (
             <span className="ecosystem-sso-indicator" title="एकीकृत परिचय सक्रिय (Unified Ecosystem SSO Active)">
               <span className="sso-dot" />

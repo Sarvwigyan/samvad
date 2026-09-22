@@ -1,25 +1,23 @@
 /* ==========================================================================
    Samwad (संवाद) — Sovereign Vedic Liquid Glass Design System (v3.0 Master)
-   Synthesizing Apple VisionOS / X (Twitter) Ultra-Precision Liquid Glass with
-   Supreme Vedic Luminescence (ऋग्वेद, उपनिषद्, भगवद्गीता, सुवर्ण, अग्नि)
    ========================================================================== */
 
 :root {
-  /* Divine Elemental Palette */
-  --kesari:              #FF7A00;   /* Pure Sacred Agni Saffron (पवित्र अग्नि) */
-  --kesari-hover:        #FF9429;
-  --kesari-dark:         #C45000;   /* 3D Saffron Push Shadow */
-  --sona:                #E5A93C;   /* Radiant Molten Gold (सुवर्ण) */
-  --sona-hover:          #F3BC54;
-  --sona-dark:           #A86F18;   /* 3D Deep Gold Push Shadow */
-  --sona-glow:           rgba(229, 169, 60, 0.35);
-  --maroon:              #991B1B;   /* Deep Royal Kumkum (कुंकुम) */
-  --van:                 #059669;   /* Sacred Tulsi Forest Green (तुलसी) */
-  --chakra-navy:         #1E3A8A;   /* Sovereign Ashoka Chakra Navy (अशोक चक्र) */
-  --chakra-navy-hover:   #2563EB;
-  --chakra-navy-dark:    #172554;   /* 3D Navy Shadow */
+  /* Divine Elemental Palette - Monochrome Edition */
+  --kesari:              #000000;
+  --kesari-hover:        #1A1A1A;
+  --kesari-dark:         #000000;
+  --sona:                #000000;
+  --sona-hover:          #1A1A1A;
+  --sona-dark:           #000000;
+  --sona-glow:           rgba(0, 0, 0, 0.1);
+  --maroon:              #000000;
+  --van:                 #000000;
+  --chakra-navy:         #000000;
+  --chakra-navy-hover:   #1A1A1A;
+  --chakra-navy-dark:    #000000;
 
-  /* Surface & Canvas Tokens — Devanagari Precision */
+  /* Surface & Canvas Tokens */
   --font-heading:        'Tiro Devanagari Hindi', 'Noto Sans Devanagari', 'Mukta', 'Segoe UI Historic', 'Nirmala UI', 'Cinzel', serif;
   --font-body:           'Noto Sans Devanagari', 'Mukta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Nirmala UI', 'SF Pro Text', system-ui, sans-serif;
   --font-script:         'Noto Sans Devanagari', 'Mukta', 'Nirmala UI', sans-serif;
@@ -31,130 +29,101 @@
   --radius-pill:         9999px;
 
   /* Duolingo 3D Tactile Button Tokens */
-  --shadow-btn-3d:        0 4px 0 0 var(--sona-dark);
-  --shadow-btn-navy-3d:   0 4px 0 0 var(--chakra-navy-dark);
-  --shadow-btn-kesari-3d: 0 4px 0 0 var(--kesari-dark);
-  --shadow-pill-3d:       0 2px 0 0 rgba(229, 169, 60, 0.25);
+  --shadow-btn-3d:        0 4px 0 0 var(--text);
+  --shadow-btn-navy-3d:   0 4px 0 0 var(--text);
+  --shadow-btn-kesari-3d: 0 4px 0 0 var(--text);
+  --shadow-pill-3d:       0 2px 0 0 rgba(0, 0, 0, 0.1);
 
   /* Apple Liquid Spring Motion */
   --spring-bounce:       cubic-bezier(0.175, 0.885, 0.32, 1.15);
   --spring-smooth:       cubic-bezier(0.16, 1, 0.3, 1);
   --transition:          200ms var(--spring-smooth);
-
-  /* Default Surface Fallbacks (OLED Obsidian Dark by default) */
-  --bg:                  #050505;
-  --bg-gradient:         radial-gradient(ellipse 70% 35% at 50% -5%, rgba(229, 169, 60, 0.08) 0%, transparent 65%),
-                         linear-gradient(180deg, #000000 0%, #080808 100%);
-  --bg-elevated:         rgba(18, 18, 20, 0.82);
-  --bg-elevated-solid:   #0E0E10;
-  --bg-glass-active:     rgba(28, 28, 32, 0.9);
-  --backdrop-blur:       blur(24px) saturate(190%);
-  --bg-surface:          #141416;
-  --bg-hover:            rgba(255, 255, 255, 0.06);
-  --bg-main:             #000000;
-  --bg-header:           rgba(0, 0, 0, 0.82);
-  --bg-card:             #0E0E10;
-
-  --text:                #F9FAFB;
-  --text-muted:          #9CA3AF;
-  --text-dim:            #6B7280;
-  --text-primary:        #F9FAFB;
-  --text-secondary:      #9CA3AF;
-
-  --border:              rgba(255, 255, 255, 0.09);
-  --border-light:        rgba(255, 255, 255, 0.05);
-  --glass-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  --shadow-liquid:       0 8px 32px rgba(0, 0, 0, 0.6);
-  --shadow-float:        0 16px 44px rgba(0, 0, 0, 0.85);
-
-  --accent:              #E5A93C;
-  --accent-secondary:    #FF7A00;
-
-  --color-error:         #EF4444;
-  --color-success:       #10B981;
-  --color-warning:       #F59E0B;
 }
 
 /* ==========================================================================
-   LIGHT MODE: श्वेत कमल (Sacred Alabaster & Light)
-   Pure, crisp, high-contrast like X with subtle warm golden aura
+   LIGHT MODE: Warm Anthropic-like White
    ========================================================================== */
 [data-theme="light"] {
-  --bg:                  #FFFFFF;
-  --bg-gradient:         radial-gradient(ellipse 70% 30% at 50% -5%, rgba(229, 169, 60, 0.06) 0%, transparent 60%),
-                         linear-gradient(180deg, #FFFFFF 0%, #FAF8F5 100%);
+  --bg:                  #F5F4F0;
+  --bg-gradient:         none;
   
-  --bg-elevated:         rgba(255, 255, 255, 0.88);
-  --bg-elevated-solid:   #FFFFFF;
-  --bg-glass-active:     rgba(255, 255, 255, 0.96);
+  --bg-elevated:         rgba(249, 248, 246, 0.88);
+  --bg-elevated-solid:   #F9F8F6;
+  --bg-glass-active:     rgba(249, 248, 246, 0.96);
   --backdrop-blur:       blur(24px) saturate(190%);
 
-  --bg-surface:          #F4F4F6;
+  --bg-surface:          #EAE9E4;
   --bg-hover:            rgba(0, 0, 0, 0.04);
-  --bg-main:             #FFFFFF;
-  --bg-header:           rgba(255, 255, 255, 0.88);
+  --bg-main:             #F5F4F0;
+  --bg-header:           rgba(245, 244, 240, 0.88);
   --bg-card:             #FFFFFF;
   
-  /* X-Grade Ink Contrast */
-  --text:                #0F1419;
-  --text-muted:          #536471;
-  --text-dim:            #8899A6;
-  --text-primary:        #0F1419;
-  --text-secondary:      #536471;
+  --text:                #1A1A1A;
+  --text-muted:          #666666;
+  --text-dim:            #888888;
+  --text-primary:        #1A1A1A;
+  --text-secondary:      #555555;
   
-  /* Subtle, crisp hairline dividers (No muddy yellow tint!) */
-  --border:              rgba(0, 0, 0, 0.08);
-  --border-light:        rgba(0, 0, 0, 0.04);
+  --border:              rgba(0, 0, 0, 0.1);
+  --border-light:        rgba(0, 0, 0, 0.05);
   --glass-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.95);
   
   --shadow-liquid:       0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
   --shadow-float:        0 12px 36px rgba(0, 0, 0, 0.09), 0 2px 8px rgba(0, 0, 0, 0.03);
-  --accent:              #D97706;
-  --accent-secondary:    #EA580C;
+  
+  --accent:              #000000;
+  --accent-secondary:    #000000;
 
-  --color-error:         #DC2626;
-  --color-success:       #059669;
-  --color-warning:       #D97706;
+  --color-error:         #000000;
+  --color-success:       #000000;
+  --color-warning:       #000000;
+  
+  --sona:                #000000;
+  --sona-hover:          #333333;
+  --sona-dark:           #000000;
+  --sona-glow:           rgba(0, 0, 0, 0.1);
 }
 
 /* ==========================================================================
-   DARK MODE: नासदीय सूक्त (Vedic Cosmic Obsidian Glass)
-   True OLED depth, radiant gold luminescence, crisp white typography
+   DARK MODE: Dracula-like Soft Grey/Solarized
    ========================================================================== */
 [data-theme="dark"] {
-  --bg:                  #000000;
-  --bg-gradient:         radial-gradient(ellipse 75% 35% at 50% -5%, rgba(229, 169, 60, 0.09) 0%, transparent 65%),
-                         linear-gradient(180deg, #000000 0%, #060607 100%);
+  --bg:                  #282A36;
+  --bg-gradient:         none;
   
-  --bg-elevated:         rgba(16, 16, 18, 0.82);
-  --bg-elevated-solid:   #0E0E10;
-  --bg-glass-active:     rgba(26, 26, 30, 0.92);
+  --bg-elevated:         rgba(40, 42, 54, 0.82);
+  --bg-elevated-solid:   #282A36;
+  --bg-glass-active:     rgba(40, 42, 54, 0.92);
   --backdrop-blur:       blur(28px) saturate(200%);
 
-  --bg-surface:          #141416;
+  --bg-surface:          #343746;
   --bg-hover:            rgba(255, 255, 255, 0.06);
-  --bg-main:             #000000;
-  --bg-header:           rgba(0, 0, 0, 0.85);
-  --bg-card:             #0E0E10;
+  --bg-main:             #282A36;
+  --bg-header:           rgba(40, 42, 54, 0.85);
+  --bg-card:             #44475A;
   
-  /* Luminous Ivory & White */
-  --text:                #F9FAFB;
-  --text-muted:          #9CA3AF;
-  --text-dim:            #6B7280;
-  --text-primary:        #F9FAFB;
-  --text-secondary:      #9CA3AF;
+  --text:                #F8F8F2;
+  --text-muted:          #6272A4;
+  --text-dim:            #6272A4;
+  --text-primary:        #F8F8F2;
+  --text-secondary:      #B9C3D6;
   
-  /* Hairline precision dividers */
-  --border:              rgba(255, 255, 255, 0.09);
-  --border-light:        rgba(255, 255, 255, 0.05);
-  --glass-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --border:              rgba(248, 248, 242, 0.1);
+  --border-light:        rgba(248, 248, 242, 0.05);
+  --glass-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   
-  --shadow-liquid:       0 8px 32px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.45);
-  --shadow-float:        0 18px 48px rgba(0, 0, 0, 0.9), 0 4px 14px rgba(0, 0, 0, 0.6);
-  --accent:              #E5A93C;
-  --accent-secondary:    #FF7A00;
+  --shadow-liquid:       0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-float:        0 18px 48px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.4);
+  
+  --accent:              #FFFFFF;
+  --accent-secondary:    #FFFFFF;
 
-  --color-error:         #EF4444;
-  --color-success:       #10B981;
-  --color-warning:       #F59E0B;
+  --color-error:         #FFFFFF;
+  --color-success:       #FFFFFF;
+  --color-warning:       #FFFFFF;
+  
+  --sona:                #FFFFFF;
+  --sona-hover:          #E0E0E0;
+  --sona-dark:           #A0A0A0;
+  --sona-glow:           rgba(255, 255, 255, 0.1);
 }

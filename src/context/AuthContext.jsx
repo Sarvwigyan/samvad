@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { onAuthStateChanged, signInWithRedirect, signOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db, googleProvider } from "../firebase";
 import { upsertUserProfile } from "../lib/firestore";
@@ -111,8 +111,8 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = async () => {
     try {
-      const res = await signInWithPopup(auth, googleProvider);
-      return res.user;
+      // Using redirect instead of popup to fix login issues on mobile browsers
+      await signInWithRedirect(auth, googleProvider);
     } catch (err) {
       console.error("Google login error:", err);
       throw err;

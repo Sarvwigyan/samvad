@@ -99,42 +99,44 @@
   min-height: 48px;
 }
 
-/* Primary Tactile Button (Rich Saffron / Gold with Duolingo 3D depth) */
+/* Primary Tactile Button (Duolingo Primary) */
 .btn-primary {
   background: var(--sona);
-  color: var(--bg);
-  border: none;
-  border-radius: 9999px;
-  box-shadow: 0 2px 8px var(--sona-glow);
+  color: #ffffff;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  box-shadow: 0 4px 0 var(--sona-dark);
+  padding: 12px 24px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-  box-shadow: 0 4px 12px var(--sona-glow);
+  background: var(--sona-hover);
+  box-shadow: 0 4px 0 var(--sona-dark);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: scale(0.97);
-  box-shadow: none;
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
 }
 
-/* Sovereign Chakra Navy Tactile Button (High Contrast WCAG AA 12.6:1) */
+/* Secondary / Navy Tactile Button (Duolingo Secondary) */
 .btn-navy {
   background: var(--chakra-navy);
-  color: var(--bg);
-  border: none;
-  border-radius: 9999px;
-  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
+  color: #ffffff;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  box-shadow: 0 4px 0 var(--chakra-navy-dark);
+  padding: 12px 24px;
 }
 
 .btn-navy:hover:not(:disabled) {
   background: var(--chakra-navy-hover);
-  box-shadow: 0 4px 12px rgba(6, 3, 141, 0.3);
+  box-shadow: 0 4px 0 var(--chakra-navy-dark);
 }
 
 .btn-navy:active:not(:disabled) {
-  transform: scale(0.97);
-  box-shadow: none;
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
 }
 
 /* Outline Tactile Button */

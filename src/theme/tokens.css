@@ -1,129 +1,122 @@
 /* ==========================================================================
-   Samwad (संवाद) — Sovereign Vedic Liquid Glass Design System (v3.0 Master)
+   Samwad (संवाद) — Simple Wikipedia UI with Duolingo Buttons
    ========================================================================== */
 
 :root {
-  /* Divine Elemental Palette - Monochrome Edition */
-  --kesari:              #000000;
-  --kesari-hover:        #1A1A1A;
-  --kesari-dark:         #000000;
-  --sona:                #000000;
-  --sona-hover:          #1A1A1A;
-  --sona-dark:           #000000;
-  --sona-glow:           rgba(0, 0, 0, 0.1);
-  --maroon:              #000000;
-  --van:                 #000000;
-  --chakra-navy:         #000000;
-  --chakra-navy-hover:   #1A1A1A;
-  --chakra-navy-dark:    #000000;
+  /* Duolingo Button Colors */
+  --btn-primary:         #58cc02;
+  --btn-primary-shadow:  #58a700;
+  --btn-secondary:       #1cb0f6;
+  --btn-secondary-shadow:#1899d6;
+  --btn-danger:          #ff4b4b;
+  --btn-danger-shadow:   #ea1515;
 
-  /* Surface & Canvas Tokens */
-  --font-heading:        'Tiro Devanagari Hindi', 'Noto Sans Devanagari', 'Mukta', 'Segoe UI Historic', 'Nirmala UI', 'Cinzel', serif;
-  --font-body:           'Noto Sans Devanagari', 'Mukta', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Nirmala UI', 'SF Pro Text', system-ui, sans-serif;
-  --font-script:         'Noto Sans Devanagari', 'Mukta', 'Nirmala UI', sans-serif;
+  /* Typography (Wikipedia style) */
+  --font-heading:        'Linux Libertine', 'Georgia', 'Times', serif;
+  --font-body:           sans-serif;
+  --font-script:         'Noto Sans Devanagari', sans-serif;
 
-  --radius-xl:           20px;
+  /* Button Radii */
+  --radius-xl:           16px;
   --radius-lg:           16px;
-  --radius:              12px;
-  --radius-sm:           8px;
-  --radius-pill:         9999px;
-
-  /* Duolingo 3D Tactile Button Tokens */
-  --shadow-btn-3d:        0 4px 0 0 var(--text);
-  --shadow-btn-navy-3d:   0 4px 0 0 var(--text);
-  --shadow-btn-kesari-3d: 0 4px 0 0 var(--text);
-  --shadow-pill-3d:       0 2px 0 0 rgba(0, 0, 0, 0.1);
-
-  /* Apple Liquid Spring Motion */
-  --spring-bounce:       cubic-bezier(0.175, 0.885, 0.32, 1.15);
-  --spring-smooth:       cubic-bezier(0.16, 1, 0.3, 1);
-  --transition:          200ms var(--spring-smooth);
+  --radius:              16px;
+  --radius-sm:           12px;
+  --radius-pill:         16px;
+  
+  --transition:          150ms ease;
 }
 
-/* ==========================================================================
-   LIGHT MODE: Warm Anthropic-like White
-   ========================================================================== */
-[data-theme="light"] {
-  --bg:                  #F5F4F0;
+[data-theme="light"],
+:root {
+  /* Wikipedia Backgrounds */
+  --bg:                  #ffffff;
   --bg-gradient:         none;
-  
-  --bg-elevated:         rgba(249, 248, 246, 0.88);
-  --bg-elevated-solid:   #F9F8F6;
-  --bg-glass-active:     rgba(249, 248, 246, 0.96);
-  --backdrop-blur:       blur(24px) saturate(190%);
+  --bg-elevated:         #ffffff;
+  --bg-elevated-solid:   #ffffff;
+  --bg-glass-active:     #ffffff;
+  --backdrop-blur:       none;
 
-  --bg-surface:          #EAE9E4;
-  --bg-hover:            rgba(0, 0, 0, 0.04);
-  --bg-main:             #F5F4F0;
-  --bg-header:           rgba(245, 244, 240, 0.88);
-  --bg-card:             #FFFFFF;
+  --bg-surface:          #f8f9fa; /* Wikipedia light gray */
+  --bg-hover:            #eaecf0;
+  --bg-main:             #ffffff;
+  --bg-header:           #f8f9fa;
+  --bg-card:             #ffffff;
   
-  --text:                #1A1A1A;
-  --text-muted:          #666666;
-  --text-dim:            #888888;
-  --text-primary:        #1A1A1A;
-  --text-secondary:      #555555;
+  /* Wikipedia Text */
+  --text:                #202122;
+  --text-muted:          #72777d;
+  --text-dim:            #a2a9b1;
+  --text-primary:        #202122;
+  --text-secondary:      #54595d;
   
-  --border:              rgba(0, 0, 0, 0.1);
-  --border-light:        rgba(0, 0, 0, 0.05);
-  --glass-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  /* Wikipedia Borders */
+  --border:              #a2a9b1;
+  --border-light:        #eaecf0;
+  --glass-highlight:     none;
   
-  --shadow-liquid:       0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --shadow-float:        0 12px 36px rgba(0, 0, 0, 0.09), 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-liquid:       none;
+  --shadow-float:        0 1px 2px rgba(0,0,0,0.1);
   
-  --accent:              #000000;
-  --accent-secondary:    #000000;
+  --accent:              #0645ad; /* Wikipedia Link Blue */
+  --accent-secondary:    #3366cc;
 
-  --color-error:         #000000;
-  --color-success:       #000000;
-  --color-warning:       #000000;
+  --color-error:         #d33;
+  --color-success:       #00af89;
+  --color-warning:       #ffcc33;
   
-  --sona:                #000000;
-  --sona-hover:          #333333;
-  --sona-dark:           #000000;
-  --sona-glow:           rgba(0, 0, 0, 0.1);
+  /* Map legacy variables to our new ones */
+  --sona:                var(--btn-primary);
+  --sona-hover:          #46a302;
+  --sona-dark:           var(--btn-primary-shadow);
+  --sona-glow:           transparent;
+  
+  --chakra-navy:         var(--btn-secondary);
+  --chakra-navy-hover:   #158ec2;
+  --chakra-navy-dark:    var(--btn-secondary-shadow);
 }
 
-/* ==========================================================================
-   DARK MODE: Dracula-like Soft Grey/Solarized
-   ========================================================================== */
 [data-theme="dark"] {
-  --bg:                  #282A36;
+  /* Simple Dark Mode */
+  --bg:                  #121212;
   --bg-gradient:         none;
   
-  --bg-elevated:         rgba(40, 42, 54, 0.82);
-  --bg-elevated-solid:   #282A36;
-  --bg-glass-active:     rgba(40, 42, 54, 0.92);
-  --backdrop-blur:       blur(28px) saturate(200%);
+  --bg-elevated:         #1e1e1e;
+  --bg-elevated-solid:   #1e1e1e;
+  --bg-glass-active:     #1e1e1e;
+  --backdrop-blur:       none;
 
-  --bg-surface:          #343746;
-  --bg-hover:            rgba(255, 255, 255, 0.06);
-  --bg-main:             #282A36;
-  --bg-header:           rgba(40, 42, 54, 0.85);
-  --bg-card:             #44475A;
+  --bg-surface:          #1e1e1e;
+  --bg-hover:            #2a2a2a;
+  --bg-main:             #121212;
+  --bg-header:           #1e1e1e;
+  --bg-card:             #1e1e1e;
   
-  --text:                #F8F8F2;
-  --text-muted:          #6272A4;
-  --text-dim:            #6272A4;
-  --text-primary:        #F8F8F2;
-  --text-secondary:      #B9C3D6;
+  --text:                #e0e0e0;
+  --text-muted:          #9e9e9e;
+  --text-dim:            #757575;
+  --text-primary:        #ffffff;
+  --text-secondary:      #b3b3b3;
   
-  --border:              rgba(248, 248, 242, 0.1);
-  --border-light:        rgba(248, 248, 242, 0.05);
-  --glass-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --border:              #333333;
+  --border-light:        #2a2a2a;
+  --glass-highlight:     none;
   
-  --shadow-liquid:       0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-float:        0 18px 48px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-liquid:       none;
+  --shadow-float:        none;
   
-  --accent:              #FFFFFF;
-  --accent-secondary:    #FFFFFF;
+  --accent:              #8ab4f8; 
+  --accent-secondary:    #8ab4f8;
 
-  --color-error:         #FFFFFF;
-  --color-success:       #FFFFFF;
-  --color-warning:       #FFFFFF;
+  --color-error:         #ff5252;
+  --color-success:       #69f0ae;
+  --color-warning:       #ffd740;
   
-  --sona:                #FFFFFF;
-  --sona-hover:          #E0E0E0;
-  --sona-dark:           #A0A0A0;
-  --sona-glow:           rgba(255, 255, 255, 0.1);
+  --sona:                var(--btn-primary);
+  --sona-hover:          #46a302;
+  --sona-dark:           var(--btn-primary-shadow);
+  --sona-glow:           transparent;
+  
+  --chakra-navy:         var(--btn-secondary);
+  --chakra-navy-hover:   #158ec2;
+  --chakra-navy-dark:    var(--btn-secondary-shadow);
 }

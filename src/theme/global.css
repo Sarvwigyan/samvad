@@ -43,15 +43,9 @@ html, body {
   scrollbar-color: rgba(229, 169, 60, 0.2) transparent;
 }
 
-/* Subtle sacred aura geometry */
+/* Clean Wikipedia Background */
 body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(229, 169, 60, 0.04) 0%, transparent 55%);
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 #root {

@@ -3,23 +3,18 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem("samwad_theme") || "dark";
-    } catch {
-      return "dark";
-    }
-  });
+  const [theme, setTheme] = useState("light");
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme", "light");
     try {
-      localStorage.setItem("samwad_theme", theme);
+      localStorage.setItem("samwad_theme", "light");
     } catch {}
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    // Keep Wikipedia white theme
+    setTheme("light");
   };
 
   return (
